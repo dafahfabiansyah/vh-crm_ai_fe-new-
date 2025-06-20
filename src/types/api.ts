@@ -25,11 +25,24 @@ export interface User {
 export interface RegisterResponse extends User {
   phone_number: string;
   created_at: string;
-  token?: string;
+  token: string; // Make token required
 }
 
 export interface LoginResponse extends User {
   token: string;
+}
+
+// Backend API wrapper responses
+export interface ApiSuccessResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface ApiErrorResponse {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[]>;
 }
 
 export interface ApiError {
@@ -45,4 +58,5 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  isInitialized: boolean; // Add this to track if auth state has been initialized
 }

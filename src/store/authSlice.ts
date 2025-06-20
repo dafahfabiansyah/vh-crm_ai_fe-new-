@@ -4,11 +4,12 @@ import type { AuthState, RegisterRequest, LoginRequest, ApiError } from '../type
 
 // Initial state
 const initialState: AuthState = {
-  user: AuthService.getStoredUser(),
-  token: AuthService.getStoredToken(),
+  user: null,
+  token: null,
   isLoading: false,
   error: null,
-  isAuthenticated: AuthService.isAuthenticated(),
+  isAuthenticated: false,
+  isInitialized: false, // Start as not initialized
 };
 
 // Async thunks
@@ -43,18 +44,29 @@ const authSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
-    },
-    logout: (state) => {
+    },    logout: (state) => {
       AuthService.logout();
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-    },
-    setCredentials: (state, action: PayloadAction<{ user: any; token: string }>) => {
+      state.isInitialized = true;
+    },setCredentials: (state, action: PayloadAction<{ user: any; token: string }>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      state.isInitialized = true;
+    },    initializeAuth: (state, action: PayloadAction<{ user: any; token: string } | null>) => {
+      if (action.payload) {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+      } else {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      }
+      state.isInitialized = true;
     },
   },
   extraReducers: (builder) => {
@@ -65,11 +77,11 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
+        state.isLoading = false;        state.user = action.payload;
         state.token = action.payload.token || null;
         state.isAuthenticated = true;
         state.error = null;
+        state.isInitialized = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -82,11 +94,11 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
+        state.isLoading = false;        state.user = action.payload;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        state.isInitialized = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -96,5 +108,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, logout, setCredentials } = authSlice.actions;
+export const { clearError, logout, setCredentials, initializeAuth } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router";
+import { ProtectedRoute, PublicRoute } from "@/components/route";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import Dashboard from "@/pages/Dashboard";
@@ -10,6 +11,7 @@ import ConnectedPlatformsPage from "./pages/ConnectPlatforms";
 import ContactsPage from "./pages/ContactPage";
 import BillingPage from "./pages/BillingPage";
 import CreatePipelinePage from "./pages/CreatePipeline";
+// import DashboardPage from "@/pages/Dashboard";
 
 export default function App() {
   return (
@@ -17,21 +19,85 @@ export default function App() {
       <Routes>
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
+        {/* <Route path="/" element={<DashboardPage/>} /> */}
         
-        {/* Auth routes */}
-        <Route path="/auth/login" element={<LoginPage />} />
-        <Route path="/auth/register" element={<RegisterPage />} />
+        {/* Public Auth routes - redirect to dashboard if already authenticated */}
+        <Route 
+          path="/auth/login" 
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/auth/register" 
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          } 
+        />
         
-        {/* Dashboard route */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/ai-agents" element={<AIAgentsPage />} />
-        <Route path="/human-agents" element={<HumanAgentsPage />} />
-
-        <Route path="/connected-platforms" element={<ConnectedPlatformsPage/>} />
-        <Route path="/contacts" element={<ContactsPage/>} />
-        <Route path="/billing" element={<BillingPage/>} />
-        <Route path="/pipeline/create" element={<CreatePipelinePage/>} />
-        <Route path="/contacts" element={<Navigate to="/dashboard" replace />} />
+        {/* Protected Dashboard routes - require authentication */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/ai-agents" 
+          element={
+            <ProtectedRoute>
+              <AIAgentsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/human-agents" 
+          element={
+            <ProtectedRoute>
+              <HumanAgentsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/connected-platforms" 
+          element={
+            <ProtectedRoute>
+              <ConnectedPlatformsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/contacts" 
+          element={
+            <ProtectedRoute>
+              <ContactsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/billing" 
+          element={
+            <ProtectedRoute>
+              <BillingPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/pipeline/create" 
+          element={
+            <ProtectedRoute>
+              <CreatePipelinePage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Legacy redirects */}
         <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
         
         {/* 404 Not Found Page */}

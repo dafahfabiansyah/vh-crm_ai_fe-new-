@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useNavigate } from "react-router";
+import { useAppDispatch } from "@/hooks/redux";
+import { logout } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,6 +37,15 @@ export default function Topbar({
   },
 }: TopbarProps) {
   const [notifications] = useState(3); // Mock notification count
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    // Dispatch logout action to clear Redux state and localStorage
+    dispatch(logout());
+    // Redirect to login page
+    navigate("/auth/login", { replace: true });
+  };
 
   return (
     <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between">
@@ -139,9 +151,11 @@ export default function Topbar({
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            </DropdownMenuItem>            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="text-destructive"
+              onClick={handleLogout}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>

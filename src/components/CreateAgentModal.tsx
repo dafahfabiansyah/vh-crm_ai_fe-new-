@@ -1,47 +1,99 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { X, ChevronDown } from "lucide-react"
+import { X, ChevronDown, Loader2, AlertCircle } from "lucide-react"
+import { AgentsService } from "@/services/agentsService"
+import type { AgentRole } from "@/types"
 
 interface CreateAgentModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: { name: string; template: string }) => void
+  onSuccess: () => void // Changed from onSubmit to onSuccess for better naming
 }
 
 const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onSuccess,
 }) => {
   const [agentName, setAgentName] = useState("")
-  const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [selectedRoleId, setSelectedRoleId] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [roles, setRoles] = useState<AgentRole[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [rolesLoading, setRolesLoading] = useState(false)
 
-  const templates = [
-    { value: "customer-service", label: "Customer Service AI" },
-    { value: "sales", label: "Sales AI" },
-  ]
+  useEffect(() => {
+    if (isOpen) {
+      fetchRoles()
+    }
+  }, [isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (agentName && selectedTemplate) {
-      onSubmit({ name: agentName, template: selectedTemplate })
-      setAgentName("")
-      setSelectedTemplate("")
-      onClose()
+  const fetchRoles = async () => {
+    try {
+      setRolesLoading(true)
+      const rolesData = await AgentsService.getAgentRoles()
+      setRoles(rolesData)
+    } catch (err: any) {
+      console.error('Error fetching roles:', err)
+      // Set default roles if API fails
+      setRoles([
+        { id: "customer-service", name: "Customer Service AI", description: "AI agent for customer support", created_at: "", updated_at: "" },
+        { id: "sales", name: "Sales AI", description: "AI agent for sales operations", created_at: "", updated_at: "" },
+      ])
+    } finally {
+      setRolesLoading(false)
     }
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!agentName || !selectedRoleId) return
+
+    try {
+      setLoading(true)
+      setError(null)
+      
+      await AgentsService.createAgent({
+        name: agentName,
+        role_id: selectedRoleId,
+        is_active: true
+      })
+      
+      // Reset form
+      setAgentName("")
+      setSelectedRoleId("")
+      setIsDropdownOpen(false)
+      
+      // Close modal and refresh agents list
+      onClose()
+      onSuccess()
+    } catch (err: any) {
+      console.error('Error creating agent:', err)
+      setError(err.message || 'Failed to create agent')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClose = () => {
+    setAgentName("")
+    setSelectedRoleId("")
+    setIsDropdownOpen(false)
+    setError(null)
+    onClose()
+  }
   if (!isOpen) return null
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black opacity-25" 
-        onClick={onClose}
+        onClick={handleClose}
       />
       
       {/* Modal */}
@@ -54,7 +106,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            onClick={onClose}
+            onClick={handleClose}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -62,6 +114,14 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Display */}
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-700">{error}</span>
+              </div>
+            )}
+
             {/* Agent Name Field */}
             <div className="space-y-2">
               <Label htmlFor="agentName" className="text-sm font-medium">
@@ -73,6 +133,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
                 value={agentName}
                 onChange={(e) => setAgentName(e.target.value)}
                 className="w-full"
+                disabled={loading}
               />
             </div>
 
@@ -84,33 +145,38 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
               <div className="relative">
                 <button
                   type="button"
-                  className="w-full p-3 text-left border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 text-left border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  disabled={loading || rolesLoading}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={selectedTemplate ? "text-gray-900" : "text-gray-500"}>
-                      {selectedTemplate 
-                        ? templates.find(t => t.value === selectedTemplate)?.label
-                        : "Pilih Template"
-                      }
+                    <span className={selectedRoleId ? "text-gray-900" : "text-gray-500"}>
+                      {rolesLoading ? "Memuat template..." : (
+                        selectedRoleId 
+                          ? roles.find(r => r.id === selectedRoleId)?.name
+                          : "Pilih Template"
+                      )}
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-400" />
                   </div>
                 </button>
                 
-                {isDropdownOpen && (
+                {isDropdownOpen && !rolesLoading && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                    {templates.map((template) => (
+                    {roles.map((role) => (
                       <button
-                        key={template.value}
+                        key={role.id}
                         type="button"
                         className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
                         onClick={() => {
-                          setSelectedTemplate(template.value)
+                          setSelectedRoleId(role.id)
                           setIsDropdownOpen(false)
                         }}
                       >
-                        {template.label}
+                        <div>
+                          <div className="font-medium">{role.name}</div>
+                          <div className="text-sm text-gray-500">{role.description}</div>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -122,9 +188,16 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
             <Button
               type="submit"
               className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!agentName || !selectedTemplate}
+              disabled={!agentName || !selectedRoleId || loading}
             >
-              Buat Agent
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Membuat Agent...
+                </>
+              ) : (
+                'Buat Agent'
+              )}
             </Button>
           </form>
         </CardContent>

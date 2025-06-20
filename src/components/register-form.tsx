@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { registerUser, clearError } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import type { RegisterFormData, FormErrors, PasswordStrength } from "@/types";
 
 export default function RegisterForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { isLoading, error: authError, isAuthenticated } = useAppSelector((state) => state.auth);
   
@@ -45,13 +46,14 @@ export default function RegisterForm() {
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
-
-  // Redirect to dashboard if authenticated
+  // Redirect to dashboard or intended page if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      // Check if there's an intended redirect path from ProtectedRoute  
+      const intendedPath = (location.state as any)?.from || "/dashboard";
+      navigate(intendedPath, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location]);
 
   const checkPasswordStrength = (password: string): PasswordStrength => {
     const feedback: string[] = [];

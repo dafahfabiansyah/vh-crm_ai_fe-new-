@@ -1,23 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Plus, Settings, Trash2 } from "lucide-react";
-import { aiAgents } from "@/app/mock/data";
+import { Search, Plus, Settings, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import { AgentsService } from "@/services/agentsService";
+import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
 
 export default function AIAgentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [agents, setAgents] = useState<AIAgent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleCreateAgent = (data: { name: string; template: string }) => {
-    // Handle agent creation here
-    console.log("Creating agent:", data);
-    // You can add the logic to create the agent here
+  useEffect(() => {
+    fetchAgents();
+  }, []);
+
+  const fetchAgents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await AgentsService.getAgents();
+      setAgents(response.data);
+    } catch (err: any) {
+      console.error('Error fetching agents:', err);
+      setError(err.message || 'Failed to load AI agents');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleAgentCreated = () => {
+    // Refresh the agents list after successful creation
+    fetchAgents();
+  };
+
+  const filteredAgents = agents.filter(agent =>
+    agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getAgentInitials = (name: string) => {
+    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+  };
   return (
     <MainLayout>
       <div className="p-6 max-w-7xl mx-auto">
@@ -34,70 +71,137 @@ export default function AIAgentsPage() {
         <div className="flex items-center justify-between mb-6 gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input placeholder="Cari agen..." className="pl-10" />
+            <Input 
+              placeholder="Cari agen..." 
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => setIsModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
             BUAT AGEN AI BARU
           </Button>
-        </div>        {/* Agents Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {aiAgents.map((agent) => (
-            <Card
-              key={agent.id}
-              className="p-6 hover:shadow-lg transition-shadow"
-            >
-              <CardContent className="p-0">
-                {/* Header with Avatar and Actions */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 bg-green-100">
-                      <AvatarFallback className="text-green-600 font-semibold">
-                        {agent.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-bold text-lg">{agent.name}</h3>
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-800 text-xs"
-                      >
-                        Customer Service AI
-                      </Badge>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <span className="ml-2 text-gray-600">Memuat agen AI...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Gagal memuat agen AI</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button onClick={fetchAgents} variant="outline">
+                Coba Lagi
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && filteredAgents.length === 0 && (
+          <div className="text-center py-12">
+            <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Settings className="h-12 w-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchQuery ? 'Tidak ada agen yang ditemukan' : 'Belum ada agen AI'}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchQuery 
+                ? 'Coba kata kunci pencarian yang berbeda'
+                : 'Mulai dengan membuat agen AI pertama Anda untuk mengotomatiskan layanan pelanggan'
+              }
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setIsModalOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Buat Agen AI Pertama
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Agents Grid */}
+        {!loading && !error && filteredAgents.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredAgents.map((agent) => (
+              <Card
+                key={agent.id}
+                className="p-6 hover:shadow-lg transition-shadow"
+              >
+                <CardContent className="p-0">
+                  {/* Header with Avatar and Actions */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12 bg-green-100">
+                        <AvatarFallback className="text-green-600 font-semibold">
+                          {getAgentInitials(agent.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-bold text-lg">{agent.name}</h3>
+                        <Badge
+                          variant={agent.is_active ? "default" : "secondary"}
+                          className={`text-xs ${
+                            agent.is_active 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {agent.role?.name || 'Unknown Role'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Settings className="h-4 w-4 text-gray-400" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Trash2 className="h-4 w-4 text-gray-400" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Settings className="h-4 w-4 text-gray-400" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4 text-gray-400" />
-                    </Button>
+
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mb-4">
+                    {agent.role?.description || 'AI agent for automated tasks'}
+                  </p>
+
+                  {/* Status */}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Created: {formatDate(agent.created_at)}</span>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        agent.is_active ? "text-green-600" : "text-gray-500"
+                      }`}
+                    >
+                      {agent.is_active ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
-                </div>
-
-                {/* Description */}
-                <p className="text-gray-600 text-sm mb-4">
-                  AI agent for customer support
-                </p>
-
-                {/* Created Date */}
-                <div className="text-xs text-gray-500">
-                  Created: 19/06/2025
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Modal */}
         <CreateAgentModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={handleCreateAgent}
+          onSuccess={handleAgentCreated}
         />
       </div>
     </MainLayout>

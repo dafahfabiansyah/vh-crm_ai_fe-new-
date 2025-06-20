@@ -172,3 +172,39 @@ export interface PricingPlan {
   popular?: boolean;
 }
 // billing types end
+
+// AI Agents types
+export interface AgentRole {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIAgent {
+  id: string;
+  name: string;
+  role_id: string;
+  is_active: boolean;
+  role: AgentRole;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentsResponse {
+  data: AIAgent[];
+  meta: {
+    limit: number;
+    offset: number;
+    count: number;
+  };
+}
+
+export interface CreateAgentRequest {
+  name: string;
+  role_id: string;
+  is_active?: boolean;
+}
+
+// AI Agents types end
