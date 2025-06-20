@@ -1,0 +1,174 @@
+// Export API types
+export * from './types/api';
+
+// register type 
+export interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  businessName?: string; 
+  phoneNumber?: string; 
+  confirmPassword: string;
+  acceptTerms: boolean;
+}
+
+export interface FormErrors {
+  username?: string;
+  email?: string;
+  password?: string;
+  businessName?: string;
+  phoneNumber?: string;
+  confirmPassword?: string;
+  acceptTerms?: string;
+  general?: string;
+}
+
+export interface PasswordStrength {
+  score: number;
+  feedback: string[];
+}
+// register type end
+
+// login type
+export interface LoginFormData {
+  email: string
+  password: string
+}
+
+export interface FormErrors {
+  email?: string
+  password?: string
+  general?: string
+}
+// login type end
+
+// dashboard conversation types
+export interface ChatSession {
+  id: string
+  customerName: string
+  lastMessage: string
+  timestamp: string
+  status: "active" | "pending" | "resolved"
+  agent: string
+  isOnline: boolean
+}
+
+export interface Message {
+  id: string
+  content: string
+  sender: "customer" | "agent" | "system"
+  timestamp: string
+  isSystem: boolean
+}
+
+export interface ChatInfo {
+  customerName: string
+  customerId: string
+  agent: string
+  status: string
+  labels: string[]
+  handledBy: string
+  collaborators: string[]
+  notes: string
+  assignedBy: string
+  resolvedBy: string
+  aiHandoffAt: string
+  assignedAt: string
+  createdAt: string
+  resolvedAt: string
+  openUntil: string
+}
+// dashboard conversation types end
+
+// chat information types
+export interface ChatInformationProps {
+    chatInfo: ChatInfo
+}
+// chat information types end
+
+// chat history list types
+export interface ChatHistoryListProps {
+  chatSessions: ChatSession[]
+  selectedChatId: string | null
+  onSelectChat: (chatId: string) => void
+  searchQuery: string
+  onSearchChange: (query: string) => void
+}
+// chat history list types end
+
+// chat conversation types
+export interface ChatConversationProps {
+  messages: Message[]
+  selectedChat?: ChatSession | null
+}
+// chat conversation types end
+
+//navigation sidebar types
+export interface NavigationItem {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  href?: string
+  badge?: string | number
+  children?: NavigationItem[]
+}
+// navigation sidebar types end
+
+// topbar types
+
+export interface TopbarProps {
+  user?: {
+    name: string
+    email: string
+    plan: string
+    avatar?: string
+  }
+}
+// topbar types end
+
+// main layout types
+
+export interface MainLayoutProps {
+  children: React.ReactNode
+}
+
+export interface MainLayoutProps {
+  children: React.ReactNode
+}
+// main layout types end
+
+// connected platforms types
+export interface Platform {
+  id: string;
+  name: string;
+  type: "whatsapp" | "instagram" | "facebook" | "email" | "website";
+  phone?: string;
+  description?: string;
+  isActive: boolean;
+  aiAgent: string;
+  teams: string[];
+  humanAgent: string;
+  distributionMethod: string;
+  csatEnabled: boolean;
+}
+// connected platforms types end
+
+// billing types
+export interface PricingFeature {
+  text: string;
+  included: boolean;
+}
+
+export interface PricingPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  period: string;
+  badge?: string;
+  badgeColor?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  features: PricingFeature[];
+  popular?: boolean;
+}
+// billing types end

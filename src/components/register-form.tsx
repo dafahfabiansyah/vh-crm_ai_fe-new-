@@ -1,8 +1,10 @@
 "use client";
 
 import type React from "react";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { registerUser, clearError } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,42 +18,40 @@ import {
   Lock,
   AlertCircle,
   CheckCircle,
+  Building,
+  Phone,
 } from "lucide-react";
-
-interface RegisterFormData {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  acceptTerms: boolean;
-}
-
-interface FormErrors {
-  username?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  acceptTerms?: string;
-  general?: string;
-}
-
-interface PasswordStrength {
-  score: number;
-  feedback: string[];
-}
+import type { RegisterFormData, FormErrors, PasswordStrength } from "@/types";
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { isLoading, error: authError, isAuthenticated } = useAppSelector((state) => state.auth);
+  
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    businessName: "",
+    phoneNumber: "",
     acceptTerms: false,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Clear auth error when component mounts
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  // Redirect to dashboard if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const checkPasswordStrength = (password: string): PasswordStrength => {
     const feedback: string[] = [];
@@ -101,13 +101,26 @@ export default function RegisterForm() {
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       newErrors.username =
         "Username can only contain letters, numbers, and underscores";
-    }
-
-    // Email validation
+    } // Email validation
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
+    }
+
+    // Business name validation (optional)
+    if (formData.businessName && formData.businessName.length < 2) {
+      newErrors.businessName = "Business name must be at least 2 characters";
+    }
+
+    // Phone number validation (optional)
+    if (
+      formData.phoneNumber &&
+      !/^[\+]?[1-9][\d]{0,15}$/.test(
+        formData.phoneNumber.replace(/[\s\-\(\)]/g, "")
+      )
+    ) {
+      newErrors.phoneNumber = "Please enter a valid phone number";
     }
 
     // Password validation
@@ -134,32 +147,38 @@ export default function RegisterForm() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  };  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    // Clear any existing errors
     setErrors({});
+    dispatch(clearError());
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Create the request object according to API specification
+      const registerData = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.username,
+        business_name: formData.businessName || "",
+        phone_number: formData.phoneNumber || "",
+      };
 
-      // Simulate registration logic here
-      console.log("Registration attempt:", formData);
-
-      // For demo purposes, show success
-      alert(
-        "Registration successful! Please check your email to verify your account."
-      );
+      // Dispatch register action
+      const result = await dispatch(registerUser(registerData));
+      
+      if (registerUser.fulfilled.match(result)) {
+        // Registration successful, user will be redirected by useEffect
+        console.log("Registration successful:", result.payload);
+      } else {
+        // Registration failed, error will be shown from authError
+        console.error("Registration failed:", result.payload);
+      }
     } catch (error) {
       console.error("Registration error:", error);
-      setErrors({ general: "Registration failed. Please try again." });
-    } finally {
-      setIsLoading(false);
+      setErrors({ general: "An unexpected error occurred. Please try again." });
     }
   };
 
@@ -187,16 +206,14 @@ export default function RegisterForm() {
     "bg-green-500",
   ];
   const strengthLabels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {errors.general && (
+      {(errors.general || authError) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general}</AlertDescription>
+          <AlertDescription>{errors.general || authError}</AlertDescription>
         </Alert>
       )}
-
       <div className="space-y-2">
         <Label htmlFor="username" className="text-foreground">
           Username
@@ -221,8 +238,7 @@ export default function RegisterForm() {
             {errors.username}
           </p>
         )}
-      </div>
-
+      </div>{" "}
       <div className="space-y-2">
         <Label htmlFor="email" className="text-foreground">
           Email
@@ -248,7 +264,60 @@ export default function RegisterForm() {
           </p>
         )}
       </div>
-
+      <div className="space-y-2">
+        <Label htmlFor="businessName" className="text-foreground">
+          Business Name
+        </Label>
+        <div className="relative">
+          <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="businessName"
+            type="text"
+            placeholder="Enter your business name"
+            value={formData.businessName}
+            onChange={handleInputChange("businessName")}
+            className={`pl-10 ${
+              errors.businessName ? "border-destructive" : "border-border"
+            }`}
+            disabled={isLoading}
+            aria-describedby={
+              errors.businessName ? "business-name-error" : undefined
+            }
+          />
+        </div>
+        {errors.businessName && (
+          <p id="business-name-error" className="text-sm text-destructive">
+            {errors.businessName}
+          </p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phoneNumber" className="text-foreground">
+          Phone Number
+        </Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="phoneNumber"
+            type="tel"
+            placeholder="Enter your phone number"
+            value={formData.phoneNumber}
+            onChange={handleInputChange("phoneNumber")}
+            className={`pl-10 ${
+              errors.phoneNumber ? "border-destructive" : "border-border"
+            }`}
+            disabled={isLoading}
+            aria-describedby={
+              errors.phoneNumber ? "phone-number-error" : undefined
+            }
+          />
+        </div>
+        {errors.phoneNumber && (
+          <p id="phone-number-error" className="text-sm text-destructive">
+            {errors.phoneNumber}
+          </p>
+        )}
+      </div>
       <div className="space-y-2">
         <Label htmlFor="password" className="text-foreground">
           Password
@@ -317,7 +386,6 @@ export default function RegisterForm() {
           </p>
         )}
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="confirmPassword" className="text-foreground">
           Confirm Password
@@ -361,7 +429,6 @@ export default function RegisterForm() {
           </p>
         )}
       </div>
-
       <div className="flex items-center space-x-2">
         <Checkbox
           id="terms"
@@ -400,7 +467,6 @@ export default function RegisterForm() {
           {errors.acceptTerms}
         </p>
       )}
-
       <Button
         type="submit"
         disabled={isLoading}

@@ -3,24 +3,27 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react"
+import type { LoginFormData, FormErrors } from "@/types"
 
-interface LoginFormData {
-  email: string
-  password: string
-}
+// interface LoginFormData {
+//   email: string
+//   password: string
+// }
 
-interface FormErrors {
-  email?: string
-  password?: string
-  general?: string
-}
+// interface FormErrors {
+//   email?: string
+//   password?: string
+//   general?: string
+// }
 
 export default function LoginForm() {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -50,7 +53,6 @@ export default function LoginForm() {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -66,8 +68,8 @@ export default function LoginForm() {
       // Simulate login logic here
       console.log("Login attempt:", formData)
 
-      // For demo purposes, show success
-      alert("Login successful!")
+      // For demo purposes, show success and navigate to dashboard
+      navigate("/dashboard")
     } catch (error) {
         console.error("Login failed:", error)
       setErrors({ general: "Invalid email or password. Please try again." })
