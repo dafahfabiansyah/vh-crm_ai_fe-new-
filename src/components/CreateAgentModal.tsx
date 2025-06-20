@@ -41,10 +41,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       console.error('Error fetching roles:', err)
       // Set default roles if API fails
       setRoles([
-        { id: "customer-service", name: "Customer Service AI", description: "AI agent for customer support", created_at: "", updated_at: "" },
-        { id: "sales", name: "Sales AI", description: "AI agent for sales operations", created_at: "", updated_at: "" },
-      ])
-    } finally {
+        { id: "Customer Service AI", name: "Customer Service AI", description: "AI agent for customer support", created_at: "", updated_at: "" },
+        { id: "Sales AI", name: "Sales AI", description: "AI agent for sales operations", created_at: "", updated_at: "" },
+      ])    } finally {
       setRolesLoading(false)
     }
   }
@@ -57,11 +56,17 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       setLoading(true)
       setError(null)
       
-      await AgentsService.createAgent({
+      // Find the selected role to get the role name
+      const selectedRole = roles.find(role => role.id === selectedRoleId)
+      const roleName = selectedRole?.name || selectedRoleId
+      
+      const payload = {
         name: agentName,
-        role_id: selectedRoleId,
+        role_name: roleName, // Send role name instead of role id
         is_active: true
-      })
+      }
+      
+      await AgentsService.createAgent(payload)
       
       // Reset form
       setAgentName("")
@@ -71,9 +76,10 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       // Close modal and refresh agents list
       onClose()
       onSuccess()
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string }
       console.error('Error creating agent:', err)
-      setError(err.message || 'Failed to create agent')
+      setError(error.message || 'Failed to create agent')
     } finally {
       setLoading(false)
     }

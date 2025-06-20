@@ -126,20 +126,21 @@ export class AgentsService {
       };
     }
   }
-
   /**
    * Get available agent roles/templates
    */
   static async getAgentRoles(): Promise<AgentRole[]> {
     try {
-      const response = await axiosInstance.get<ApiSuccessResponse<AgentRole[]>>('/tenant/agent-roles');
-      return response.data.data;
-    } catch (error: any) {
-      if (error.response?.data) {
+      const response = await axiosInstance.get<AgentRole[]>('/tenant/agents/roles');
+      // Response is direct array, not wrapped in ApiSuccessResponse
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string; errors?: unknown }; status?: number } };
+      if (err.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch agent roles',
-          status: error.response.status,
-          errors: error.response.data.errors,
+          message: err.response.data.message || 'Failed to fetch agent roles',
+          status: err.response.status,
+          errors: err.response.data.errors,
         };
       }
       throw {

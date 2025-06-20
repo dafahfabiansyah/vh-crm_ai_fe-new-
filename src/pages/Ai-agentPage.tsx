@@ -25,7 +25,6 @@ export default function AIAgentsPage() {
       setLoading(true);
       setError(null);
       const response = await AgentsService.getAgents();
-      console.log('Agents response:', response);
       // Check if response has data property or is direct array
       const agentsData = response?.data || response || [];
       setAgents(Array.isArray(agentsData) ? agentsData : []);    } catch (err: unknown) {
