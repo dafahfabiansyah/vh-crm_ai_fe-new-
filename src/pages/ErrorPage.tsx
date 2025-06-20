@@ -3,8 +3,9 @@
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, RefreshCw, Home, MessageCircle } from "lucide-react"
+import { AlertTriangle, RefreshCw, Home, MessageCircle, Code } from "lucide-react"
 import { Link } from "react-router";
+import { isVerboseLogging } from "@/config/debug"
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -30,6 +31,36 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
               <p className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded">Error ID: {error.digest}</p>
             )}
           </div>
+
+          {/* Debug Information */}
+          {isVerboseLogging() && (
+            <Card className="bg-muted/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  Debug Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Error Message:</p>
+                    <p className="text-xs font-mono bg-destructive/10 p-2 rounded text-destructive">
+                      {error.message}
+                    </p>
+                  </div>
+                  {error.stack && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Stack Trace:</p>
+                      <pre className="text-xs font-mono bg-muted p-2 rounded overflow-auto max-h-32 text-muted-foreground">
+                        {error.stack}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-3">
             <Button onClick={reset} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">

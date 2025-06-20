@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { shouldAutoLogout, debugWarn } from '@/config/debug';
 
 // Base axios instance configuration
 const axiosInstance = axios.create({
@@ -30,11 +31,18 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth data on unauthorized response
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
-      // Redirect to login if needed
-      window.location.href = '/login';
+      debugWarn('401 Unauthorized error detected:', error.response);
+      
+      // Only auto-logout if not in debug mode
+      if (shouldAutoLogout()) {
+        // Clear auth data on unauthorized response
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        // Redirect to login if needed
+        window.location.href = '/auth/login';
+      } else {
+        debugWarn('Auto-logout disabled for debugging');
+      }
     }
     return Promise.reject(error);
   }

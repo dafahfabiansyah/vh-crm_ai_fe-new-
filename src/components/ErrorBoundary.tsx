@@ -1,5 +1,6 @@
 import React from 'react';
 import ErrorPage from '@/pages/ErrorPage';
+import { debugError, isVerboseLogging } from '@/config/debug';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -22,11 +23,26 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // You can log the error to an error reporting service here
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    // Enhanced error logging for debugging
+    debugError('Error caught by ErrorBoundary:', {
+      error: error.message,
+      stack: error.stack,
+      errorInfo,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Log to console for development
+    if (isVerboseLogging()) {
+      console.group('🔴 ErrorBoundary - Component Error');
+      console.error('Error:', error);
+      console.error('Error Info:', errorInfo);
+      console.error('Component Stack:', errorInfo.componentStack);
+      console.groupEnd();
+    }
   }
 
   reset = () => {
+    debugError('ErrorBoundary reset triggered');
     this.setState({ hasError: false, error: undefined });
   };
 
