@@ -5,7 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Plus, Settings, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Settings,
+  Trash2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
@@ -27,10 +34,11 @@ export default function AIAgentsPage() {
       const response = await AgentsService.getAgents();
       // Check if response has data property or is direct array
       const agentsData = response?.data || response || [];
-      setAgents(Array.isArray(agentsData) ? agentsData : []);    } catch (err: unknown) {
+      setAgents(Array.isArray(agentsData) ? agentsData : []);
+    } catch (err: unknown) {
       const error = err as { message?: string };
-      console.error('Error fetching agents:', err);
-      setError(error.message || 'Failed to load AI agents');
+      console.error("Error fetching agents:", err);
+      setError(error.message || "Failed to load AI agents");
       setAgents([]); // Ensure agents is always an array
     } finally {
       setLoading(false);
@@ -42,20 +50,49 @@ export default function AIAgentsPage() {
     fetchAgents();
   };
 
-  const filteredAgents = Array.isArray(agents) ? agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const handleDeleteAgent = async (agent: AIAgent) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Update agent to set is_active: false (soft delete)
+      await AgentsService.updateAgent(agent.id, {
+        name: agent.name,
+        is_active: false,
+      });
+
+      // Refresh agents list
+      fetchAgents();
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      console.error("Error deleting agent:", err);
+      setError(error.message || "Failed to delete agent");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredAgents = Array.isArray(agents)
+    ? agents.filter((agent) =>
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
   const getAgentInitials = (name: string) => {
-    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
   return (
     <MainLayout>
@@ -73,8 +110,8 @@ export default function AIAgentsPage() {
         <div className="flex items-center justify-between mb-6 gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input 
-              placeholder="Cari agen..." 
+            <Input
+              placeholder="Cari agen..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -102,7 +139,9 @@ export default function AIAgentsPage() {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Gagal memuat agen AI</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Gagal memuat agen AI
+              </h3>
               <p className="text-gray-600 mb-4">{error}</p>
               <Button onClick={fetchAgents} variant="outline">
                 Coba Lagi
@@ -118,13 +157,14 @@ export default function AIAgentsPage() {
               <Settings className="h-12 w-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchQuery ? 'Tidak ada agen yang ditemukan' : 'Belum ada agen AI'}
+              {searchQuery
+                ? "Tidak ada agen yang ditemukan"
+                : "Belum ada agen AI"}
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchQuery 
-                ? 'Coba kata kunci pencarian yang berbeda'
-                : 'Mulai dengan membuat agen AI pertama Anda untuk mengotomatiskan layanan pelanggan'
-              }
+              {searchQuery
+                ? "Coba kata kunci pencarian yang berbeda"
+                : "Mulai dengan membuat agen AI pertama Anda untuk mengotomatiskan layanan pelanggan"}
             </p>
             {!searchQuery && (
               <Button onClick={() => setIsModalOpen(true)}>
@@ -157,35 +197,42 @@ export default function AIAgentsPage() {
                         <Badge
                           variant={agent.is_active ? "default" : "secondary"}
                           className={`text-xs ${
-                            agent.is_active 
-                              ? "bg-green-100 text-green-800" 
+                            agent.is_active
+                              ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          {agent.role?.name || 'Unknown Role'}
+                          {agent.role?.name || "Unknown Role"}
                         </Badge>
                       </div>
                     </div>
                     <div className="flex gap-1">
+                      {" "}
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Settings className="h-4 w-4 text-gray-400" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Trash2 className="h-4 w-4 text-gray-400" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleDeleteAgent(agent)}
+                        disabled={loading}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
                   </div>
 
                   {/* Description */}
                   <p className="text-gray-600 text-sm mb-4">
-                    {agent.role?.description || 'AI agent for automated tasks'}
+                    {agent.role?.description || "AI agent for automated tasks"}
                   </p>
 
                   {/* Status */}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Created: {formatDate(agent.created_at)}</span>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs ${
                         agent.is_active ? "text-green-600" : "text-gray-500"
                       }`}
