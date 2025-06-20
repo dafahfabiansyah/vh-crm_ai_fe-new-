@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate, useParams } from "react-router";
 import { ProtectedRoute, PublicRoute } from "@/components/route";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -11,7 +11,14 @@ import ConnectedPlatformsPage from "./pages/ConnectPlatforms";
 import ContactsPage from "./pages/ContactPage";
 import BillingPage from "./pages/BillingPage";
 import CreatePipelinePage from "./pages/CreatePipeline";
+import AIAgentDetailPage from "./pages/AiDetailPage";
 // import DashboardPage from "@/pages/Dashboard";
+
+// Wrapper component for AIAgentDetailPage to handle params
+function AIAgentDetailWrapper() {
+  const { id } = useParams<{ id: string }>();
+  return <AIAgentDetailPage agentId={id || ""} />;
+}
 
 export default function App() {
   return (
@@ -53,6 +60,13 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AIAgentsPage />
+            </ProtectedRoute>
+          } 
+        />        <Route 
+          path="/ai-agents/:id" 
+          element={
+            <ProtectedRoute>
+              <AIAgentDetailWrapper />
             </ProtectedRoute>
           } 
         />

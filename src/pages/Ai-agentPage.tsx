@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import MainLayout from "@/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
 
 export default function AIAgentsPage() {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [agents, setAgents] = useState<AIAgent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,6 @@ export default function AIAgentsPage() {
     // Refresh the agents list after successful creation
     fetchAgents();
   };
-
   const handleDeleteAgent = async (agent: AIAgent) => {
     try {
       setLoading(true);
@@ -70,6 +71,10 @@ export default function AIAgentsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAgentClick = (agentId: string) => {
+    navigate(`/ai-agents/${agentId}`);
   };
 
   const filteredAgents = Array.isArray(agents)
@@ -177,11 +182,11 @@ export default function AIAgentsPage() {
 
         {/* Agents Grid */}
         {!loading && !error && filteredAgents.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredAgents.map((agent) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">            {filteredAgents.map((agent) => (
               <Card
                 key={agent.id}
-                className="p-6 hover:shadow-lg transition-shadow"
+                className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleAgentClick(agent.id)}
               >
                 <CardContent className="p-0">
                   {/* Header with Avatar and Actions */}
@@ -205,17 +210,27 @@ export default function AIAgentsPage() {
                           {agent.role?.name || "Unknown Role"}
                         </Badge>
                       </div>
-                    </div>
-                    <div className="flex gap-1">
+                    </div>                    <div className="flex gap-1">
                       {" "}
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Handle settings click here if needed
+                        }}
+                      >
                         <Settings className="h-4 w-4 text-gray-400" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0"
-                        onClick={() => handleDeleteAgent(agent)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAgent(agent);
+                        }}
                         disabled={loading}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
