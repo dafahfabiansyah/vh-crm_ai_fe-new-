@@ -2,13 +2,11 @@
  * Debug utilities untuk localStorage dan authentication
  */
 
-export const DebugAuth = {
-  /**
+export const DebugAuth = {  /**
    * Check localStorage contents
    */
   checkLocalStorage() {
     console.log('=== LocalStorage Debug ===');
-    console.log('auth_token:', localStorage.getItem('auth_token'));
     console.log('user_data:', localStorage.getItem('user_data'));
     
     try {
@@ -26,7 +24,6 @@ export const DebugAuth = {
    * Clear localStorage
    */
   clearLocalStorage() {
-    localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
     console.log('LocalStorage cleared');
   },
@@ -35,15 +32,14 @@ export const DebugAuth = {
    * Manually set test data
    */
   setTestAuth() {
-    const testToken = 'test-token-123';
     const testUser = {
       id: '1',
       email: 'test@example.com',
       name: 'Test User',
-      business_name: 'Test Business'
+      business_name: 'Test Business',
+      access_token: 'test-token-123'
     };
 
-    localStorage.setItem('auth_token', testToken);
     localStorage.setItem('user_data', JSON.stringify(testUser));
     console.log('Test auth data set');
     this.checkLocalStorage();

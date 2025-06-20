@@ -20,11 +20,8 @@ export class AuthService {
       >("/auth/register", userData);
 
       // Extract actual data from wrapper
-      const actualData = response.data.data;
-
-      // Store token and user data if provided
+      const actualData = response.data.data;      // Store token and user data if provided
       if (actualData.token) {
-        // localStorage.setItem("auth_token", actualData.token);
         localStorage.setItem("user_data", JSON.stringify(actualData));
       } else {
         // Some backends might not return token on register, just store user data
@@ -57,11 +54,8 @@ export class AuthService {
       >("/auth/login", credentials);
 
       // Extract actual data from wrapper
-      const actualData = response.data.data;
-
-      // Store token and user data
+      const actualData = response.data.data;      // Store token and user data
       if (actualData.token) {
-        // localStorage.setItem("auth_token", actualData.token);
         localStorage.setItem("user_data", JSON.stringify(actualData));
       }
 
@@ -80,12 +74,10 @@ export class AuthService {
       };
     }
   }
-
   /**
    * Logout user
    */
   static logout(): void {
-    // localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
   }
   /**

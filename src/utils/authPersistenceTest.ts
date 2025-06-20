@@ -8,16 +8,13 @@
 export const AuthPersistenceTest = {
   /**
    * Test 1: Basic localStorage operations
-   */
-  testLocalStorage() {
+   */  testLocalStorage() {
     console.log('=== Test 1: localStorage Operations ===');
     
     // Clear first
-    localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
     
     // Set test data
-    const testToken = 'test-token-' + Date.now();
     const testUser = {
       id: '1',
       email: 'test@example.com',
@@ -25,21 +22,14 @@ export const AuthPersistenceTest = {
       business_name: 'Test Business'
     };
     
-    // localStorage.setItem('auth_token', testToken);
     localStorage.setItem('user_data', JSON.stringify(testUser));
     
     // Check retrieval
-    const retrievedToken = localStorage.getItem('auth_token');
     const retrievedUser = localStorage.getItem('user_data');
-    
-    console.log('✅ Set token:', testToken);
-    console.log('✅ Retrieved token:', retrievedToken);
-    console.log('✅ Tokens match:', testToken === retrievedToken);
-    
-    console.log('✅ Set user:', testUser);
+      console.log('✅ Set user:', testUser);
     console.log('✅ Retrieved user:', JSON.parse(retrievedUser || '{}'));
     
-    return testToken === retrievedToken;
+    return !!retrievedUser;
   },
 
   /**
