@@ -9,7 +9,7 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   isAuthenticated: false,
-  isInitialized: false, // Start as not initialized
+  isInitialized: false,
 };
 
 // Async thunks

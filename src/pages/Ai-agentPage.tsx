@@ -20,16 +20,19 @@ export default function AIAgentsPage() {
   useEffect(() => {
     fetchAgents();
   }, []);
-
   const fetchAgents = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await AgentsService.getAgents();
-      setAgents(response.data);
-    } catch (err: any) {
+      console.log('Agents response:', response);
+      // Check if response has data property or is direct array
+      const agentsData = response?.data || response || [];
+      setAgents(Array.isArray(agentsData) ? agentsData : []);    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error('Error fetching agents:', err);
-      setError(err.message || 'Failed to load AI agents');
+      setError(error.message || 'Failed to load AI agents');
+      setAgents([]); // Ensure agents is always an array
     } finally {
       setLoading(false);
     }
@@ -40,9 +43,9 @@ export default function AIAgentsPage() {
     fetchAgents();
   };
 
-  const filteredAgents = agents.filter(agent =>
+  const filteredAgents = Array.isArray(agents) ? agents.filter(agent =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {

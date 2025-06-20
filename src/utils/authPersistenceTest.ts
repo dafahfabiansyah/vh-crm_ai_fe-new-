@@ -25,7 +25,7 @@ export const AuthPersistenceTest = {
       business_name: 'Test Business'
     };
     
-    localStorage.setItem('auth_token', testToken);
+    // localStorage.setItem('auth_token', testToken);
     localStorage.setItem('user_data', JSON.stringify(testUser));
     
     // Check retrieval
