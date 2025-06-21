@@ -9,14 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { HumanAgentsService, type HumanAgent } from "@/services/humanAgentsService"
 import CreateHumanAgentModal from "@/components/CreateHumanAgentModal"
+import EditHumanAgentModal from "@/components/EditHumanAgentModal"
 
 export default function HumanAgentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedAgent, setSelectedAgent] = useState<HumanAgent | null>(null)
   const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [roleFilter, setRoleFilter] = useState("all-roles")  // Fetch human agents from API
+  const [roleFilter, setRoleFilter] = useState("all-roles")// Fetch human agents from API
   const fetchHumanAgents = async () => {
     try {
       setLoading(true)
@@ -34,7 +37,6 @@ export default function HumanAgentsPage() {
   useEffect(() => {
     fetchHumanAgents()
   }, [])
-
   const handleDeleteAgent = async (id: string) => {
     try {
       await HumanAgentsService.deleteHumanAgent(id)
@@ -44,6 +46,11 @@ export default function HumanAgentsPage() {
       console.error("Error deleting agent:", err)
       // You might want to show an error toast here
     }
+  }
+
+  const handleEditAgent = (agent: HumanAgent) => {
+    setSelectedAgent(agent)
+    setIsEditModalOpen(true)
   }
   // Filter agents based on search term and role
   const filteredAgents = humanAgents.filter(agent => {
@@ -160,10 +167,14 @@ export default function HumanAgentsPage() {
                                     <div className={`w-2 h-2 rounded-full ${agent.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                     <span className="text-sm">{agent.is_active ? 'Active' : 'Inactive'}</span>
                                   </div>
-                                </td>
-                                <td className="p-4">
+                                </td>                                <td className="p-4">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => handleEditAgent(agent)}
+                                    >
                                       <Edit className="h-4 w-4" />
                                     </Button>
                                     <Button 
@@ -195,6 +206,16 @@ export default function HumanAgentsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAgentCreated={fetchHumanAgents}
+      />
+
+      <EditHumanAgentModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedAgent(null)
+        }}
+        agent={selectedAgent}
+        onAgentUpdated={fetchHumanAgents}
       />
     </MainLayout>
   )

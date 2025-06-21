@@ -20,11 +20,13 @@ export interface CreateHumanAgentRequest {
   is_active: boolean;
 }
 
-export interface HumanAgentsResponse {
-  agents: HumanAgent[];
-  total: number;
-  page: number;
-  limit: number;
+export interface UpdateHumanAgentRequest {
+  name?: string;
+  user_email?: string;
+  password?: string;
+  role?: string;
+  department?: string;
+  is_active?: boolean;
 }
 
 export class HumanAgentsService {
@@ -93,10 +95,10 @@ export class HumanAgentsService {
       };
     }
   }
-
   /**
    * Update a human agent
-   */  static async updateHumanAgent(id: string, agentData: Partial<CreateHumanAgentRequest>): Promise<HumanAgent> {
+   */
+  static async updateHumanAgent(id: string, agentData: UpdateHumanAgentRequest): Promise<HumanAgent> {
     try {
       const response = await axiosInstance.put<ApiSuccessResponse<HumanAgent>>(`/tenant/human-agents/${id}`, agentData);
       return response.data.data || response.data;

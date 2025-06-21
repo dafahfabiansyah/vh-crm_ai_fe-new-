@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,16 +10,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
-import { HumanAgentsService, type CreateHumanAgentRequest } from "@/services/humanAgentsService";
+import { HumanAgentsService, type HumanAgent, type UpdateHumanAgentRequest } from "@/services/humanAgentsService";
 
-interface CreateHumanAgentModalProps {
+interface EditHumanAgentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateAgent?: (agentData: HumanAgentFormData) => void; // Optional for backward compatibility
-  onAgentCreated?: () => void; // Callback to refresh the list
+  agent: HumanAgent | null;
+  onAgentUpdated?: () => void; // Callback to refresh the list
 }
 
-interface HumanAgentFormData {
+interface EditHumanAgentFormData {
   name: string;
   email: string;
   password: string;
@@ -28,12 +28,13 @@ interface HumanAgentFormData {
   active: boolean;
 }
 
-export default function CreateHumanAgentModal({
+export default function EditHumanAgentModal({
   isOpen,
   onClose,
-  onAgentCreated,
-}: CreateHumanAgentModalProps) {
-  const [formData, setFormData] = useState<HumanAgentFormData>({
+  agent,
+  onAgentUpdated,
+}: EditHumanAgentModalProps) {
+  const [formData, setFormData] = useState<EditHumanAgentFormData>({
     name: "",
     email: "",
     password: "",
@@ -45,52 +46,62 @@ export default function CreateHumanAgentModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Populate form when agent data is available
+  useEffect(() => {
+    if (agent) {
+      setFormData({
+        name: agent.name || "",
+        email: agent.user_email || "",
+        password: "", // Don't populate password for security
+        role: agent.role || "agent",
+        department: agent.department || "",
+        active: agent.is_active !== undefined ? agent.is_active : true,
+      });
+    }
+  }, [agent]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agent) return;
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // Transform form data to API format
-      const apiData: CreateHumanAgentRequest = {
+      // Transform form data to API format (only include fields that have values)
+      const apiData: UpdateHumanAgentRequest = {
         name: formData.name,
         user_email: formData.email,
-        password: formData.password,
         role: formData.role,
         department: formData.department,
         is_active: formData.active,
       };
 
+      // Only include password if it's provided
+      if (formData.password.trim()) {
+        apiData.password = formData.password;
+      }
+
       // Call the API
-      await HumanAgentsService.createHumanAgent(apiData);
-      
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        role: "agent",
-        department: "",
-        active: true,
-      });
+      await HumanAgentsService.updateHumanAgent(agent.id, apiData);
       
       // Close modal and refresh list
       onClose();
-      if (onAgentCreated) {
-        onAgentCreated();
+      if (onAgentUpdated) {
+        onAgentUpdated();
       }
       
-      console.log("Agent created successfully");
+      console.log("Agent updated successfully");
     } catch (err: any) {
-      setError(err.message || "Failed to create agent");
-      console.error("Error creating agent:", err);
+      setError(err.message || "Failed to update agent");
+      console.error("Error updating agent:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (
-    field: keyof HumanAgentFormData,
+    field: keyof EditHumanAgentFormData,
     value: string | boolean
   ) => {
     setFormData((prev) => ({
@@ -99,13 +110,14 @@ export default function CreateHumanAgentModal({
     }));
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !agent) return null;
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 relative z-10">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-semibold">Create Agent</h2>
+          <h2 className="text-lg font-semibold">Edit Agent</h2>
           <Button
             variant="ghost"
             size="sm"
@@ -114,7 +126,9 @@ export default function CreateHumanAgentModal({
           >
             <X className="h-4 w-4" />
           </Button>
-        </div>        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-600 text-sm">{error}</p>
@@ -151,10 +165,9 @@ export default function CreateHumanAgentModal({
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Password *"
+                placeholder="Password (leave empty to keep current)"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                required
                 disabled={isLoading}
                 className="bg-gray-50 pr-10"
               />
@@ -173,7 +186,9 @@ export default function CreateHumanAgentModal({
                 )}
               </Button>
             </div>
-          </div>          <div className="flex flex-row justify-between space-x-4">
+          </div>
+
+          <div className="flex flex-row justify-between space-x-4">
             <div className="space-y-2">
               <Label htmlFor="role" className="text-sm text-gray-600">
                 Role *
@@ -222,7 +237,23 @@ export default function CreateHumanAgentModal({
                 </SelectContent>
               </Select>
             </div>
-          </div>          <div className="flex justify-end space-x-2 pt-4">
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="active"
+              checked={formData.active}
+              onChange={(e) => handleInputChange("active", e.target.checked)}
+              disabled={isLoading}
+              className="h-4 w-4 text-blue-600"
+            />
+            <Label htmlFor="active" className="text-sm text-gray-600">
+              Active
+            </Label>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -238,7 +269,7 @@ export default function CreateHumanAgentModal({
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading ? "CREATING..." : "CREATE"}
+              {isLoading ? "UPDATING..." : "UPDATE"}
             </Button>
           </div>
         </form>
