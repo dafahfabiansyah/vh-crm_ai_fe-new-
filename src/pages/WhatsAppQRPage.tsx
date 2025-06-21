@@ -1,38 +1,57 @@
-import { useState } from 'react';
-import MainLayout from '@/main-layout';
-import WhatsAppQRCode from '@/components/whatsapp-qr-code';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  MessageSquare, 
+import { useState, useEffect } from "react";
+import MainLayout from "@/main-layout";
+import WhatsAppQRCode from "@/components/whatsapp-qr-code";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  MessageSquare,
   Smartphone,
   ArrowLeft,
-  Settings
-} from 'lucide-react';
-import { useNavigate } from 'react-router';
+  Settings,
+} from "lucide-react";
+import { useNavigate } from "react-router";
+import { useAppSelector } from "@/hooks/redux";
+import {
+  selectWhatsAppConnectionData,
+  selectWhatsAppConnectionStatus,
+  selectWhatsAppError,
+} from "@/store/whatsappSlice";
 
 const WhatsAppQRPage = () => {
-  const navigate = useNavigate();  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const handleDeviceConnected = (deviceId: string) => {
-    setConnectedDevice(deviceId);
-    setConnectionStatus('connected');
+  const navigate = useNavigate();
+  
+  // Get WhatsApp data from Redux store
+  const connectionData = useAppSelector(selectWhatsAppConnectionData);
+  const connectionStatus = useAppSelector(selectWhatsAppConnectionStatus);
+  const reduxError = useAppSelector(selectWhatsAppError);
+  
+  // Local state for backward compatibility
+  const [errorMessage, setErrorMessage] = useState<string | null>(reduxError);
+  
+  // Sync Redux error with local state
+  useEffect(() => {
+    setErrorMessage(reduxError);
+  }, [reduxError]);  const handleDeviceConnected = (deviceId: string) => {
     setErrorMessage(null);
-    console.log('Device connected:', deviceId);
+    console.log("Device connected:", deviceId);
   };
 
   const handleError = (error: string) => {
     setErrorMessage(error);
-    setConnectionStatus('disconnected');
   };
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   return (
@@ -50,7 +69,7 @@ const WhatsAppQRPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
-            
+
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <MessageSquare className="h-8 w-8 text-green-600" />
@@ -60,18 +79,29 @@ const WhatsAppQRPage = () => {
                 Connect your WhatsApp Business account to manage conversations
               </p>
             </div>
-          </div>          {/* Status Banner */}
-          {connectionStatus === 'connected' && connectedDevice && (
+          </div>{" "}          {/* Status Banner */}
+          {connectionStatus === "connected" && connectionData.deviceId && (
             <Alert className="bg-green-50 border-green-200">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                WhatsApp device successfully connected! 
+                WhatsApp device successfully connected!
                 <br />
-                Device ID: <code className="bg-green-100 px-1 rounded text-xs">{connectedDevice}</code>
+                Device ID:{" "}
+                <code className="bg-green-100 px-1 rounded text-xs">
+                  {connectionData.deviceId}
+                </code>
+                {connectionData.phoneNumber && (
+                  <>
+                    <br />
+                    Phone: {" "}
+                    <code className="bg-green-100 px-1 rounded text-xs">
+                      {connectionData.phoneNumber}
+                    </code>
+                  </>
+                )}
               </AlertDescription>
             </Alert>
           )}
-
           {errorMessage && (
             <Alert variant="destructive" className="mt-4">
               <AlertTriangle className="h-4 w-4" />
@@ -83,7 +113,7 @@ const WhatsAppQRPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* QR Code Section */}
           <div className="space-y-6">
-            <WhatsAppQRCode 
+            <WhatsAppQRCode
               onDeviceConnected={handleDeviceConnected}
               onError={handleError}
             />
@@ -102,26 +132,40 @@ const WhatsAppQRPage = () => {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Current Status:</span>
-                  <Badge 
-                    variant={connectionStatus === 'connected' ? 'default' : 'secondary'}
+                  <Badge
+                    variant={
+                      connectionStatus === "connected" ? "default" : "secondary"
+                    }
                     className={
-                      connectionStatus === 'connected' 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : connectionStatus === 'connecting'
-                        ? 'bg-orange-600 hover:bg-orange-700'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                      connectionStatus === "connected"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : connectionStatus === "connecting"
+                        ? "bg-orange-600 hover:bg-orange-700"
+                        : "bg-gray-600 hover:bg-gray-700"
                     }
                   >
-                    {connectionStatus === 'connected' ? 'Connected' : 
-                     connectionStatus === 'connecting' ? 'Connecting...' : 
-                     'Disconnected'}
+                    {connectionStatus === "connected"
+                      ? "Connected"
+                      : connectionStatus === "connecting"
+                      ? "Connecting..."
+                      : "Disconnected"}
                   </Badge>
-                </div>
-                
-                {connectedDevice && (
+                </div>                {connectionData.deviceId && (
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-600">Device ID:</p>
-                    <code className="text-sm font-mono">{connectedDevice}</code>
+                    <code className="text-sm font-mono">{connectionData.deviceId}</code>
+                    {connectionData.phoneNumber && (
+                      <>
+                        <p className="text-xs text-gray-600 mt-2">Phone Number:</p>
+                        <code className="text-sm font-mono">{connectionData.phoneNumber}</code>
+                      </>
+                    )}
+                    {connectionData.deviceName && (
+                      <>
+                        <p className="text-xs text-gray-600 mt-2">Device Name:</p>
+                        <code className="text-sm font-mono">{connectionData.deviceName}</code>
+                      </>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -196,7 +240,7 @@ const WhatsAppQRPage = () => {
             </Card>
 
             {/* Settings Button */}
-            {connectionStatus === 'connected' && (
+            {connectionStatus === "connected" && (
               <Button className="w-full" variant="outline">
                 <Settings className="h-4 w-4 mr-2" />
                 WhatsApp Settings

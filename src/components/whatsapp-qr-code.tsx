@@ -21,16 +21,28 @@ import {
 import whatsappService from "@/services/whatsappService";
 import type { WhatsAppQRCodeProps, WhatsAppQRCodeData } from "@/types";
 import type { WhatsAppStatusResponse } from "@/services/whatsappService";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import {
+  setConnectionData,
+  setSessionId,
+  setDeviceId as setWhatsAppDeviceId,
+  setError as setWhatsAppError,
+  clearError,
+  selectWhatsAppConnectionData,
+} from "@/store/whatsappSlice";
 
 const WhatsAppQRCode = ({
   onDeviceConnected,
   onError,
 }: WhatsAppQRCodeProps) => {
+  const dispatch = useAppDispatch();
+  const connectionData = useAppSelector(selectWhatsAppConnectionData);
+  
   const [qrData, setQrData] = useState<WhatsAppQRCodeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [deviceId, setDeviceId] = useState<string>("");
+  const [deviceId, setDeviceId] = useState<string>(connectionData.deviceId || "");
   const [status, setStatus] = useState<WhatsAppStatusResponse["data"] | null>(
     null
   );
@@ -63,8 +75,7 @@ const WhatsAppQRCode = ({
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-  // Check WhatsApp status
+  };  // Check WhatsApp status
   const checkStatus = useCallback(
     async (device_id: string) => {
       try {
@@ -72,6 +83,15 @@ const WhatsAppQRCode = ({
 
         if (response.success && response.data) {
           setStatus(response.data);
+
+          // Dispatch to Redux store
+          dispatch(setConnectionData({ 
+            statusData: response.data,
+            sessionId: qrData?.session_id 
+          }));
+
+          // Clear any existing errors
+          dispatch(clearError());
 
           // If connected and logged in, notify parent
           if (response.data.is_connected && response.data.is_logged_in) {
@@ -81,10 +101,12 @@ const WhatsAppQRCode = ({
         }
       } catch (err: any) {
         console.error("❌ Status check error:", err);
+        const errorMessage = err.response?.data?.message || err.message || "Status check failed";
+        dispatch(setWhatsAppError(errorMessage));
         // Don't show error for status checks, just log it
       }
     },
-    [onDeviceConnected]
+    [onDeviceConnected, dispatch, qrData?.session_id]
   );
   // Remove automatic polling - only check status manually
   // useEffect(() => {
@@ -104,11 +126,14 @@ const WhatsAppQRCode = ({
   const fetchQRCode = useCallback(async () => {
     setLoading(true);
     setError(null);
+    dispatch(clearError());
 
     try {
       // Generate or use existing device ID
       const currentDeviceId = deviceId || generateDeviceId();
       setDeviceId(currentDeviceId);
+        // Update device ID in Redux
+      dispatch(setWhatsAppDeviceId(currentDeviceId));
 
       console.log("🔄 Requesting QR code with device ID:", currentDeviceId);
 
@@ -119,6 +144,10 @@ const WhatsAppQRCode = ({
       if (response.success && response.data) {
         setQrData(response.data);
         setStatus(null); // Reset status when getting new QR
+        
+        // Store session ID in Redux
+        dispatch(setSessionId(response.data.session_id));
+        
         console.log("✅ QR code data set:", response.data);
       } else {
         throw new Error(response.message || "Failed to generate QR code");
@@ -134,11 +163,12 @@ const WhatsAppQRCode = ({
       }
 
       setError(errorMessage);
+      dispatch(setWhatsAppError(errorMessage));
       onError?.(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [deviceId, onError]); // Manual fetch QR code on component mount (not automatic)
+  }, [deviceId, onError, dispatch]);// Manual fetch QR code on component mount (not automatic)
   useEffect(() => {
     console.log("🚀 WhatsApp QR Component mounted");
     // Don't auto-fetch, let user click to generate QR

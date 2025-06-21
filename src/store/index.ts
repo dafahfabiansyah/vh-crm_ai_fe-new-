@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
+import whatsappReducer from './whatsappSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    whatsapp: whatsappReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
