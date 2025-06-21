@@ -5,8 +5,8 @@ import { logout } from '../store/authSlice';
 
 // Base axios instance configuration
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api/v1',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
+  timeout: 30000, // Increased timeout for WhatsApp operations
   headers: {
     'Content-Type': 'application/json',
   },

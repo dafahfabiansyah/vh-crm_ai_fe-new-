@@ -208,3 +208,29 @@ export interface CreateAgentRequest {
 }
 
 // AI Agents types end
+
+// WhatsApp QR Code types
+export interface WhatsAppQRCodeRequest {
+  device_id: string;
+}
+
+export interface WhatsAppQRCodeData {
+  qr_code: string;
+  qr_code_image: string;
+  session_id: string;
+  device_id: string;
+  expires_at: string;
+  instructions: string;
+}
+
+export interface WhatsAppQRCodeResponse {
+  success: boolean;
+  message: string;
+  data: WhatsAppQRCodeData;
+}
+
+export interface WhatsAppQRCodeProps {
+  onDeviceConnected?: (deviceId: string) => void;
+  onError?: (error: string) => void;
+}
+// WhatsApp QR Code types end

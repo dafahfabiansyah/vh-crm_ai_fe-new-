@@ -12,6 +12,7 @@ import ContactsPage from "./pages/ContactPage";
 import BillingPage from "./pages/BillingPage";
 import CreatePipelinePage from "./pages/CreatePipeline";
 import AIAgentDetailPage from "./pages/AiDetailPage";
+import WhatsAppQRPage from "./pages/WhatsAppQRPage";
 // import DashboardPage from "@/pages/Dashboard";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -101,12 +102,19 @@ export default function App() {
               <BillingPage />
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />        <Route 
           path="/pipeline/create" 
           element={
             <ProtectedRoute>
               <CreatePipelinePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/whatsapp/connect" 
+          element={
+            <ProtectedRoute>
+              <WhatsAppQRPage />
             </ProtectedRoute>
           } 
         />

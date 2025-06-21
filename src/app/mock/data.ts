@@ -1,5 +1,5 @@
 import type { ChatInfo, ChatSession, Message, NavigationItem, Platform, PricingPlan } from "@/types"
-import { Bot, CreditCard, Crown, GitBranch, LayoutDashboard, MessageSquare, Settings, SquarePlus, User, Users, Zap } from "lucide-react"
+import { Bot, CreditCard, Crown, GitBranch, LayoutDashboard, MessageSquare, Settings, SquarePlus, User, Users, Zap, Smartphone } from "lucide-react"
 
 export const navigationItems: NavigationItem[] = [
   {
@@ -33,12 +33,24 @@ export const navigationItems: NavigationItem[] = [
     label: "Human Agent",
     icon: User,
     href: "/human-agents",
-  },
-  {
+  },  {
     id: "platforms",
     label: "Platforms",
     icon: MessageSquare,
-    href: "/connected-platforms",
+    children: [
+      {
+        id: "connected-platforms",
+        label: "Connected Platforms",
+        icon: MessageSquare,
+        href: "/connected-platforms",
+      },
+      {
+        id: "whatsapp-connect",
+        label: "WhatsApp Setup",
+        icon: Smartphone,
+        href: "/whatsapp/connect",
+      },
+    ],
   },
   {
     id: "contacts",
