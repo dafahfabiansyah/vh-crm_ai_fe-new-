@@ -79,14 +79,16 @@ const WhatsAppQRCode = ({
   const checkStatus = useCallback(
     async (device_id: string) => {
       try {
-        const response = await whatsappService.getStatus(device_id);
-
-        if (response.success && response.data) {
+        const response = await whatsappService.getStatus(device_id);        if (response.success && response.data) {
           setStatus(response.data);
 
-          // Dispatch to Redux store
+          // Dispatch to Redux store - preserve existing deviceId if available
           dispatch(setConnectionData({ 
-            statusData: response.data,
+            statusData: {
+              ...response.data,
+              // Preserve the original deviceId if it exists in Redux
+              device_id: connectionData.deviceId || response.data.device_id
+            },
             sessionId: qrData?.session_id 
           }));
 
@@ -96,7 +98,6 @@ const WhatsAppQRCode = ({
           // If connected and logged in, notify parent
           if (response.data.is_connected && response.data.is_logged_in) {
             onDeviceConnected?.(device_id);
-            console.log("✅ WhatsApp connected successfully:", response.data);
           }
         }
       } catch (err: any) {
@@ -128,18 +129,27 @@ const WhatsAppQRCode = ({
     setError(null);
     dispatch(clearError());
 
-    try {
-      // Generate or use existing device ID
+    try {      // Generate or use existing device ID
       const currentDeviceId = deviceId || generateDeviceId();
       setDeviceId(currentDeviceId);
-        // Update device ID in Redux
+        // Update device ID in Redux FIRST
       dispatch(setWhatsAppDeviceId(currentDeviceId));
-
-      console.log("🔄 Requesting QR code with device ID:", currentDeviceId);
+      
+      // Also store in localStorage for persistence
+      try {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          parsedData.whatsapp_device_id = currentDeviceId;
+          localStorage.setItem('user_data', JSON.stringify(parsedData));
+        } else {
+          // Create new user_data if it doesn't exist
+          localStorage.setItem('user_data', JSON.stringify({ whatsapp_device_id: currentDeviceId }));
+        }
+      } catch (error) {
+      }
 
       const response = await whatsappService.getQRCode(currentDeviceId);
-
-      console.log("📱 WhatsApp QR response:", response);
 
       if (response.success && response.data) {
         setQrData(response.data);
@@ -147,8 +157,6 @@ const WhatsAppQRCode = ({
         
         // Store session ID in Redux
         dispatch(setSessionId(response.data.session_id));
-        
-        console.log("✅ QR code data set:", response.data);
       } else {
         throw new Error(response.message || "Failed to generate QR code");
       }
@@ -170,7 +178,6 @@ const WhatsAppQRCode = ({
     }
   }, [deviceId, onError, dispatch]);// Manual fetch QR code on component mount (not automatic)
   useEffect(() => {
-    console.log("🚀 WhatsApp QR Component mounted");
     // Don't auto-fetch, let user click to generate QR
   }, []);
 

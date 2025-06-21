@@ -12,8 +12,7 @@ export interface CreateAgentResponse {
   data: AIAgent;
 }
 
-export class AgentsService {
-  /**
+export class AgentsService {  /**
    * Get all AI agents
    */
   static async getAgents(): Promise<AgentsResponse> {
@@ -24,6 +23,35 @@ export class AgentsService {
       const actualData = response.data.data;
       
       return actualData;
+    } catch (error: any) {
+      // Handle and format error response
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch agents',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+  /**
+   * Get AI agents with pagination
+   */
+  static async getAgentsWithPagination(limit: number = 10, offset: number = 0): Promise<{data: AIAgent[]}> {
+    try {
+      const response = await axiosInstance.get(`/tenant/agents?limit=${limit}&offset=${offset}`);
+      
+      console.log("Raw API response:", response.data);
+      
+      // The API response structure should be: { data: [agents], meta: {...} }
+      // Return in format expected by the component
+      return {
+        data: response.data.data || []
+      };
     } catch (error: any) {
       // Handle and format error response
       if (error.response?.data) {
