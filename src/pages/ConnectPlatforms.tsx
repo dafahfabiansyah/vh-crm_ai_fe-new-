@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Search,
@@ -45,8 +44,10 @@ import { selectWhatsAppConnectionData } from "@/store/whatsappSlice";
 import { whatsappService } from "@/services/whatsappService";
 import { AgentsService } from "@/services/agentsService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
+import { AgentMappingService } from "@/services/agentMappingService";
 import type { HumanAgent } from "@/services/humanAgentsService";
 import type { AIAgent } from "@/types";
+import { Toast } from "@/components/ui/toast";
 
 const platformIcons = {
   whatsapp: MessageSquare,
@@ -94,12 +95,22 @@ export default function ConnectedPlatformsPage() {
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   // Agent states
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
   const [humanAgentsLoading, setHumanAgentsLoading] = useState(false);
+
+  // Toast notification state
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
+
+  // Saving state
+  const [isSaving, setIsSaving] = useState(false);
 
   // Get WhatsApp connection data from Redux
   const whatsappConnectionData = useSelector(selectWhatsAppConnectionData);
@@ -177,9 +188,9 @@ export default function ConnectedPlatformsPage() {
         );
       } finally {
         setLoading(false);
-      }
-    };
+      }    };
     fetchWhatsAppStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [whatsappConnectionData.deviceId, whatsappConnectionData.sessionId]);
   // Fetch AI agents
   useEffect(() => {
@@ -213,10 +224,18 @@ export default function ConnectedPlatformsPage() {
       } finally {
         setHumanAgentsLoading(false);
       }
-    };
-
-    fetchHumanAgents();
+    };    fetchHumanAgents();
   }, []);
+
+  // Auto-hide toast after 5 seconds
+  useEffect(() => {
+    if (toast?.show) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
   const fetchWhatsAppStatus = async () => {
     // Try to get deviceId from Redux first, then use fallback from localStorage or hardcoded
     let deviceId = whatsappConnectionData.deviceId;
@@ -229,7 +248,9 @@ export default function ConnectedPlatformsPage() {
           const parsedData = JSON.parse(userData);
           deviceId = parsedData.whatsapp_device_id;
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error parsing user_data from localStorage:", error);
+      }
     }
 
     // Final fallback to hardcoded deviceId
@@ -294,13 +315,91 @@ export default function ConnectedPlatformsPage() {
 
   const filteredPlatforms = whatsappPlatforms.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const handleSave = () => {
+  );  const handleSave = async () => {
     if (!selectedPlatform) return;
 
-    setWhatsappPlatforms((prev) =>
-      prev.map((p) => (p.id === selectedPlatform.id ? selectedPlatform : p))
-    );
+    // Validate required fields
+    if (!selectedPlatform.aiAgent) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Validation Error",
+        description: "Please select an AI Agent before saving."
+      });
+      return;
+    }    const whatsappNumber = whatsappConnectionData.phoneNumber || selectedPlatform.phone;
+    if (!whatsappNumber) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Validation Error",
+        description: "WhatsApp number is required."
+      });
+      return;
+    }
+
+    const deviceId = whatsappConnectionData.deviceId || selectedPlatform.deviceId;
+    if (!deviceId) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Validation Error",
+        description: "Device ID is required."
+      });
+      return;
+    }
+
+    // Find the selected AI agent to get its ID
+    const selectedAIAgent = aiAgents.find(agent => agent.name === selectedPlatform.aiAgent);
+    if (!selectedAIAgent) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Validation Error",
+        description: "Selected AI Agent not found."
+      });
+      return;
+    }
+
+    setIsSaving(true);
+      try {      const requestData = {
+        whatsapp_number: whatsappNumber,
+        agent_id: selectedAIAgent.id,
+        is_active: true,
+        DeviceID: deviceId,
+        MappingType: "ai_agent"  // Assuming this is the mapping type for AI agents
+      };
+
+      console.log("Sending agent mapping request:", requestData);
+      
+      const response = await AgentMappingService.createMapping(requestData);
+      
+      if (response.status === "success") {
+        setToast({
+          show: true,
+          type: "success",
+          title: "Mapping Created Successfully",
+          description: `WhatsApp number ${whatsappNumber} has been mapped to ${selectedPlatform.aiAgent}`
+        });
+
+        // Update the platform in the list
+        setWhatsappPlatforms((prev) =>
+          prev.map((p) => (p.id === selectedPlatform.id ? selectedPlatform : p))
+        );
+      } else {
+        throw new Error(response.message || "Failed to create mapping");
+      }
+    } catch (error) {
+      console.error("Error creating agent mapping:", error);
+      setToast({
+        show: true,
+        type: "error",
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save agent mapping"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = () => {
@@ -613,15 +712,14 @@ export default function ConnectedPlatformsPage() {
                         </p>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
+                  </div>                  <div className="flex gap-2">
                     <Button
                       onClick={handleSave}
+                      disabled={isSaving}
                       className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      Save
+                      {isSaving ? "Saving..." : "Save"}
                     </Button>
                     <Button
                       variant="outline"
@@ -631,8 +729,19 @@ export default function ConnectedPlatformsPage() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>              </div>
+
+              {/* Toast Notification */}
+              {toast?.show && (
+                <div className="mb-4">
+                  <Toast
+                    type={toast.type}
+                    title={toast.title}
+                    description={toast.description}
+                    onClose={() => setToast(null)}
+                  />
                 </div>
-              </div>
+              )}
 
               {/* Configuration Content */}
               <div className="flex-1 overflow-y-auto p-6">
