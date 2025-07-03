@@ -13,6 +13,8 @@ import BillingPage from "./pages/BillingPage";
 import CreatePipelinePage from "./pages/CreatePipeline";
 import AIAgentDetailPage from "./pages/AiDetailPage";
 import WhatsAppQRPage from "./pages/WhatsAppQRPage";
+import PipelinePage from "./pages/PipelinePage";
+import ProductPage from "./pages/ProductPage";
 // import DashboardPage from "@/pages/Dashboard";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -28,100 +30,117 @@ export default function App() {
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
         {/* <Route path="/" element={<DashboardPage/>} /> */}
-        
         {/* Public Auth routes - redirect to dashboard if already authenticated */}
-        <Route 
-          path="/auth/login" 
+        <Route
+          path="/auth/login"
           element={
             <PublicRoute>
               <LoginPage />
             </PublicRoute>
-          } 
+          }
         />
-        <Route 
-          path="/auth/register" 
+        <Route
+          path="/auth/register"
           element={
             <PublicRoute>
               <RegisterPage />
             </PublicRoute>
-          } 
+          }
         />
-        
         {/* Protected Dashboard routes - require authentication */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/ai-agents" 
+        <Route
+          path="/ai-agents"
           element={
             <ProtectedRoute>
               <AIAgentsPage />
             </ProtectedRoute>
-          } 
-        />        <Route 
-          path="/ai-agents/:id" 
+          }
+        />{" "}
+        <Route
+          path="/ai-agents/:id"
           element={
             <ProtectedRoute>
               <AIAgentDetailWrapper />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/human-agents" 
+        <Route
+          path="/human-agents"
           element={
             <ProtectedRoute>
               <HumanAgentsPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/connected-platforms" 
+        <Route
+          path="/connected-platforms"
           element={
             <ProtectedRoute>
               <ConnectedPlatformsPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/contacts" 
+        <Route
+          path="/contacts"
           element={
             <ProtectedRoute>
               <ContactsPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/billing" 
+        <Route
+          path="/billing"
           element={
             <ProtectedRoute>
               <BillingPage />
             </ProtectedRoute>
-          } 
-        />        <Route 
-          path="/pipeline/create" 
+          }
+        />{" "}
+        <Route
+          path="/pipeline/create"
           element={
             <ProtectedRoute>
               <CreatePipelinePage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/whatsapp/connect" 
+        <Route
+          path="/pipeline"
+          element={
+            <ProtectedRoute>
+              <PipelinePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <ProtectedRoute>
+              <ProductPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/whatsapp/connect"
           element={
             <ProtectedRoute>
               <WhatsAppQRPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        
         {/* Legacy redirects */}
-        <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
-        
+        <Route
+          path="/settings"
+          element={<Navigate to="/dashboard" replace />}
+        />
         {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -73,3 +73,26 @@ export interface DecodeTokenResponse {
   exp ?: number; // Optional expiration time
   iat ?: number; // Optional issued at time
 }
+
+// WhatsApp Platform interface based on API response
+export interface WhatsAppPlatform {
+  id: string;
+  name: string;
+  type: "whatsapp";
+  phone: string;
+  description?: string;
+  isActive: boolean;
+  deviceId: string;
+  deviceName: string;
+  status: string;
+  sessionId: string;
+  timestamp: string;
+  isConnected: boolean;
+  isLoggedIn: boolean;
+  // Additional fields for platform configuration
+  aiAgent?: string;
+  teams?: string[];
+  humanAgent?: string;
+  distributionMethod?: string;
+  csatEnabled?: boolean;
+}

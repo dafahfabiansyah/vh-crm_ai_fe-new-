@@ -46,7 +46,7 @@ import { AgentsService } from "@/services/agentsService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import { AgentMappingService } from "@/services/agentMappingService";
 import type { HumanAgent } from "@/services/humanAgentsService";
-import type { AIAgent } from "@/types";
+import type { AIAgent, WhatsAppPlatform } from "@/types";
 import { Toast } from "@/components/ui/toast";
 
 const platformIcons = {
@@ -62,29 +62,6 @@ const distributionMethods = [
   { value: "least-assigned", label: "Least Assigned First" },
   { value: "round-robin", label: "Round Robin" },
 ];
-
-// WhatsApp Platform interface based on API response
-interface WhatsAppPlatform {
-  id: string;
-  name: string;
-  type: "whatsapp";
-  phone: string;
-  description?: string;
-  isActive: boolean;
-  deviceId: string;
-  deviceName: string;
-  status: string;
-  sessionId: string;
-  timestamp: string;
-  isConnected: boolean;
-  isLoggedIn: boolean;
-  // Additional fields for platform configuration
-  aiAgent?: string;
-  teams?: string[];
-  humanAgent?: string;
-  distributionMethod?: string;
-  csatEnabled?: boolean;
-}
 
 export default function ConnectedPlatformsPage() {
   const [selectedPlatform, setSelectedPlatform] =
@@ -797,7 +774,7 @@ export default function ConnectedPlatformsPage() {
                               {aiAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
-                                    <Bot className="h-4 w-4 text-gray-600" />
+                                    {/* <Bot className="h-4 w-4 text-gray-600" /> */}
                                     {agent.name}
                                   </div>
                                 </SelectItem>
@@ -890,7 +867,7 @@ export default function ConnectedPlatformsPage() {
                               {humanAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-green-600" />
+                                    {/* <User className="h-4 w-4 text-green-600" /> */}
                                     {agent.name}
                                   </div>
                                 </SelectItem>

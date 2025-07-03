@@ -25,7 +25,7 @@ export const RouteGuard = {
       '/connected-platforms',
       '/contacts',
       '/billing',
-      '/pipeline',
+      '/pipeline/*',
       '/settings'
     ];
 
