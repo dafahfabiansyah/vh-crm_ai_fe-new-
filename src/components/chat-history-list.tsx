@@ -19,12 +19,30 @@ export default function ChatHistoryList({
   const [assignedCount] = useState(1515)
   const [unassignedCount] = useState(201)
   const [ResolveCount] = useState(201)
+  const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
 
-  const filteredSessions = chatSessions.filter(
-    (session) =>
+  const filteredSessions = chatSessions.filter((session) => {
+    // Filter berdasarkan search query
+    const matchesSearch = 
       session.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      session.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    // Filter berdasarkan tab yang aktif
+    const matchesTab = (() => {
+      switch (activeTab) {
+        case 'assigned':
+          return session.agent !== 'Unassigned' && session.status !== 'resolved'
+        case 'unassigned':
+          return session.agent === 'Unassigned' || session.status === 'pending'
+        case 'resolved':
+          return session.status === 'resolved'
+        default:
+          return true
+      }
+    })()
+    
+    return matchesSearch && matchesTab
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,33 +100,79 @@ export default function ChatHistoryList({
           />
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-4 text-sm overflow-x-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Assigned</span>
-            <Badge variant="secondary" className="bg-primary/10 text-primary">
+        {/* Tabs */}
+        <div className="flex gap-2 text-sm overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('assigned')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              activeTab === 'assigned' 
+                ? 'bg-primary/10 text-primary border border-primary/20' 
+                : 'hover:bg-accent/50 text-muted-foreground'
+            }`}
+          >
+            <span>Assigned</span>
+            <Badge variant="secondary" className={`${
+              activeTab === 'assigned' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+            }`}>
               {assignedCount}
             </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Unassigned</span>
-            <Badge variant="secondary" className="bg-destructive/10 text-destructive">
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('unassigned')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              activeTab === 'unassigned' 
+                ? 'bg-destructive/10 text-destructive border border-destructive/20' 
+                : 'hover:bg-accent/50 text-muted-foreground'
+            }`}
+          >
+            <span>Unassigned</span>
+            <Badge variant="secondary" className={`${
+              activeTab === 'unassigned' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'
+            }`}>
               {unassignedCount}
             </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* <span className="text-muted-foreground">Resolve</span> */}
-            <CheckCheck className="text-muted-foreground" />
-            <Badge variant="secondary" className="bg-emerald-500 text-white">
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('resolved')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              activeTab === 'resolved' 
+                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                : 'hover:bg-accent/50 text-muted-foreground'
+            }`}
+          >
+            <CheckCheck className="h-4 w-4" />
+            <Badge variant="secondary" className={`${
+              activeTab === 'resolved' ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
+            }`}>
               {ResolveCount}
             </Badge>
-          </div>
+          </button>
         </div>
       </div>
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {filteredSessions.map((session) => (
+        {/* Tab Indicator */}
+        <div className="p-3 bg-accent/30 border-b border-border">
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">
+              {activeTab === 'assigned' ? 'Assigned' : 
+               activeTab === 'unassigned' ? 'Unassigned' : 'Resolved'}
+            </span> conversations ({filteredSessions.length})
+          </p>
+        </div>
+        
+        {filteredSessions.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-muted-foreground">No conversations found</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Try adjusting your search or tab selection
+            </p>
+          </div>
+        ) : (
+          filteredSessions.map((session) => (
           <div
             key={session.id}
             onClick={() => onSelectChat(session.id)}
@@ -157,7 +221,8 @@ export default function ChatHistoryList({
               </div>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   )
