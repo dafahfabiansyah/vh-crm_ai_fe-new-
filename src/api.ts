@@ -16,4 +16,4 @@ export type {
   User, 
   AuthState, 
   ApiError 
-} from './types/api';
+} from './types/interface';

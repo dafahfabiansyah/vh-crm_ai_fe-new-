@@ -1,6 +1,6 @@
 import axiosInstance from './axios';
 import type { AgentsResponse, AIAgent, AgentRole } from '../types';
-import type { ApiSuccessResponse } from '../types/api';
+import type { ApiSuccessResponse } from '../types/interface';
 
 export interface CreateAgentRequest {
   name: string;

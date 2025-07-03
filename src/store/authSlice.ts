@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { AuthService } from '../services/authService';
-import type { AuthState, RegisterRequest, LoginRequest, ApiError } from '../types/api';
+import type { AuthState, RegisterRequest, LoginRequest, ApiError } from '../types/interface';
 
 // Initial state
 const initialState: AuthState = {

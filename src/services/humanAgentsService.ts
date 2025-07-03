@@ -1,5 +1,5 @@
 import axiosInstance from './axios';
-import type { ApiSuccessResponse } from '../types/api';
+import type { ApiSuccessResponse } from '../types/interface';
 
 export interface HumanAgent {
   id: string;

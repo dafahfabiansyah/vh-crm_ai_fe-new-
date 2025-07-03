@@ -60,3 +60,16 @@ export interface AuthState {
   isAuthenticated: boolean;
   isInitialized: boolean; // Add this to track if auth state has been initialized
 }
+
+// decode JWT token response
+export interface DecodeTokenResponse {
+  user_id: string;
+  tenant_id: string;
+  email: string;
+  database: string;
+  is_human_agent: boolean;
+  agent_id: string;
+  agent_department: string;
+  exp ?: number; // Optional expiration time
+  iat ?: number; // Optional issued at time
+}

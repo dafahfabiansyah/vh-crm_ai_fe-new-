@@ -1,5 +1,5 @@
 // Export API types
-export * from './types/api';
+export * from './types/interface';
 
 // register type 
 export interface RegisterFormData {

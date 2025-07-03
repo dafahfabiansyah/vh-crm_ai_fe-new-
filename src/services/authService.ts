@@ -6,7 +6,7 @@ import type {
   LoginResponse,
   User,
   ApiSuccessResponse,
-} from "../types/api";
+} from "../types/interface";
 
 export class AuthService {
   /**
