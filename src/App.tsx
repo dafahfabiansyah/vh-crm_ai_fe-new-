@@ -16,6 +16,8 @@ import WhatsAppQRPage from "./pages/WhatsAppQRPage";
 import PipelinePage from "./pages/PipelinePage";
 import ProductPage from "./pages/ProductPage";
 import TicketPage from "./pages/TicketPage";
+import FlowSettingsPage from "./pages/FlowSettingsPage";
+import SettingsPage from "./pages/SettingsPage";
 // import DashboardPage from "@/pages/Dashboard";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -138,6 +140,14 @@ export default function App() {
           }
         />
         <Route
+          path="/flow"
+          element={
+            <ProtectedRoute>
+              <FlowSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/whatsapp/connect"
           element={
             <ProtectedRoute>
@@ -145,10 +155,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Legacy redirects */}
+        {/* Settings Page */}
         <Route
           path="/settings"
-          element={<Navigate to="/dashboard" replace />}
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
         />
         {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />
