@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Filter, Plus, MoreHorizontal, Circle, CheckCircle2 } from "lucide-react"
+import { Search, Filter, Plus, MoreHorizontal, Circle, CheckCircle2, CheckCheck } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { ChatHistoryListProps } from "@/types"
 
@@ -18,6 +18,7 @@ export default function ChatHistoryList({
 }: ChatHistoryListProps) {
   const [assignedCount] = useState(1515)
   const [unassignedCount] = useState(201)
+  const [ResolveCount] = useState(201)
 
   const filteredSessions = chatSessions.filter(
     (session) =>
@@ -82,7 +83,7 @@ export default function ChatHistoryList({
         </div>
 
         {/* Stats */}
-        <div className="flex gap-4 text-sm">
+        <div className="flex gap-4 text-sm overflow-x-auto">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Assigned</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary">
@@ -93,6 +94,13 @@ export default function ChatHistoryList({
             <span className="text-muted-foreground">Unassigned</span>
             <Badge variant="secondary" className="bg-destructive/10 text-destructive">
               {unassignedCount}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* <span className="text-muted-foreground">Resolve</span> */}
+            <CheckCheck className="text-muted-foreground" />
+            <Badge variant="secondary" className="bg-emerald-500 text-white">
+              {ResolveCount}
             </Badge>
           </div>
         </div>

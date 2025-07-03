@@ -15,6 +15,7 @@ import AIAgentDetailPage from "./pages/AiDetailPage";
 import WhatsAppQRPage from "./pages/WhatsAppQRPage";
 import PipelinePage from "./pages/PipelinePage";
 import ProductPage from "./pages/ProductPage";
+import TicketPage from "./pages/TicketPage";
 // import DashboardPage from "@/pages/Dashboard";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -125,6 +126,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ProductPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets"
+          element={
+            <ProtectedRoute>
+              <TicketPage />
             </ProtectedRoute>
           }
         />

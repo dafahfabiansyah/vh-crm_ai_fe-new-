@@ -7,6 +7,9 @@ import { logout } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Bell,
@@ -26,6 +36,7 @@ import {
   LogOut,
   CreditCard,
   Shield,
+  X,
 } from "lucide-react";
 import type { TopbarProps } from "@/types";
 
@@ -37,6 +48,15 @@ export default function Topbar({
   },
 }: TopbarProps) {
   const [notifications] = useState(3); // Mock notification count
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [helpForm, setHelpForm] = useState({
+    title: '',
+    description: '',
+    priority: '',
+    tags: [] as string[]
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -45,6 +65,52 @@ export default function Topbar({
     dispatch(logout());
     // Redirect to login page
     navigate("/auth/login", { replace: true });
+  };
+
+  const handleHelpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Help ticket submitted:', helpForm);
+      
+      // Reset form and close modal
+      setHelpForm({
+        title: '',
+        description: '',
+        priority: '',
+        tags: []
+      });
+      setIsHelpModalOpen(false);
+      
+      // Show success message (you can replace with a toast notification)
+      alert('Pengaduan berhasil dikirim!');
+      
+    } catch (error) {
+      console.error('Error submitting help ticket:', error);
+      alert('Gagal mengirim pengaduan. Silakan coba lagi.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | string[]) => {
+    setHelpForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setHelpForm(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag]
+    }));
   };
 
   return (
@@ -65,6 +131,7 @@ export default function Topbar({
           variant="outline"
           size="sm"
           className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          onClick={() => setIsHelpModalOpen(true)}
         >
           <HelpCircle className="h-4 w-4 mr-2" />
           Pusat Bantuan
@@ -162,6 +229,112 @@ export default function Topbar({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Help Modal */}
+      {isHelpModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-blue-600">Pusat Bantuan</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsHelpModalOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Silakan isi judul dan deskripsi pengaduan Anda
+            </p>
+
+            <form onSubmit={handleHelpSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="title">Masalah Utama *</Label>
+                <Input
+                  id="title"
+                  placeholder="Masalah Utama *"
+                  value={helpForm.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Deskripsi masalah *</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Deskripsi masalah *"
+                  value={helpForm.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="priority">Prioritas</Label>
+                  <Select
+                    value={helpForm.priority}
+                    onValueChange={(value) => handleInputChange('priority', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Prioritas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="tags">Tags</Label>
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-500">
+                      {helpForm.tags.length} Selected
+                    </div>
+                    <div className="space-y-1">
+                      {['AI Agent', 'Chat', 'Connect Platform'].map((tag) => (
+                        <label key={tag} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={helpForm.tags.includes(tag.toLowerCase().replace(' ', '-'))}
+                            onChange={() => handleTagToggle(tag.toLowerCase().replace(' ', '-'))}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">{tag}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsHelpModalOpen(false)}
+                  className="flex-1"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !helpForm.title || !helpForm.description}
+                  className="flex-1"
+                >
+                  {isSubmitting ? 'Mengirim...' : 'Kirim Pengaduan'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
