@@ -5,7 +5,7 @@ import type { MainLayoutProps } from "@/types"
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
       <NavigationSidebar />
 
