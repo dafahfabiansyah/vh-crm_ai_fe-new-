@@ -128,7 +128,7 @@ export default function ChatHistoryList({
           >
             <span>Unassigned</span>
             <Badge variant="secondary" className={`${
-              activeTab === 'unassigned' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'
+              activeTab === 'unassigned' ? 'bg-destructive/10 text-destructive' : 'bg-destructive text-primary-foreground'
             }`}>
               {unassignedCount}
             </Badge>
