@@ -93,9 +93,8 @@ export default function HumanAgentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all-roles">All Roles</SelectItem>
-                      <SelectItem value="super-admin">Super Admin</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="superadmin">Super Admin</SelectItem>
+                      <SelectItem value="human-agent">Human Agent</SelectItem>
                       <SelectItem value="manager">Manager</SelectItem>
                     </SelectContent>
                   </Select>                </div>

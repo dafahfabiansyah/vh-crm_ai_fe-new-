@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import MainLayout from "@/main-layout";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Search,
-  Plus,
-  Settings,
-  Trash2,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+
+import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
+
+import MainLayout from "@/main-layout";
 import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
@@ -158,9 +154,6 @@ export default function AIAgentsPage() {
         {/* Empty State */}
         {!loading && !error && filteredAgents.length === 0 && (
           <div className="text-center py-12">
-            <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Settings className="h-12 w-12 text-gray-400" />
-            </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchQuery
                 ? "Tidak ada agen yang ditemukan"
@@ -182,7 +175,9 @@ export default function AIAgentsPage() {
 
         {/* Agents Grid */}
         {!loading && !error && filteredAgents.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">            {filteredAgents.map((agent) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {" "}
+            {filteredAgents.map((agent) => (
               <Card
                 key={agent.id}
                 className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -210,19 +205,8 @@ export default function AIAgentsPage() {
                           {agent.role?.name || "Unknown Role"}
                         </Badge>
                       </div>
-                    </div>                    <div className="flex gap-1">
-                      {" "}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle settings click here if needed
-                        }}
-                      >
-                        <Settings className="h-4 w-4 text-gray-400" />
-                      </Button>
+                    </div>{" "}
+                    <div className="flex gap-1">
                       <Button
                         variant="ghost"
                         size="sm"

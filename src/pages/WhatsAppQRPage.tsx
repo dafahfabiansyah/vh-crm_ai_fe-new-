@@ -29,19 +29,20 @@ import {
 
 const WhatsAppQRPage = () => {
   const navigate = useNavigate();
-  
+
   // Get WhatsApp data from Redux store
   const connectionData = useAppSelector(selectWhatsAppConnectionData);
   const connectionStatus = useAppSelector(selectWhatsAppConnectionStatus);
   const reduxError = useAppSelector(selectWhatsAppError);
-  
+
   // Local state for backward compatibility
   const [errorMessage, setErrorMessage] = useState<string | null>(reduxError);
-  
+
   // Sync Redux error with local state
   useEffect(() => {
     setErrorMessage(reduxError);
-  }, [reduxError]);  const handleDeviceConnected = (deviceId: string) => {
+  }, [reduxError]);
+  const handleDeviceConnected = (deviceId: string) => {
     setErrorMessage(null);
     console.log("Device connected:", deviceId);
   };
@@ -79,7 +80,8 @@ const WhatsAppQRPage = () => {
                 Connect your WhatsApp Business account to manage conversations
               </p>
             </div>
-          </div>{" "}          {/* Status Banner */}
+          </div>{" "}
+          {/* Status Banner */}
           {connectionStatus === "connected" && connectionData.deviceId && (
             <Alert className="bg-green-50 border-green-200">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -93,7 +95,7 @@ const WhatsAppQRPage = () => {
                 {connectionData.phoneNumber && (
                   <>
                     <br />
-                    Phone: {" "}
+                    Phone:{" "}
                     <code className="bg-green-100 px-1 rounded text-xs">
                       {connectionData.phoneNumber}
                     </code>
@@ -150,24 +152,35 @@ const WhatsAppQRPage = () => {
                       ? "Connecting..."
                       : "Disconnected"}
                   </Badge>
-                </div>                {connectionData.deviceId && (
+                </div>
+                {/* {connectionData.deviceId && (
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-600">Device ID:</p>
-                    <code className="text-sm font-mono">{connectionData.deviceId}</code>
+                    <code className="text-sm font-mono">
+                      {connectionData.deviceId}
+                    </code>
                     {connectionData.phoneNumber && (
                       <>
-                        <p className="text-xs text-gray-600 mt-2">Phone Number:</p>
-                        <code className="text-sm font-mono">{connectionData.phoneNumber}</code>
+                        <p className="text-xs text-gray-600 mt-2">
+                          Phone Number:
+                        </p>
+                        <code className="text-sm font-mono">
+                          {connectionData.phoneNumber}
+                        </code>
                       </>
                     )}
                     {connectionData.deviceName && (
                       <>
-                        <p className="text-xs text-gray-600 mt-2">Device Name:</p>
-                        <code className="text-sm font-mono">{connectionData.deviceName}</code>
+                        <p className="text-xs text-gray-600 mt-2">
+                          Device Name:
+                        </p>
+                        <code className="text-sm font-mono">
+                          {connectionData.deviceName}
+                        </code>
                       </>
                     )}
                   </div>
-                )}
+                )} */}
               </CardContent>
             </Card>
 

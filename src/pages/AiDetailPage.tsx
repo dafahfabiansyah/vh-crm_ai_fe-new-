@@ -1,49 +1,69 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useNavigate } from "react-router"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ArrowLeft, Bot, Settings, Database, Link, RefreshCw, FileText, ChevronDown } from "lucide-react"
-import AIAgentChatPreview from "@/components/ai-agent-chat"
-import MainLayout from "@/main-layout"
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  ArrowLeft,
+  Bot,
+  Settings,
+  Database,
+  Link,
+  RefreshCw,
+  FileText,
+  ChevronDown,
+} from "lucide-react";
+import AIAgentChatPreview from "@/components/ai-agent-chat";
+import MainLayout from "@/main-layout";
 
 interface AIAgentData {
-  id: string
-  name: string
-  description: string
-  type: string
-  behavior: string
-  welcomeMessage: string
-  transferConditions: string
-  stopAIAfterHandoff: boolean
-  isActive: boolean
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  behavior: string;
+  welcomeMessage: string;
+  transferConditions: string;
+  stopAIAfterHandoff: boolean;
+  isActive: boolean;
   // Additional Settings
-  model: string
-  aiHistoryLimit: number
-  aiContextLimit: number
-  messageAwait: number
-  aiMessageLimit: number
-  timezone: string
-  selectedLabels: string[]
+  model: string;
+  aiHistoryLimit: number;
+  aiContextLimit: number;
+  messageAwait: number;
+  aiMessageLimit: number;
+  timezone: string;
+  selectedLabels: string[];
 }
 
 interface AIAgentDetailPageProps {
-  agentId: string
+  agentId: string;
 }
 
 export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
-  const navigate = useNavigate()
-  const [hasChanges, setHasChanges] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAdditionalSettingsOpen, setIsAdditionalSettingsOpen] = useState(false)
+  const navigate = useNavigate();
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAdditionalSettingsOpen, setIsAdditionalSettingsOpen] =
+    useState(false);
   // Mock data - in real app, this would come from API
   const [agentData, setAgentData] = useState<AIAgentData>({
     id: agentId,
@@ -54,7 +74,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       "You are a helpful customer service assistant. Your goal is to resolve customer queries and issues efficiently and professionally. Be empathetic, patient, and focus on customer satisfaction.",
     welcomeMessage:
       "Hello! I'm your customer service assistant. How can I help you today? I'm here to assist with any questions or issues you might have.",
-    transferConditions: "I need to speak with a human\nTransfer to agent\nI want to talk to a real person",
+    transferConditions:
+      "I need to speak with a human\nTransfer to agent\nI want to talk to a real person",
     stopAIAfterHandoff: true,
     isActive: true,
     // Additional Settings default values
@@ -65,40 +86,43 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     aiMessageLimit: 1000,
     timezone: "(GMT+07:00) Asia/Jakarta",
     selectedLabels: [],
-  })
-  const handleInputChange = (field: keyof AIAgentData, value: string | boolean | number | string[]) => {
-    setAgentData((prev) => ({ ...prev, [field]: value }))
-    setHasChanges(true)
-  }
+  });
+  const handleInputChange = (
+    field: keyof AIAgentData,
+    value: string | boolean | number | string[]
+  ) => {
+    setAgentData((prev) => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
 
   const handleSaveChanges = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Saving agent data:", agentData)
-      setHasChanges(false)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Saving agent data:", agentData);
+      setHasChanges(false);
     } catch (error) {
-      console.error("Error saving changes:", error)
+      console.error("Error saving changes:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleBack = () => {
-    // router.push("/ai-agents")
-    navigate("/ai-agents")  }
-  
-  const behaviorCharacterCount = agentData.behavior.length
-  const welcomeCharacterCount = agentData.welcomeMessage.length
-  const transferCharacterCount = agentData.transferConditions.length
+    navigate("/ai-agents");
+  };
+
+  const behaviorCharacterCount = agentData.behavior.length;
+  const welcomeCharacterCount = agentData.welcomeMessage.length;
+  const transferCharacterCount = agentData.transferConditions.length;
 
   return (
     <MainLayout>
       <div className="bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={handleBack}>
                 <ArrowLeft className="h-5 w-5" />
@@ -112,7 +136,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 </Avatar>
 
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">{agentData.name}</h1>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    {agentData.name}
+                  </h1>
                   <p className="text-green-600 font-medium">{agentData.type}</p>
                 </div>
               </div>
@@ -136,42 +162,42 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         </div>
 
         {/* Content Area - Always Scrollable */}
-        <div className="max-w-7xl mx-auto px-6 py-6 pb-20">
+        <div className="px-6 py-6 pb-20">
           <Tabs defaultValue="general" className="w-full">
             {/* Navigation Tabs */}
             <div className="bg-white rounded-lg mb-6 shadow-sm border border-gray-200">
               <TabsList className="grid w-full grid-cols-5 bg-transparent h-auto p-0">
                 <TabsTrigger
                   value="general"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none"
+                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
                 >
                   <Settings className="h-4 w-4" />
                   General
                 </TabsTrigger>
                 <TabsTrigger
                   value="knowledge"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none"
+                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
                 >
                   <Database className="h-4 w-4" />
                   Knowledge Sources
                 </TabsTrigger>
                 <TabsTrigger
                   value="integrations"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none"
+                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
                 >
                   <Link className="h-4 w-4" />
                   Integrations
                 </TabsTrigger>
                 <TabsTrigger
                   value="followups"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none"
+                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Followups
                 </TabsTrigger>
                 <TabsTrigger
                   value="existing"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none"
+                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
                 >
                   <FileText className="h-4 w-4" />
                   Existing Knowledge Sources
@@ -184,30 +210,39 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
               {/* Left Panel - Configuration */}
               <div className="flex-1">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <div className="max-w-2xl mx-auto">
                   <TabsContent value="general" className="mt-0 space-y-6">
                     {/* Agent Name */}
                     <div className="space-y-2">
-                      <Label htmlFor="agentName" className="text-sm font-medium">
+                      <Label
+                        htmlFor="agentName"
+                        className="text-sm font-medium"
+                      >
                         Agent Name
                       </Label>
                       <Input
                         id="agentName"
                         value={agentData.name}
-                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
                         className="w-full"
                       />
                     </div>
 
                     {/* Description */}
                     <div className="space-y-2">
-                      <Label htmlFor="description" className="text-sm font-medium">
+                      <Label
+                        htmlFor="description"
+                        className="text-sm font-medium"
+                      >
                         Description
                       </Label>
                       <Input
                         id="description"
                         value={agentData.description}
-                        onChange={(e) => handleInputChange("description", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("description", e.target.value)
+                        }
                         className="w-full"
                       />
                     </div>
@@ -215,16 +250,21 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     {/* AI Agent Behavior */}
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium text-blue-600">AI Agent Behavior</Label>
+                        <Label className="text-sm font-medium ">
+                          AI Agent Behavior
+                        </Label>
                         <p className="text-sm text-muted-foreground mt-1">
-                          This is the AI Prompt that will determine the speaking style and identity of the AI.
+                          This is the AI Prompt that will determine the speaking
+                          style and identity of the AI.
                         </p>
                       </div>
 
                       <div className="space-y-2">
                         <Textarea
                           value={agentData.behavior}
-                          onChange={(e) => handleInputChange("behavior", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("behavior", e.target.value)
+                          }
                           className="min-h-[120px] resize-none"
                           maxLength={10000}
                         />
@@ -237,13 +277,17 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     {/* Welcome Message */}
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium text-blue-600">Welcome Message</Label>
+                        <Label className="text-sm font-medium ">
+                          Welcome Message
+                        </Label>
                       </div>
 
                       <div className="space-y-2">
                         <Textarea
                           value={agentData.welcomeMessage}
-                          onChange={(e) => handleInputChange("welcomeMessage", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("welcomeMessage", e.target.value)
+                          }
                           className="min-h-[80px] resize-none"
                           maxLength={9000}
                         />
@@ -256,13 +300,20 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     {/* Agent Transfer Conditions */}
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium text-blue-600">Agent Transfer Conditions</Label>
+                        <Label className="text-sm font-medium ">
+                          Agent Transfer Conditions
+                        </Label>
                       </div>
 
                       <div className="space-y-2">
                         <Textarea
                           value={agentData.transferConditions}
-                          onChange={(e) => handleInputChange("transferConditions", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "transferConditions",
+                              e.target.value
+                            )
+                          }
                           className="min-h-[80px] resize-none"
                           maxLength={750}
                         />
@@ -277,7 +328,12 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       <Checkbox
                         id="stopAI"
                         checked={agentData.stopAIAfterHandoff}
-                        onCheckedChange={(checked) => handleInputChange("stopAIAfterHandoff", checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleInputChange(
+                            "stopAIAfterHandoff",
+                            checked as boolean
+                          )
+                        }
                       />
                       <Label htmlFor="stopAI" className="text-sm font-medium">
                         Stop AI after Handoff
@@ -285,23 +341,41 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     </div>
 
                     {/* Additional Settings */}
-                    <Collapsible open={isAdditionalSettingsOpen} onOpenChange={setIsAdditionalSettingsOpen}>
+                    <Collapsible
+                      open={isAdditionalSettingsOpen}
+                      onOpenChange={setIsAdditionalSettingsOpen}
+                    >
                       <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-                          <span className="text-sm font-medium text-blue-600">Additional Settings</span>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between p-0 h-auto"
+                        >
+                          <span className="text-sm font-medium ">
+                            Additional Settings
+                          </span>
                           <ChevronDown
-                            className={`h-4 w-4 transition-transform ${isAdditionalSettingsOpen ? "rotate-180" : ""}`}
+                            className={`h-4 w-4 transition-transform ${
+                              isAdditionalSettingsOpen ? "rotate-180" : ""
+                            }`}
                           />
                         </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-4 mt-4">
                         {/* Model */}
                         <div className="space-y-2">
-                          <Label htmlFor="model" className="text-sm font-medium">
+                          <Label
+                            htmlFor="model"
+                            className="text-sm font-medium"
+                          >
                             Model
                           </Label>
-                          <Select value={agentData.model} onValueChange={(value) => handleInputChange("model", value)}>
-                            <SelectTrigger>
+                          <Select
+                            value={agentData.model}
+                            onValueChange={(value) =>
+                              handleInputChange("model", value)
+                            }
+                          >
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent>
@@ -314,147 +388,524 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
 
                         {/* AI History Limit */}
                         <div className="space-y-2">
-                          <Label htmlFor="aiHistoryLimit" className="text-sm font-medium">
+                          <Label
+                            htmlFor="aiHistoryLimit"
+                            className="text-sm font-medium"
+                          >
                             AI History Limit
                           </Label>
                           <Input
                             id="aiHistoryLimit"
                             type="number"
                             value={agentData.aiHistoryLimit}
-                            onChange={(e) => handleInputChange("aiHistoryLimit", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "aiHistoryLimit",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
                             className="w-full"
                           />
-                          <p className="text-xs text-muted-foreground">Berapa banyak pesan yang akan diingat AI</p>
+                          <p className="text-xs text-muted-foreground">
+                            Berapa banyak pesan yang akan diingat AI
+                          </p>
                         </div>
 
                         {/* AI Context Limit */}
                         <div className="space-y-2">
-                          <Label htmlFor="aiContextLimit" className="text-sm font-medium">
+                          <Label
+                            htmlFor="aiContextLimit"
+                            className="text-sm font-medium"
+                          >
                             AI Context Limit
                           </Label>
                           <Input
                             id="aiContextLimit"
                             type="number"
                             value={agentData.aiContextLimit}
-                            onChange={(e) => handleInputChange("aiContextLimit", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "aiContextLimit",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
                             className="w-full"
                           />
-                          <p className="text-xs text-muted-foreground">Level AI untuk membaca knowledge source</p>
+                          <p className="text-xs text-muted-foreground">
+                            Level AI untuk membaca knowledge source
+                          </p>
                         </div>
 
                         {/* Message Await */}
                         <div className="space-y-2">
-                          <Label htmlFor="messageAwait" className="text-sm font-medium">
+                          <Label
+                            htmlFor="messageAwait"
+                            className="text-sm font-medium"
+                          >
                             Message Await
                           </Label>
                           <Input
                             id="messageAwait"
                             type="number"
                             value={agentData.messageAwait}
-                            onChange={(e) => handleInputChange("messageAwait", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "messageAwait",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
                             className="w-full"
                           />
-                          <p className="text-xs text-muted-foreground">Delay Waktu AI untuk merespon pesan pengguna</p>
+                          <p className="text-xs text-muted-foreground">
+                            Delay Waktu AI untuk merespon pesan pengguna
+                          </p>
                         </div>
 
                         {/* AI Message Limit */}
                         <div className="space-y-2">
-                          <Label htmlFor="aiMessageLimit" className="text-sm font-medium">
+                          <Label
+                            htmlFor="aiMessageLimit"
+                            className="text-sm font-medium"
+                          >
                             AI Message Limit
                           </Label>
                           <Input
                             id="aiMessageLimit"
                             type="number"
                             value={agentData.aiMessageLimit}
-                            onChange={(e) => handleInputChange("aiMessageLimit", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "aiMessageLimit",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
                             className="w-full"
                           />
-                          <p className="text-xs text-muted-foreground">Limit pesan yang bisa dikirim oleh AI ke satu customer</p>
+                          <p className="text-xs text-muted-foreground">
+                            Limit pesan yang bisa dikirim oleh AI ke satu
+                            customer
+                          </p>
                         </div>
 
                         {/* Timezone */}
                         <div className="space-y-2">
-                          <Label htmlFor="timezone" className="text-sm font-medium">
+                          <Label
+                            htmlFor="timezone"
+                            className="text-sm font-medium"
+                          >
                             Timezone
                           </Label>
-                          <Select value={agentData.timezone} onValueChange={(value) => handleInputChange("timezone", value)}>
-                            <SelectTrigger>
+                          <Select
+                            value={agentData.timezone}
+                            onValueChange={(value) =>
+                              handleInputChange("timezone", value)
+                            }
+                          >
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select timezone" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="(GMT+07:00) Asia/Jakarta">(GMT+07:00) Asia/Jakarta</SelectItem>
-                              <SelectItem value="(GMT+08:00) Asia/Singapore">(GMT+08:00) Asia/Singapore</SelectItem>
-                              <SelectItem value="(GMT+09:00) Asia/Tokyo">(GMT+09:00) Asia/Tokyo</SelectItem>
-                              <SelectItem value="(GMT+00:00) UTC">(GMT+00:00) UTC</SelectItem>
-                              <SelectItem value="(GMT-05:00) America/New_York">(GMT-05:00) America/New_York</SelectItem>
+                              <SelectItem value="(GMT+07:00) Asia/Jakarta">
+                                (GMT+07:00) Asia/Jakarta
+                              </SelectItem>
+                              <SelectItem value="(GMT+08:00) Asia/Singapore">
+                                (GMT+08:00) Asia/Singapore
+                              </SelectItem>
+                              <SelectItem value="(GMT+09:00) Asia/Tokyo">
+                                (GMT+09:00) Asia/Tokyo
+                              </SelectItem>
+                              <SelectItem value="(GMT+00:00) UTC">
+                                (GMT+00:00) UTC
+                              </SelectItem>
+                              <SelectItem value="(GMT-05:00) America/New_York">
+                                (GMT-05:00) America/New_York
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         {/* Selected Labels */}
                         <div className="space-y-2">
-                          <Label htmlFor="selectedLabels" className="text-sm font-medium">
+                          <Label
+                            htmlFor="selectedLabels"
+                            className="text-sm font-medium"
+                          >
                             Selected Labels
                           </Label>
                           <Select>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select labels" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="support">Support</SelectItem>
                               <SelectItem value="sales">Sales</SelectItem>
-                              <SelectItem value="technical">Technical</SelectItem>
+                              <SelectItem value="technical">
+                                Technical
+                              </SelectItem>
                               <SelectItem value="billing">Billing</SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-muted-foreground">AI dapat secara otomatis melabeli chat. Pilih label yang digunakan untuk digunakan oleh AI</p>
+                          <p className="text-xs text-muted-foreground">
+                            AI dapat secara otomatis melabeli chat. Pilih label
+                            yang digunakan untuk digunakan oleh AI
+                          </p>
                         </div>
                       </CollapsibleContent>
                     </Collapsible>
                   </TabsContent>
 
                   <TabsContent value="knowledge" className="mt-0">
-                    <div className="text-center py-12">
-                      <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Knowledge Sources</h3>
-                      <p className="text-muted-foreground">Configure knowledge sources for your AI agent.</p>
-                    </div>
+                    <Tabs defaultValue="text" className="w-full">
+                      {/* Knowledge Sources Nested Tabs */}
+                      <div className="border-b border-gray-200 mb-6">
+                        <TabsList className="grid w-full grid-cols-5 bg-transparent h-auto p-0">
+                          <TabsTrigger
+                            value="text"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                          >
+                            Text
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="website"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                          >
+                            Website
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="product"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                          >
+                            Product
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="file"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                          >
+                            File
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="qa"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                          >
+                            Q&A
+                          </TabsTrigger>
+                        </TabsList>
+                      </div>
+
+                      {/* Nested Tab Contents */}
+                      <TabsContent value="text" className="mt-0">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-foreground mb-2">
+                              Text Knowledge Source
+                            </h4>
+                            <p className="text-muted-foreground mb-4">
+                              Add text-based knowledge for your AI agent.
+                            </p>
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="textTitle"
+                              className="text-sm font-medium"
+                            >
+                              Title
+                            </Label>
+                            <Input
+                              id="textTitle"
+                              placeholder="Enter knowledge title"
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="textContent"
+                              className="text-sm font-medium"
+                            >
+                              Content
+                            </Label>
+                            <Textarea
+                              id="textContent"
+                              placeholder="Enter your knowledge content here..."
+                              className="min-h-[200px] resize-none"
+                            />
+                          </div>
+                          <Button className="bg-primary hover:bg-primary/90">
+                            Add Text Knowledge
+                          </Button>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="website" className="mt-0">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-foreground mb-2">
+                              Website Knowledge Source
+                            </h4>
+                            <p className="text-muted-foreground mb-4">
+                              Import knowledge from websites and URLs.
+                            </p>
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="websiteUrl"
+                              className="text-sm font-medium"
+                            >
+                              Website URL
+                            </Label>
+                            <Input
+                              id="websiteUrl"
+                              placeholder="https://example.com"
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="websiteTitle"
+                              className="text-sm font-medium"
+                            >
+                              Title (Optional)
+                            </Label>
+                            <Input
+                              id="websiteTitle"
+                              placeholder="Custom title for this source"
+                              className="w-full"
+                            />
+                          </div>
+                          {/* <div className="flex items-center space-x-2">
+                            <Checkbox id="autoUpdate" />
+                            <Label
+                              htmlFor="autoUpdate"
+                              className="text-sm font-medium"
+                            >
+                              Auto-update content from this URL
+                            </Label>
+                          </div> */}
+                          <Button className="bg-primary hover:bg-primary/90">
+                            Import from Website
+                          </Button>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="product" className="mt-0">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-foreground mb-2">
+                              Product Knowledge Source
+                            </h4>
+                            <p className="text-muted-foreground mb-4">
+                              Add product information and specifications.
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                              <Label
+                                htmlFor="productName"
+                                className="text-sm font-medium"
+                              >
+                                Product Name
+                              </Label>
+                              <Input
+                                id="productName"
+                                placeholder="Enter product name"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <Label
+                                htmlFor="productCategory"
+                                className="text-sm font-medium"
+                              >
+                                Category
+                              </Label>
+                              <Select>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="electronics">
+                                    Electronics
+                                  </SelectItem>
+                                  <SelectItem value="clothing">
+                                    Clothing
+                                  </SelectItem>
+                                  <SelectItem value="home">
+                                    Home & Garden
+                                  </SelectItem>
+                                  <SelectItem value="sports">Sports</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="productDescription"
+                              className="text-sm font-medium"
+                            >
+                              Product Description
+                            </Label>
+                            <Textarea
+                              id="productDescription"
+                              placeholder="Detailed product description..."
+                              className="min-h-[150px] resize-none"
+                            />
+                          </div>
+                          <Button className="bg-primary hover:bg-primary/90">
+                            Add Product Knowledge
+                          </Button>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="file" className="mt-0">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-foreground mb-2">
+                              File Knowledge Source
+                            </h4>
+                            <p className="text-muted-foreground mb-4">
+                              Upload documents and files as knowledge sources.
+                            </p>
+                          </div>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h5 className="text-lg font-medium text-foreground mb-2">
+                              Upload Files
+                            </h5>
+                            <p className="text-muted-foreground mb-4">
+                              Drag and drop files here, or click to browse
+                            </p>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Supported formats: PDF, DOC, DOCX, TXT, CSV
+                            </p>
+                            <Button variant="outline">Browse Files</Button>
+                          </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="fileTitle"
+                              className="text-sm font-medium"
+                            >
+                              Custom Title (Optional)
+                            </Label>
+                            <Input
+                              id="fileTitle"
+                              placeholder="Custom title for uploaded files"
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="qa" className="mt-0">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-foreground mb-2">
+                              Q&A Knowledge Source
+                            </h4>
+                            <p className="text-muted-foreground mb-4">
+                              Create question and answer pairs for specific
+                              scenarios.
+                            </p>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="space-y-3">
+                              <Label
+                                htmlFor="question"
+                                className="text-sm font-medium"
+                              >
+                                Question
+                              </Label>
+                              <Input
+                                id="question"
+                                placeholder="What question might customers ask?"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <Label
+                                htmlFor="answer"
+                                className="text-sm font-medium"
+                              >
+                                Answer
+                              </Label>
+                              <Textarea
+                                id="answer"
+                                placeholder="Provide the ideal answer for this question..."
+                                className="min-h-[120px] resize-none"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <Label
+                                htmlFor="keywords"
+                                className="text-sm font-medium"
+                              >
+                                Keywords (Optional)
+                              </Label>
+                              <Input
+                                id="keywords"
+                                placeholder="Related keywords, separated by commas"
+                                className="w-full"
+                              />
+                            </div>
+                          </div>
+                          <Button className="bg-primary hover:bg-primary/90">
+                            Add Q&A Pair
+                          </Button>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
 
                   <TabsContent value="integrations" className="mt-0">
                     <div className="text-center py-12">
                       <Link className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Integrations</h3>
-                      <p className="text-muted-foreground">Connect your AI agent with external services.</p>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Integrations
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Connect your AI agent with external services.
+                      </p>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="followups" className="mt-0">
                     <div className="text-center py-12">
                       <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Followups</h3>
-                      <p className="text-muted-foreground">Configure automated followup messages.</p>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Followups
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Configure automated followup messages.
+                      </p>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="existing" className="mt-0">
                     <div className="text-center py-12">
                       <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Existing Knowledge Sources</h3>
-                      <p className="text-muted-foreground">View and manage existing knowledge sources.</p>
-                    </div>                    </TabsContent>
-                  </div>
-                </div>
-              </div>              {/* Right Panel - Chat Preview (Always Visible) */}
-              <div className="w-96 flex-shrink-0">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <AIAgentChatPreview agentName={agentData.name} welcomeMessage={agentData.welcomeMessage} />
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Existing Knowledge Sources
+                      </h3>
+                      <p className="text-muted-foreground">
+                        View and manage existing knowledge sources.
+                      </p>
+                    </div>
+                  </TabsContent>
                 </div>
               </div>
+
+              {/* Right Panel - Chat Preview (Always Visible) */}
+              <div className="w-96 flex-shrink-0">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                  <AIAgentChatPreview
+                    agentName={agentData.name}
+                    welcomeMessage={agentData.welcomeMessage}
+                  />
+                </div>
+              </div>
+              
             </div>
           </Tabs>
         </div>
       </div>
     </MainLayout>
-  )
+  );
 }

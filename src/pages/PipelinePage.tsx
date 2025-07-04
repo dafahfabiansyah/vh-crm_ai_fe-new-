@@ -45,7 +45,7 @@ const initialPipelineData: PipelineStage[] = [
   {
     id: 'new-lead',
     name: 'New Lead',
-    count: 19,
+    count: 4,
     value: 0,
     color: 'blue',
     leads: [
@@ -439,7 +439,7 @@ const PipelinePage = () => {
                   className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span className="text-sm font-medium">BACK TO DASHBOARD</span>
+                  <span className="text-sm font-medium">Back To Dashboard</span>
                 </Link>
               </div>
               

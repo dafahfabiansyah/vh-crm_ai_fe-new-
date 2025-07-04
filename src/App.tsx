@@ -18,7 +18,6 @@ import ProductPage from "./pages/ProductPage";
 import TicketPage from "./pages/TicketPage";
 import FlowSettingsPage from "./pages/FlowSettingsPage";
 import SettingsPage from "./pages/SettingsPage";
-// import DashboardPage from "@/pages/Dashboard";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
@@ -66,7 +65,7 @@ export default function App() {
               <AIAgentsPage />
             </ProtectedRoute>
           }
-        />{" "}
+        />
         <Route
           path="/ai-agents/:id"
           element={
@@ -106,7 +105,7 @@ export default function App() {
               <BillingPage />
             </ProtectedRoute>
           }
-        />{" "}
+        />
         <Route
           path="/pipeline/create"
           element={

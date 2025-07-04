@@ -68,15 +68,16 @@ const CreatePipelinePage = () => {
     <MainLayout>
       <div className="p-6 max-w-4xl mx-auto">
         {/* Back Navigation */}
-        <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm font-medium">BACK TO DASHBOARD</span>
-          </Link>
-        </div>
+        <div className="flex items-center gap-4">
+              <Link
+                to="#"
+                onClick={(e) => { e.preventDefault(); window.history.back(); }}
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="text-sm font-medium">Back</span>
+              </Link>
+            </div>
 
         {/* Main Content Card */}
         <Card className="border border-border shadow-sm">

@@ -32,14 +32,17 @@ export default function NavigationSidebar() {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  const isParentActive = (children?: NavigationItem[]) => {
-    if (!children) return false;
-    return children.some((child) => isActive(child.href));
+  const isItemActive = (item: NavigationItem): boolean => {
+    if (isActive(item.href)) return true;
+    if (item.children) {
+      return item.children.some(child => isActive(child.href));
+    }
+    return false;
   };
   const renderNavigationItem = (item: NavigationItem, level = 0) => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.includes(item.id);
-    const itemIsActive = isActive(item.href) || isParentActive(item.children);
+    const itemIsActive = isItemActive(item);
 
     if (hasChildren) {
       return (
@@ -55,23 +58,17 @@ export default function NavigationSidebar() {
                 "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
                 !isHovered ? "px-3" : "px-3",
                 level > 0 && isHovered && "pl-8",
-                itemIsActive &&
-                  "bg-primary/10 text-primary border-r-2 border-r-primary"
+                itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
               )}
             >
-              {" "}
-              <item.icon
-                className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")}
-              />
+              <item.icon className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")} />
               <div
                 className={cn(
                   "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
                   isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
                 )}
               >
-                <span className="flex-1 text-left whitespace-nowrap">
-                  {item.label}
-                </span>
+                <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
                 {isExpanded ? (
                   <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0" />
                 ) : (
@@ -82,9 +79,7 @@ export default function NavigationSidebar() {
           </CollapsibleTrigger>
           {isHovered && (
             <CollapsibleContent className="space-y-1">
-              {item.children?.map((child) =>
-                renderNavigationItem(child, level + 1)
-              )}
+              {item.children?.map((child) => renderNavigationItem(child, level + 1))}
             </CollapsibleContent>
           )}
         </Collapsible>
@@ -100,23 +95,17 @@ export default function NavigationSidebar() {
               "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
               !isHovered ? "px-3" : "px-3",
               level > 0 && isHovered && "pl-8",
-              itemIsActive &&
-                "bg-primary/10 text-primary border-r-2 border-r-primary"
+              itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
             )}
           >
-            {" "}
-            <item.icon
-              className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")}
-            />
+            <item.icon className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")} />
             <div
               className={cn(
                 "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
                 isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
               )}
             >
-              <span className="flex-1 text-left whitespace-nowrap">
-                {item.label}
-              </span>
+              <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
               {item.badge && (
                 <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
                   {item.badge}
@@ -126,41 +115,36 @@ export default function NavigationSidebar() {
           </Button>
         </Link>
       );
-    } else {
-      return (
-        <div key={item.id}>
-          <Button
-            variant="ghost"
+    }
+
+    return (
+      <div key={item.id}>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
+            !isHovered ? "px-3" : "px-3",
+            level > 0 && isHovered && "pl-8",
+            itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
+          )}
+        >
+          <item.icon className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")} />
+          <div
             className={cn(
-              "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-              !isHovered ? "px-3" : "px-3",
-              level > 0 && isHovered && "pl-8",
-              itemIsActive &&
-                "bg-primary/10 text-primary border-r-2 border-r-primary"
+              "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
+              isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             )}
           >
-            <item.icon
-              className={cn("h-4 w-4 flex-shrink-0", isHovered && "mr-3")}
-            />
-            <div
-              className={cn(
-                "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
-                isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-              )}
-            >
-              <span className="flex-1 text-left whitespace-nowrap">
-                {item.label}
-              </span>
-              {item.badge && (
-                <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
-                  {item.badge}
-                </Badge>
-              )}
-            </div>
-          </Button>
-        </div>
-      );
-    }
+            <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+            {item.badge && (
+              <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
+                {item.badge}
+              </Badge>
+            )}
+          </div>
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -233,8 +217,7 @@ export default function NavigationSidebar() {
                       variant="ghost"
                       className={cn(
                         "w-full justify-center h-11 px-3 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                        (isActive(item.href) ||
-                          isParentActive(item.children)) &&
+                        isItemActive(item) &&
                           "bg-primary/10 text-primary"
                       )}
                     >
@@ -246,7 +229,7 @@ export default function NavigationSidebar() {
                     variant="ghost"
                     className={cn(
                       "w-full justify-center h-11 px-3 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                      (isActive(item.href) || isParentActive(item.children)) &&
+                      isItemActive(item) &&
                         "bg-primary/10 text-primary"
                     )}
                   >
@@ -269,8 +252,7 @@ export default function NavigationSidebar() {
                       variant="ghost"
                       className={cn(
                         "w-full justify-center h-11 px-3 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                        (isActive(item.href) ||
-                          isParentActive(item.children)) &&
+                        isItemActive(item) &&
                           "bg-primary/10 text-primary"
                       )}
                     >
@@ -282,7 +264,7 @@ export default function NavigationSidebar() {
                     variant="ghost"
                     className={cn(
                       "w-full justify-center h-11 px-3 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                      (isActive(item.href) || isParentActive(item.children)) &&
+                      isItemActive(item) &&
                         "bg-primary/10 text-primary"
                     )}
                   >
