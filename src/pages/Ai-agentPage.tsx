@@ -10,56 +10,76 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 import MainLayout from "@/main-layout";
-import { AgentsService } from "@/services/agentsService";
+import { mockAIAgents } from "@/app/mock/data";
 import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
 
 export default function AIAgentsPage() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [agents, setAgents] = useState<AIAgent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [agents, setAgents] = useState<AIAgent[]>(mockAIAgents);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Simulate loading on initial render
   useEffect(() => {
-    fetchAgents();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   }, []);
+
   const fetchAgents = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await AgentsService.getAgents();
-      // Check if response has data property or is direct array
-      const agentsData = response?.data || response || [];
-      setAgents(Array.isArray(agentsData) ? agentsData : []);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Keep existing agents and merge with mock data if needed
+      setAgents(prevAgents => {
+        // If no previous agents, use mock data
+        if (prevAgents.length === 0) {
+          return mockAIAgents;
+        }
+        // Otherwise keep existing agents (which includes newly created ones)
+        return prevAgents;
+      });
     } catch (err: unknown) {
       const error = err as { message?: string };
       console.error("Error fetching agents:", err);
       setError(error.message || "Failed to load AI agents");
-      setAgents([]); // Ensure agents is always an array
+      setAgents([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAgentCreated = () => {
-    // Refresh the agents list after successful creation
-    fetchAgents();
+  const handleAgentCreated = (newAgent?: any) => {
+    if (newAgent) {
+      // Add the new agent to the existing agents
+      setAgents(prev => [...prev, newAgent]);
+    } else {
+      // Fallback: refresh the agents list
+      fetchAgents();
+    }
   };
   const handleDeleteAgent = async (agent: AIAgent) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Update agent to set is_active: false (soft delete)
-      await AgentsService.updateAgent(agent.id, {
-        name: agent.name,
-        is_active: false,
-      });
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Refresh agents list
-      fetchAgents();
+      // Update agent to set is_active: false (soft delete) in local state
+      setAgents(prev => 
+        prev.map(a => 
+          a.id === agent.id 
+            ? { ...a, is_active: false } 
+            : a
+        )
+      );
     } catch (err: unknown) {
       const error = err as { message?: string };
       console.error("Error deleting agent:", err);

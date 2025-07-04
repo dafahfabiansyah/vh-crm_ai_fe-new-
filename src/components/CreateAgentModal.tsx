@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, ChevronDown, Loader2, AlertCircle } from "lucide-react"
-import { AgentsService } from "@/services/agentsService"
+import { mockAgentRoles } from "@/app/mock/data"
 import type { AgentRole } from "@/types"
 
 interface CreateAgentModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (newAgent?: any) => void
 }
 
 const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
@@ -21,7 +21,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
   const [agentName, setAgentName] = useState("")
   const [selectedRoleId, setSelectedRoleId] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [roles, setRoles] = useState<AgentRole[]>([])
+  const [roles, setRoles] = useState<AgentRole[]>(mockAgentRoles)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rolesLoading, setRolesLoading] = useState(false)
@@ -35,15 +35,13 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
   const fetchRoles = async () => {
     try {
       setRolesLoading(true)
-      const rolesData = await AgentsService.getAgentRoles()
-      setRoles(rolesData)
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setRoles(mockAgentRoles)
     } catch (err: any) {
       console.error('Error fetching roles:', err)
-      // Set default roles if API fails
-      setRoles([
-        { id: "Customer Service AI", name: "Customer Service AI", description: "AI agent for customer support", created_at: "", updated_at: "" },
-        { id: "Sales AI", name: "Sales AI", description: "AI agent for sales operations", created_at: "", updated_at: "" },
-      ])    } finally {
+      setRoles(mockAgentRoles)
+    } finally {
       setRolesLoading(false)
     }
   }
@@ -56,22 +54,37 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       setLoading(true)
       setError(null)
       
-      const payload = {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find the selected role
+      const selectedRole = roles.find(role => role.id === selectedRoleId);
+      
+      // Create new agent object
+      const newAgent = {
+        id: Date.now().toString(), // Simple ID generation
         name: agentName,
         role_id: selectedRoleId,
-        is_active: true
-      }
-      
-      await AgentsService.createAgent(payload)
+        is_active: true,
+        role: selectedRole || {
+          id: selectedRoleId,
+          name: "Unknown Role",
+          description: "Role description not available",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       
       // Reset form
       setAgentName("")
       setSelectedRoleId("")
       setIsDropdownOpen(false)
       
-      // Close modal and refresh agents list
+      // Close modal and notify parent with new agent
       onClose()
-      onSuccess()
+      onSuccess(newAgent)
     } catch (err: unknown) {
       const error = err as { message?: string }
       console.error('Error creating agent:', err)

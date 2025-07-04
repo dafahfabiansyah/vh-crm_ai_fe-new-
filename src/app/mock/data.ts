@@ -1,4 +1,5 @@
 import type {
+  AgentRole,
   AIAgent,
   ChatInfo,
   ChatSession,
@@ -355,6 +356,38 @@ export const pricingPlans: PricingPlan[] = [
   },
 ];
 
+// Mock data untuk Agent Roles
+export const mockAgentRoles: AgentRole[] = [
+  {
+    id: "1",
+    name: "Customer Support",
+    description: "Handles customer inquiries and support requests",
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+  },
+  {
+    id: "2",
+    name: "Sales Assistant",
+    description: "Assists with sales inquiries and product information",
+    created_at: "2024-02-20T14:45:00Z",
+    updated_at: "2024-02-20T14:45:00Z",
+  },
+  {
+    id: "3",
+    name: "Technical Support",
+    description: "Provides technical assistance and troubleshooting",
+    created_at: "2024-03-10T09:15:00Z",
+    updated_at: "2024-03-10T09:15:00Z",
+  },
+  {
+    id: "4",
+    name: "Marketing Assistant",
+    description: "Helps with marketing campaigns and customer engagement",
+    created_at: "2024-04-05T16:20:00Z",
+    updated_at: "2024-04-05T16:20:00Z",
+  },
+];
+
 // Mock data untuk AI Agents
 export const mockAIAgents: AIAgent[] = [
   {
@@ -401,6 +434,21 @@ export const mockAIAgents: AIAgent[] = [
     },
     created_at: "2024-03-10T09:15:00Z",
     updated_at: "2024-03-10T09:15:00Z",
+  },
+  {
+    id: "4",
+    name: "Marketing Assistant AI",
+    role_id: "4",
+    is_active: true,
+    role: {
+      id: "4",
+      name: "Marketing Assistant",
+      description: "Helps with marketing campaigns and customer engagement",
+      created_at: "2024-04-05T16:20:00Z",
+      updated_at: "2024-04-05T16:20:00Z",
+    },
+    created_at: "2024-04-05T16:20:00Z",
+    updated_at: "2024-04-05T16:20:00Z",
   },
 ];
 
