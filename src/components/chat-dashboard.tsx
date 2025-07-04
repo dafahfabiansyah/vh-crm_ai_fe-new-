@@ -3,7 +3,7 @@ import { useState } from "react"
 import ChatHistoryList from "./chat-history-list"
 import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
-import { mockChatSessions, mockMessages, mockChatInfo } from "@/app/mock/data"
+import { mockChatSessions, mockMessages, mockChatInfo } from "@/mock/data"
 
 // Default welcome content
 function WelcomeContent() {

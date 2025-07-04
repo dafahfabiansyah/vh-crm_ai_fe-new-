@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, ChevronDown, Loader2, AlertCircle } from "lucide-react"
-import { mockAgentRoles } from "@/app/mock/data"
+import { mockAgentRoles } from "@/mock/data"
 import type { AgentRole } from "@/types"
 
 interface CreateAgentModalProps {

@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 import MainLayout from "@/main-layout";
-import { mockAIAgents } from "@/app/mock/data";
+import { mockAIAgents } from "@/mock/data";
 import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/CreateAgentModal";
 

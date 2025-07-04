@@ -11,7 +11,7 @@ import {
 import { ChevronRight, ChevronDown, TreePine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavigationItem } from "@/types";
-import { navigationItems, bottomNavigationItems } from "@/app/mock/data";
+import { navigationItems, bottomNavigationItems } from "@/mock/data";
 
 export default function NavigationSidebar() {
   const location = useLocation();

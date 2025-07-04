@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check, MessageCircle, Shield } from "lucide-react";
 import MainLayout from "@/main-layout";
-import { pricingPlans } from "@/app/mock/data";
+import { pricingPlans } from "@/mock/data";
 
 
 

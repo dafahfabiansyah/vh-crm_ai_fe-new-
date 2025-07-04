@@ -44,7 +44,7 @@ import {
   mockHumanAgents,
   mockWhatsAppPlatform,
   platformIcons,
-} from "@/app/mock/data";
+} from "@/mock/data";
 import { useNavigate } from "react-router";
 
 export default function ConnectedPlatformsPage() {
