@@ -10,7 +10,7 @@ import type { AgentRole } from "@/types"
 interface CreateAgentModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void // Changed from onSubmit to onSuccess for better naming
+  onSuccess: () => void
 }
 
 const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
@@ -56,13 +56,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       setLoading(true)
       setError(null)
       
-      // Find the selected role to get the role name
-      const selectedRole = roles.find(role => role.id === selectedRoleId)
-      const roleName = selectedRole?.name || selectedRoleId
-      
       const payload = {
         name: agentName,
-        role_name: roleName, // Send role name instead of role id
+        role_id: selectedRoleId,
         is_active: true
       }
       
