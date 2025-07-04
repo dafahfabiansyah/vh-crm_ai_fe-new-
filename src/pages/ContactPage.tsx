@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -30,6 +32,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
+  X,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 
@@ -174,6 +177,30 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(100);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsAppForm, setWhatsAppForm] = useState({
+    phone: "",
+    deviceName: "",
+    agentId: "",
+    message: "Hello, this is an initial message.",
+    title: "Customer inquiry",
+    notes: "Customer asked about product X"
+  });
+
+  const handleOpenWhatsAppModal = (contact: Contact) => {
+    setWhatsAppForm(prev => ({
+      ...prev,
+      phone: contact.phone || "",
+    }));
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const handleWhatsAppSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission here
+    console.log("WhatsApp message data:", whatsAppForm);
+    setIsWhatsAppModalOpen(false);
+  };
 
   const totalContacts = 9153;
   const totalPages = Math.ceil(totalContacts / itemsPerPage);
@@ -318,7 +345,12 @@ export default function ContactsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8"
+                        onClick={() => handleOpenWhatsAppModal(contact)}
+                      >
                         <MessageSquare className="h-4 w-4 text-blue-600" />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8">
@@ -438,6 +470,124 @@ export default function ContactsPage() {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Modal */}
+      {isWhatsAppModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-0 m-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border bg-accent-foreground text-white rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <Send className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Kirim Pesan WhatsApp</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="text-white hover:bg-blue-700"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleWhatsAppSubmit} className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-muted-foreground">
+                  Nomor Telepon
+                </Label>
+                <Input
+                  id="phone"
+                  value={whatsAppForm.phone}
+                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+628526000993731"
+                  className="font-mono"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deviceName" className="text-sm font-medium text-muted-foreground">
+                  Device Name
+                </Label>
+                <Select
+                  value={whatsAppForm.deviceName}
+                  onValueChange={(value) => setWhatsAppForm(prev => ({ ...prev, deviceName: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="tenant_69b86cc342e043d4a8abcd7633f440dd_dev..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
+                      tenant_69b86cc342e043d4a8abcd7633f440dd_dev...
+                    </SelectItem>
+                    <SelectItem value="device_2">Device 2</SelectItem>
+                    <SelectItem value="device_3">Device 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="agentId" className="text-sm font-medium text-muted-foreground">
+                  Agent ID
+                </Label>
+                <Input
+                  id="agentId"
+                  value={whatsAppForm.agentId}
+                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, agentId: e.target.value }))}
+                  placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
+                  className="font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message" className="text-sm font-medium text-muted-foreground">
+                  Pesan yang akan Dikirim *
+                </Label>
+                <Textarea
+                  id="message"
+                  value={whatsAppForm.message}
+                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Hello, this is an initial message."
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
+                  Tujuan
+                </Label>
+                <Input
+                  id="title"
+                  value={whatsAppForm.title}
+                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Customer inquiry"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm font-medium text-muted-foreground">
+                  Catatan Tambahan
+                </Label>
+                <Input
+                  id="notes"
+                  value={whatsAppForm.notes}
+                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Customer asked about product X"
+                />
+              </div>
+
+              <div className="pt-4">
+                <Button type="submit" className="w-full bg-accent-foreground ">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }
