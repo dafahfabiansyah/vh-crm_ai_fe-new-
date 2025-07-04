@@ -117,11 +117,13 @@ export default function Topbar({
     <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between">
       {/* Left Section - Status Alert */}
       <div className="flex items-center">
-        <Alert className="border-green-200 bg-green-50 text-green-800 py-2 px-4 h-auto flex items-center">
-          <Shield className="h-4 w-4 text-green-600 mr-2" />
-          <AlertDescription className="text-sm font-medium">
-            Anda sedang menggunakan paket standar
-          </AlertDescription>
+        <Alert className="border-green-200 bg-green-50 text-green-800 py-2 px-4 h-auto">
+          <div className="flex items-center">
+            <Shield className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+            <AlertDescription className="text-sm font-medium">
+              Anda sedang menggunakan paket standar
+            </AlertDescription>
+          </div>
         </Alert>
       </div>
 
