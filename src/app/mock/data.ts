@@ -1,5 +1,32 @@
-import type { ChatInfo, ChatSession, Message, NavigationItem, Platform, PricingPlan } from "@/types"
-import { Bot, CreditCard, Crown, GitBranch, LayoutDashboard, MessageSquare, Settings, SquarePlus, User, Users, Zap, Smartphone, Tickets } from "lucide-react"
+import type {
+  AIAgent,
+  ChatInfo,
+  ChatSession,
+  Message,
+  NavigationItem,
+  Platform,
+  PricingPlan,
+  WhatsAppPlatform,
+} from "@/types";
+import {
+  Bot,
+  CreditCard,
+  Crown,
+  GitBranch,
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+  SquarePlus,
+  User,
+  Users,
+  Zap,
+  Tickets,
+  Instagram,
+  Facebook,
+  Mail,
+  Globe,
+  Twitter,
+} from "lucide-react";
 
 export const navigationItems: NavigationItem[] = [
   {
@@ -19,7 +46,6 @@ export const navigationItems: NavigationItem[] = [
         icon: SquarePlus,
         href: "/pipeline/create",
       },
-
     ],
   },
   {
@@ -33,24 +59,12 @@ export const navigationItems: NavigationItem[] = [
     label: "Human Agent",
     icon: User,
     href: "/human-agents",
-  },  {
+  },
+  {
     id: "platforms",
     label: "Platforms",
     icon: MessageSquare,
-    children: [
-      {
-        id: "connected-platforms",
-        label: "Connected Platforms",
-        icon: MessageSquare,
-        href: "/connected-platforms",
-      },
-      {
-        id: "whatsapp-connect",
-        label: "WhatsApp Setup",
-        icon: Smartphone,
-        href: "/whatsapp/connect",
-      },
-    ],
+    href: "/connected-platforms",
   },
   {
     id: "contacts",
@@ -64,7 +78,7 @@ export const navigationItems: NavigationItem[] = [
     icon: Tickets,
     href: "/tickets",
   },
-]
+];
 
 export const bottomNavigationItems: NavigationItem[] = [
   {
@@ -79,9 +93,7 @@ export const bottomNavigationItems: NavigationItem[] = [
     icon: Settings,
     href: "/settings",
   },
-]
-
-
+];
 
 export const mockChatSessions: ChatSession[] = [
   {
@@ -129,19 +141,21 @@ export const mockChatSessions: ChatSession[] = [
     agent: "Sales Distcctv",
     isOnline: false,
   },
-]
+];
 
 export const mockMessages: Message[] = [
   {
     id: "1",
-    content: "Kakak butuh informasi mengenai layanan maintenance untuk mesin absen.",
+    content:
+      "Kakak butuh informasi mengenai layanan maintenance untuk mesin absen.",
     sender: "customer",
     timestamp: "Wednesday 17:07",
     isSystem: false,
   },
   {
     id: "2",
-    content: "Masalah yang dihadapi kakak adalah laporan dari mesin absen yang tidak akurat.",
+    content:
+      "Masalah yang dihadapi kakak adalah laporan dari mesin absen yang tidak akurat.",
     sender: "customer",
     timestamp: "Wednesday 17:07",
     isSystem: false,
@@ -190,7 +204,7 @@ export const mockMessages: Message[] = [
     timestamp: "Wednesday 18:58",
     isSystem: false,
   },
-]
+];
 
 export const mockChatInfo: ChatInfo = {
   customerName: "Ibu Vina Tangerang",
@@ -208,8 +222,7 @@ export const mockChatInfo: ChatInfo = {
   createdAt: "June 18th 2025, 4:58 pm",
   resolvedAt: "June 19th 2025, 5:24 pm",
   openUntil: "00:00:00",
-}
-
+};
 
 export const aiAgents = [
   {
@@ -218,21 +231,20 @@ export const aiAgents = [
     type: "Customer Service AI",
     description: "AI agent for customer support",
     avatar: "H",
-    created: "19/06/2025"
-  }
-]
+    created: "19/06/2025",
+  },
+];
 
 export const humanAgents = [
-    {
-      id: "1",
-      name: "kapanpulang@gmail.com",
-      email: "kapanpulang@gmail.com",
-      role: "Super Admin",
-      department: "management",
-      status: "Active",
-    },
-  ]
-
+  {
+    id: "1",
+    name: "kapanpulang@gmail.com",
+    email: "kapanpulang@gmail.com",
+    role: "Super Admin",
+    department: "management",
+    status: "Active",
+  },
+];
 
 export const mockPlatforms: Platform[] = [
   {
@@ -299,7 +311,6 @@ export const mockPlatforms: Platform[] = [
   },
 ];
 
-
 export const pricingPlans: PricingPlan[] = [
   {
     id: "trial",
@@ -342,4 +353,125 @@ export const pricingPlans: PricingPlan[] = [
       { text: "API Access", included: true },
     ],
   },
+];
+
+// Mock data untuk AI Agents
+export const mockAIAgents: AIAgent[] = [
+  {
+    id: "1",
+    name: "DISTCCTV AI",
+    role_id: "1",
+    is_active: true,
+    role: {
+      id: "1",
+      name: "Customer Support",
+      description: "Handles customer inquiries and support requests",
+      created_at: "2024-01-15T10:30:00Z",
+      updated_at: "2024-01-15T10:30:00Z",
+    },
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+  },
+  {
+    id: "2",
+    name: "Sales Assistant AI",
+    role_id: "2",
+    is_active: true,
+    role: {
+      id: "2",
+      name: "Sales Assistant",
+      description: "Assists with sales inquiries and product information",
+      created_at: "2024-02-20T14:45:00Z",
+      updated_at: "2024-02-20T14:45:00Z",
+    },
+    created_at: "2024-02-20T14:45:00Z",
+    updated_at: "2024-02-20T14:45:00Z",
+  },
+  {
+    id: "3",
+    name: "Technical Support AI",
+    role_id: "3",
+    is_active: true,
+    role: {
+      id: "3",
+      name: "Technical Support",
+      description: "Provides technical assistance and troubleshooting",
+      created_at: "2024-03-10T09:15:00Z",
+      updated_at: "2024-03-10T09:15:00Z",
+    },
+    created_at: "2024-03-10T09:15:00Z",
+    updated_at: "2024-03-10T09:15:00Z",
+  },
+];
+
+// Mock data untuk Human Agents
+export const mockHumanAgents = [
+  {
+    id: "1",
+    name: "SPV DISTCCTV",
+    user_email: "spv@distcctv.com",
+    role: "manager",
+    department: "Supervision",
+    is_active: true,
+  },
+  {
+    id: "2",
+    name: "Customer Service 1",
+    user_email: "cs1@distcctv.com",
+    role: "human-agent",
+    department: "Customer Service",
+    is_active: true,
+  },
+  {
+    id: "3",
+    name: "Sales Agent 1",
+    user_email: "sales1@distcctv.com",
+    role: "human-agent",
+    department: "Sales",
+    is_active: true,
+  },
+  {
+    id: "4",
+    name: "Technical Support",
+    user_email: "tech@distcctv.com",
+    role: "human-agent",
+    department: "Technical",
+    is_active: true,
+  },
+];
+
+// Mock data untuk WhatsApp Platform
+export const mockWhatsAppPlatform: WhatsAppPlatform = {
+  id: "1082fe3c_device_1750494274779_67xmoijuo",
+  name: "WhatsApp Business DISTCCTV",
+  type: "whatsapp",
+  phone: "+628526000993731",
+  description: "WhatsApp Business - Connected",
+  isActive: true,
+  deviceId: "1082fe3c_device_1750494274779_67xmoijuo",
+  deviceName: "DISTCCTV Business",
+  status: "Connected",
+  sessionId: "session_mock_123",
+  timestamp: new Date().toISOString(),
+  isConnected: true,
+  isLoggedIn: true,
+  aiAgent: "DISTCCTV AI",
+  teams: ["DISTCCTV", "Support Team"],
+  humanAgent: "SPV DISTCCTV",
+  distributionMethod: "least-assigned",
+  csatEnabled: true,
+};
+
+export const platformIcons = {
+  whatsapp: MessageSquare,
+  instagram: Instagram,
+  facebook: Facebook,
+  email: Mail,
+  website: Globe,
+  twitter: Twitter,
+};
+
+export const distributionMethods = [
+  { value: "least-assigned", label: "Least Assigned First" },
+  { value: "round-robin", label: "Round Robin" },
 ];

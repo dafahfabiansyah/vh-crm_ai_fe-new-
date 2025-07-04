@@ -22,11 +22,6 @@ import {
   Trash2,
   Phone,
   MessageSquare,
-  Instagram,
-  Facebook,
-  Twitter,
-  Mail,
-  Globe,
   Users,
   Bot,
   User,
@@ -37,141 +32,31 @@ import {
   XCircle,
   Clock,
   RefreshCw,
+  Instagram,
+  Globe,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import type { AIAgent, WhatsAppPlatform } from "@/types";
 import { Toast } from "@/components/ui/toast";
-
-const platformIcons = {
-  whatsapp: MessageSquare,
-  instagram: Instagram,
-  facebook: Facebook,
-  email: Mail,
-  website: Globe,
-  twitter: Twitter,
-};
-
-const distributionMethods = [
-  { value: "least-assigned", label: "Least Assigned First" },
-  { value: "round-robin", label: "Round Robin" },
-];
-
-// Mock data untuk AI Agents
-const mockAIAgents: AIAgent[] = [
-  {
-    id: "1",
-    name: "DISTCCTV AI",
-    role_id: "1",
-    is_active: true,
-    role: {
-      id: "1",
-      name: "Customer Support",
-      description: "Handles customer inquiries and support requests",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-    },
-    created_at: "2024-01-15T10:30:00Z",
-    updated_at: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "2", 
-    name: "Sales Assistant AI",
-    role_id: "2",
-    is_active: true,
-    role: {
-      id: "2",
-      name: "Sales Assistant",
-      description: "Assists with sales inquiries and product information",
-      created_at: "2024-02-20T14:45:00Z",
-      updated_at: "2024-02-20T14:45:00Z",
-    },
-    created_at: "2024-02-20T14:45:00Z",
-    updated_at: "2024-02-20T14:45:00Z",
-  },
-  {
-    id: "3",
-    name: "Technical Support AI", 
-    role_id: "3",
-    is_active: true,
-    role: {
-      id: "3",
-      name: "Technical Support",
-      description: "Provides technical assistance and troubleshooting",
-      created_at: "2024-03-10T09:15:00Z",
-      updated_at: "2024-03-10T09:15:00Z",
-    },
-    created_at: "2024-03-10T09:15:00Z",
-    updated_at: "2024-03-10T09:15:00Z",
-  },
-];
-
-// Mock data untuk Human Agents  
-const mockHumanAgents = [
-  {
-    id: "1",
-    name: "SPV DISTCCTV",
-    user_email: "spv@distcctv.com",
-    role: "manager",
-    department: "Supervision",
-    is_active: true,
-  },
-  {
-    id: "2",
-    name: "Customer Service 1",
-    user_email: "cs1@distcctv.com", 
-    role: "human-agent",
-    department: "Customer Service",
-    is_active: true,
-  },
-  {
-    id: "3",
-    name: "Sales Agent 1",
-    user_email: "sales1@distcctv.com",
-    role: "human-agent", 
-    department: "Sales",
-    is_active: true,
-  },
-  {
-    id: "4",
-    name: "Technical Support",
-    user_email: "tech@distcctv.com",
-    role: "human-agent",
-    department: "Technical",
-    is_active: true,
-  },
-];
-
-// Mock data untuk WhatsApp Platform
-const mockWhatsAppPlatform: WhatsAppPlatform = {
-  id: "1082fe3c_device_1750494274779_67xmoijuo",
-  name: "WhatsApp Business DISTCCTV",
-  type: "whatsapp",
-  phone: "+628526000993731",
-  description: "WhatsApp Business - Connected",
-  isActive: true,
-  deviceId: "1082fe3c_device_1750494274779_67xmoijuo", 
-  deviceName: "DISTCCTV Business",
-  status: "Connected",
-  sessionId: "session_mock_123",
-  timestamp: new Date().toISOString(),
-  isConnected: true,
-  isLoggedIn: true,
-  aiAgent: "DISTCCTV AI",
-  teams: ["DISTCCTV", "Support Team"],
-  humanAgent: "SPV DISTCCTV", 
-  distributionMethod: "least-assigned",
-  csatEnabled: true,
-};
+import {
+  distributionMethods,
+  mockAIAgents,
+  mockHumanAgents,
+  mockWhatsAppPlatform,
+  platformIcons,
+} from "@/app/mock/data";
+import { useNavigate } from "react-router";
 
 export default function ConnectedPlatformsPage() {
+  const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] =
-    useState<WhatsAppPlatform | null>(mockWhatsAppPlatform);
+    useState<WhatsAppPlatform | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [whatsappPlatforms, setWhatsappPlatforms] = useState<
     WhatsAppPlatform[]
   >([mockWhatsAppPlatform]);
   const [loading, setLoading] = useState(false);
-  // Agent states - using mock data
+
   const [aiAgents] = useState<AIAgent[]>(mockAIAgents);
   const [humanAgents] = useState(mockHumanAgents);
   const [agentsLoading] = useState(false);
@@ -187,6 +72,9 @@ export default function ConnectedPlatformsPage() {
 
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
+
+  // Add Platform Modal state
+  const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
 
   const filteredPlatforms = whatsappPlatforms.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -206,6 +94,7 @@ export default function ConnectedPlatformsPage() {
       });
     }, 1000);
   };
+
   const handleSave = async () => {
     if (!selectedPlatform) return;
 
@@ -345,7 +234,12 @@ export default function ConnectedPlatformsPage() {
                     className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
                   />
                 </Button>
-                <Button size="icon" variant="outline" className="rounded-full">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setIsAddPlatformModalOpen(true)}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -803,17 +697,92 @@ export default function ConnectedPlatformsPage() {
                   <Settings className="h-8 w-8 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Pilih Platform untuk Konfigurasi
+                  No Inbox Selected
                 </h3>
                 <p className="text-muted-foreground">
-                  Pilih platform dari sidebar untuk melihat dan mengatur
-                  konfigurasi
+                  Select an inbox from the list to view and manage its settings.
                 </p>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Add Platform Modal */}
+      {isAddPlatformModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-foreground">Connect Platform</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddPlatformModalOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-6">
+              Choose a platform to connect to your inbox
+            </p>
+
+            <div className="space-y-3">
+              {/* WhatsApp Option */}
+              <button
+                onClick={() => navigate('/connect/whatsapp')}
+                className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
+              >
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-foreground">WhatsApp Business</h3>
+                  <p className="text-sm text-muted-foreground">Connect your WhatsApp Business account</p>
+                </div>
+              </button>
+
+              {/* Instagram Option */}
+              <button
+                onClick={() => navigate('/connect/instagram')}
+                className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
+              >
+                <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <Instagram className="h-6 w-6 text-pink-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-foreground">Instagram</h3>
+                  <p className="text-sm text-muted-foreground">Connect your Instagram business account</p>
+                </div>
+              </button>
+
+              {/* Web Chat Option */}
+              <button
+                onClick={() => navigate('/connect/webchat')}
+                className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Globe className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-foreground">Web Chat</h3>
+                  <p className="text-sm text-muted-foreground">Add live chat widget to your website</p>
+                </div>
+              </button>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={() => setIsAddPlatformModalOpen(false)}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

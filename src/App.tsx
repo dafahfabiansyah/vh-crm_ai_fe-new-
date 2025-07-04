@@ -147,7 +147,23 @@ export default function App() {
           }
         />
         <Route
-          path="/whatsapp/connect"
+          path="/connect/whatsapp"
+          element={
+            <ProtectedRoute>
+              <WhatsAppQRPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/connect/instagram"
+          element={
+            <ProtectedRoute>
+              <WhatsAppQRPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/connect/webchat"
           element={
             <ProtectedRoute>
               <WhatsAppQRPage />
