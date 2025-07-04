@@ -6,7 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import AIAgentsPage from "./pages/Ai-agentPage";
 import HumanAgentsPage from "./pages/HumanAgent";
 import NotFoundPage from "@/pages/NotFoundPage";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/error-boundary";
 import ConnectedPlatformsPage from "./pages/ConnectPlatforms";
 import ContactsPage from "./pages/ContactPage";
 import BillingPage from "./pages/BillingPage";

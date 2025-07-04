@@ -12,7 +12,7 @@ import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { mockAIAgents } from "@/mock/data";
 import type { AIAgent } from "@/types";
-import CreateAgentModal from "@/components/CreateAgentModal";
+import CreateAgentModal from "@/components/create-agent-modal";
 
 export default function AIAgentsPage() {
   const navigate = useNavigate();

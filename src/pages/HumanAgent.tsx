@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Edit, Trash2, RefreshCw } from "lucide-react"
-import CreateHumanAgentModal from "@/components/CreateHumanAgentModal"
-import EditHumanAgentModal from "@/components/EditHumanAgentModal"
+import CreateHumanAgentModal from "@/components/create-human-agent-modal"
+import EditHumanAgentModal from "@/components/edit-human-agent-modal"
 
 // Mock data untuk human agents
 const mockHumanAgents = [
