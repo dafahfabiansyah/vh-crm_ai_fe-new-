@@ -1,10 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router";
-import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { registerUser, clearError } from "@/store/authSlice";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,9 +23,7 @@ import type { RegisterFormData, FormErrors, PasswordStrength } from "@/types";
 
 export default function RegisterForm() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useAppDispatch();
-  const { isLoading, error: authError, isAuthenticated } = useAppSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
@@ -41,19 +37,6 @@ export default function RegisterForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Clear auth error when component mounts
-  useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
-  // Redirect to dashboard or intended page if authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Check if there's an intended redirect path from ProtectedRoute  
-      const intendedPath = (location.state as any)?.from || "/dashboard";
-      navigate(intendedPath, { replace: true });
-    }
-  }, [isAuthenticated, navigate, location]);
 
   const checkPasswordStrength = (password: string): PasswordStrength => {
     const feedback: string[] = [];
@@ -156,31 +139,31 @@ export default function RegisterForm() {
 
     // Clear any existing errors
     setErrors({});
-    dispatch(clearError());
+    setIsLoading(true);
 
     try {
-      // Create the request object according to API specification
-      const registerData = {
-        email: formData.email,
-        password: formData.password,
-        name: formData.username,
-        business_name: formData.businessName || "",
-        phone_number: formData.phoneNumber || "",
-      };
-
-      // Dispatch register action
-      const result = await dispatch(registerUser(registerData));
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (registerUser.fulfilled.match(result)) {
-        // Registration successful, user will be redirected by useEffect
-        console.log("Registration successful:", result.payload);
-      } else {
-        // Registration failed, error will be shown from authError
-        console.error("Registration failed:", result.payload);
-      }
+      // Simulate successful registration
+      console.log("Registration successful (simulated):", {
+        email: formData.email,
+        username: formData.username,
+        businessName: formData.businessName,
+        phoneNumber: formData.phoneNumber,
+      });
+
+      // Show success message
+      alert("Registration successful! Redirecting to dashboard...");
+      
+      // Redirect to dashboard
+      navigate("/dashboard", { replace: true });
+      
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({ general: "An unexpected error occurred. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -210,10 +193,10 @@ export default function RegisterForm() {
   const strengthLabels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {(errors.general || authError) && (
+      {errors.general && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general || authError}</AlertDescription>
+          <AlertDescription>{errors.general}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">

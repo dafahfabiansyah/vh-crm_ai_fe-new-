@@ -2,10 +2,8 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router"
-import { useAppDispatch, useAppSelector } from "@/hooks/redux"
-import { loginUser, clearError } from "@/store/authSlice"
+import { useState } from "react"
+import { useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,9 +13,7 @@ import type { LoginFormData, FormErrors } from "@/types"
 
 export default function LoginForm() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const dispatch = useAppDispatch()
-  const { isLoading, error: authError, isAuthenticated } = useAppSelector((state) => state.auth)
+  const [isLoading, setIsLoading] = useState(false)
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -26,19 +22,6 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
-
-  // Clear auth error when component mounts
-  useEffect(() => {
-    dispatch(clearError())
-  }, [dispatch])
-  // Redirect to dashboard or intended page if authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Check if there's an intended redirect path from ProtectedRoute
-      const intendedPath = (location.state as any)?.from || "/dashboard";
-      navigate(intendedPath, { replace: true });
-    }
-  }, [isAuthenticated, navigate, location])
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -66,28 +49,29 @@ export default function LoginForm() {
 
     // Clear any existing errors
     setErrors({})
-    dispatch(clearError())
+    setIsLoading(true)
 
     try {
-      // Create the request object according to API specification
-      const loginData = {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Simulate successful login
+      console.log("Login successful (simulated):", {
         email: formData.email,
         password: formData.password,
-      }
+      })
 
-      // Dispatch login action
-      const result = await dispatch(loginUser(loginData))
+      // Show success message
+      alert("Login successful! Redirecting to dashboard...")
       
-      if (loginUser.fulfilled.match(result)) {
-        // Login successful, user will be redirected by useEffect
-        console.log("Login successful:", result.payload)
-      } else {
-        // Login failed, error will be shown from authError
-        console.error("Login failed:", result.payload)
-      }
+      // Redirect to dashboard
+      navigate("/dashboard", { replace: true })
+      
     } catch (error) {
       console.error("Login error:", error)
       setErrors({ general: "An unexpected error occurred. Please try again." })
+    } finally {
+      setIsLoading(false)
     }
   }
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -100,17 +84,20 @@ export default function LoginForm() {
 
     // Clear errors
     setErrors({})
-    dispatch(clearError())
+    setIsLoading(true)
 
     try {
-      // TODO: Implement forgot password API call
-      // For now, just simulate the process
+      // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
+      
+      // Simulate successful password reset
       alert("Password reset link sent to your email!")
       setShowForgotPassword(false)
     } catch (error) {
       console.error("Password reset failed:", error)  
       setErrors({ general: "Failed to send reset email. Please try again." })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -129,10 +116,10 @@ export default function LoginForm() {
           <p className="text-sm text-muted-foreground">Enter your email address and we'll send you a reset link</p>
         </div>
 
-        {(errors.general || authError) && (
+        {errors.general && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{errors.general || authError}</AlertDescription>
+            <AlertDescription>{errors.general}</AlertDescription>
           </Alert>
         )}
 
@@ -178,10 +165,10 @@ export default function LoginForm() {
   }
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {(errors.general || authError) && (
+      {errors.general && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general || authError}</AlertDescription>
+          <AlertDescription>{errors.general}</AlertDescription>
         </Alert>
       )}
 

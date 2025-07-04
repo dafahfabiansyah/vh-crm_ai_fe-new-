@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
-import { HumanAgentsService, type CreateHumanAgentRequest } from "@/services/humanAgentsService";
 
 interface CreateHumanAgentModalProps {
   isOpen: boolean;
@@ -51,18 +50,11 @@ export default function CreateHumanAgentModal({
     setError(null);
 
     try {
-      // Transform form data to API format
-      const apiData: CreateHumanAgentRequest = {
-        name: formData.name,
-        user_email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        department: formData.department,
-        is_active: formData.active,
-      };
-
-      // Call the API
-      await HumanAgentsService.createHumanAgent(apiData);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful creation
+      console.log("Agent created successfully (mock):", formData);
       
       // Reset form
       setFormData({
@@ -80,7 +72,9 @@ export default function CreateHumanAgentModal({
         onAgentCreated();
       }
       
-      console.log("Agent created successfully");
+      // Show success message
+      alert("Agent created successfully!");
+      
     } catch (err: any) {
       setError(err.message || "Failed to create agent");
       console.error("Error creating agent:", err);

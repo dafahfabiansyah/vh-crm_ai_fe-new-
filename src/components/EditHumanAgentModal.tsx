@@ -10,12 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
-import { HumanAgentsService, type HumanAgent, type UpdateHumanAgentRequest } from "@/services/humanAgentsService";
 
 interface EditHumanAgentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  agent: HumanAgent | null;
+  agent: any | null;
   onAgentUpdated?: () => void; // Callback to refresh the list
 }
 
@@ -68,22 +67,11 @@ export default function EditHumanAgentModal({
     setError(null);
 
     try {
-      // Transform form data to API format (only include fields that have values)
-      const apiData: UpdateHumanAgentRequest = {
-        name: formData.name,
-        user_email: formData.email,
-        role: formData.role,
-        department: formData.department,
-        is_active: formData.active,
-      };
-
-      // Only include password if it's provided
-      if (formData.password.trim()) {
-        apiData.password = formData.password;
-      }
-
-      // Call the API
-      await HumanAgentsService.updateHumanAgent(agent.id, apiData);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful update
+      console.log("Agent updated successfully (mock):", formData);
       
       // Close modal and refresh list
       onClose();
@@ -91,7 +79,9 @@ export default function EditHumanAgentModal({
         onAgentUpdated();
       }
       
-      console.log("Agent updated successfully");
+      // Show success message
+      alert("Agent updated successfully!");
+      
     } catch (err: any) {
       setError(err.message || "Failed to update agent");
       console.error("Error updating agent:", err);

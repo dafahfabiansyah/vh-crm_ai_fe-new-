@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -40,12 +39,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
-import { selectWhatsAppConnectionData } from "@/store/whatsappSlice";
-import { whatsappService } from "@/services/whatsappService";
-import { AgentsService } from "@/services/agentsService";
-import { HumanAgentsService } from "@/services/humanAgentsService";
-import { AgentMappingService } from "@/services/agentMappingService";
-import type { HumanAgent } from "@/services/humanAgentsService";
 import type { AIAgent, WhatsAppPlatform } from "@/types";
 import { Toast } from "@/components/ui/toast";
 
@@ -63,20 +56,126 @@ const distributionMethods = [
   { value: "round-robin", label: "Round Robin" },
 ];
 
+// Mock data untuk AI Agents
+const mockAIAgents: AIAgent[] = [
+  {
+    id: "1",
+    name: "DISTCCTV AI",
+    role_id: "1",
+    is_active: true,
+    role: {
+      id: "1",
+      name: "Customer Support",
+      description: "Handles customer inquiries and support requests",
+      created_at: "2024-01-15T10:30:00Z",
+      updated_at: "2024-01-15T10:30:00Z",
+    },
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+  },
+  {
+    id: "2", 
+    name: "Sales Assistant AI",
+    role_id: "2",
+    is_active: true,
+    role: {
+      id: "2",
+      name: "Sales Assistant",
+      description: "Assists with sales inquiries and product information",
+      created_at: "2024-02-20T14:45:00Z",
+      updated_at: "2024-02-20T14:45:00Z",
+    },
+    created_at: "2024-02-20T14:45:00Z",
+    updated_at: "2024-02-20T14:45:00Z",
+  },
+  {
+    id: "3",
+    name: "Technical Support AI", 
+    role_id: "3",
+    is_active: true,
+    role: {
+      id: "3",
+      name: "Technical Support",
+      description: "Provides technical assistance and troubleshooting",
+      created_at: "2024-03-10T09:15:00Z",
+      updated_at: "2024-03-10T09:15:00Z",
+    },
+    created_at: "2024-03-10T09:15:00Z",
+    updated_at: "2024-03-10T09:15:00Z",
+  },
+];
+
+// Mock data untuk Human Agents  
+const mockHumanAgents = [
+  {
+    id: "1",
+    name: "SPV DISTCCTV",
+    user_email: "spv@distcctv.com",
+    role: "manager",
+    department: "Supervision",
+    is_active: true,
+  },
+  {
+    id: "2",
+    name: "Customer Service 1",
+    user_email: "cs1@distcctv.com", 
+    role: "human-agent",
+    department: "Customer Service",
+    is_active: true,
+  },
+  {
+    id: "3",
+    name: "Sales Agent 1",
+    user_email: "sales1@distcctv.com",
+    role: "human-agent", 
+    department: "Sales",
+    is_active: true,
+  },
+  {
+    id: "4",
+    name: "Technical Support",
+    user_email: "tech@distcctv.com",
+    role: "human-agent",
+    department: "Technical",
+    is_active: true,
+  },
+];
+
+// Mock data untuk WhatsApp Platform
+const mockWhatsAppPlatform: WhatsAppPlatform = {
+  id: "1082fe3c_device_1750494274779_67xmoijuo",
+  name: "WhatsApp Business DISTCCTV",
+  type: "whatsapp",
+  phone: "+628526000993731",
+  description: "WhatsApp Business - Connected",
+  isActive: true,
+  deviceId: "1082fe3c_device_1750494274779_67xmoijuo", 
+  deviceName: "DISTCCTV Business",
+  status: "Connected",
+  sessionId: "session_mock_123",
+  timestamp: new Date().toISOString(),
+  isConnected: true,
+  isLoggedIn: true,
+  aiAgent: "DISTCCTV AI",
+  teams: ["DISTCCTV", "Support Team"],
+  humanAgent: "SPV DISTCCTV", 
+  distributionMethod: "least-assigned",
+  csatEnabled: true,
+};
+
 export default function ConnectedPlatformsPage() {
   const [selectedPlatform, setSelectedPlatform] =
-    useState<WhatsAppPlatform | null>(null);
+    useState<WhatsAppPlatform | null>(mockWhatsAppPlatform);
   const [searchQuery, setSearchQuery] = useState("");
   const [whatsappPlatforms, setWhatsappPlatforms] = useState<
     WhatsAppPlatform[]
-  >([]);
+  >([mockWhatsAppPlatform]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // Agent states
-  const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
-  const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
-  const [agentsLoading, setAgentsLoading] = useState(false);
-  const [humanAgentsLoading, setHumanAgentsLoading] = useState(false);
+  // Agent states - using mock data
+  const [aiAgents] = useState<AIAgent[]>(mockAIAgents);
+  const [humanAgents] = useState(mockHumanAgents);
+  const [agentsLoading] = useState(false);
+  const [humanAgentsLoading] = useState(false);
 
   // Toast notification state
   const [toast, setToast] = useState<{
@@ -89,210 +188,25 @@ export default function ConnectedPlatformsPage() {
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
-  // Get WhatsApp connection data from Redux
-  const whatsappConnectionData = useSelector(selectWhatsAppConnectionData);
-  // Add debug logging
-  useEffect(() => {}, [whatsappConnectionData]);
-  // Fetch WhatsApp status on component mount
-  useEffect(() => {
-    const fetchWhatsAppStatus = async () => {
-      // Try to get deviceId from Redux first, then use fallback from localStorage or hardcoded
-      let deviceId = whatsappConnectionData.deviceId;
-
-      // If no deviceId in Redux, try to get from localStorage
-      // if (!deviceId) {
-      //   try {
-      //     const userData = localStorage.getItem('user_data');
-      //     if (userData) {
-      //       const parsedData = JSON.parse(userData);
-      //       deviceId = parsedData.whatsapp_device_id;
-      //     }
-      //   } catch (error) {
-      //   }
-      // }
-
-      // Final fallback to hardcoded deviceId
-      if (!deviceId) {
-        deviceId = "1082fe3c_device_1750494274779_67xmoijuo";
-        console.warn("Using fallback deviceId:", deviceId);
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await whatsappService.getStatus(deviceId);
-
-        if (response.success) {
-          const platform: WhatsAppPlatform = {
-            id: response.data.device_id,
-            name: response.data.device_name || "WhatsApp Business",
-            type: "whatsapp",
-            phone: response.data.phone_number,
-            description: `WhatsApp Business - ${response.data.status}`,
-            isActive: response.data.is_logged_in,
-            deviceId: response.data.device_id,
-            deviceName: response.data.device_name,
-            status: response.data.status,
-            sessionId: whatsappConnectionData.sessionId || "",
-            timestamp: response.data.timestamp,
-            isConnected: response.data.is_connected,
-            isLoggedIn: response.data.is_logged_in,
-            // Set default configuration values
-            aiAgent: "DISTCCTV AI",
-            teams: ["DISTCCTV"],
-            humanAgent: "SPV DISTCCTV",
-            distributionMethod: "least-assigned",
-            csatEnabled: false,
-          };
-          setWhatsappPlatforms([platform]);
-
-          // Auto-select the first platform if none is selected
-          if (!selectedPlatform) {
-            setSelectedPlatform(platform);
-          }
-        } else {
-          setError(`API Error: ${response.message || "Unknown error"}`);
-        }
-      } catch (err) {
-        console.error("Failed to fetch WhatsApp status:", err);
-        if (err instanceof Error) {
-          console.error("Error message:", err.message);
-          console.error("Error stack:", err.stack);
-        }
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch WhatsApp status"
-        );
-      } finally {
-        setLoading(false);
-      }    };
-    fetchWhatsAppStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [whatsappConnectionData.deviceId, whatsappConnectionData.sessionId]);
-  // Fetch AI agents
-  useEffect(() => {
-    const fetchAiAgents = async () => {
-      setAgentsLoading(true);
-      try {
-        const response = await AgentsService.getAgentsWithPagination(10, 0);
-        console.log("AI Agents API Response:", response);
-        console.log("AI Agents data:", response.data);
-        setAiAgents(response.data || []);
-      } catch (error) {
-        console.error("Error fetching AI agents:", error);
-      } finally {
-        setAgentsLoading(false);
-      }
-    };
-
-    fetchAiAgents();
-  }, []);
-
-  // Fetch human agents
-  useEffect(() => {
-    const fetchHumanAgents = async () => {
-      setHumanAgentsLoading(true);
-      try {
-        const agents = await HumanAgentsService.getHumanAgents();
-        console.log("Human Agents API Response:", agents);
-        setHumanAgents(agents);
-      } catch (error) {
-        console.error("Error fetching human agents:", error);
-      } finally {
-        setHumanAgentsLoading(false);
-      }
-    };    fetchHumanAgents();
-  }, []);
-
-  // Auto-hide toast after 5 seconds
-  useEffect(() => {
-    if (toast?.show) {
-      const timer = setTimeout(() => {
-        setToast(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-  const fetchWhatsAppStatus = async () => {
-    // Try to get deviceId from Redux first, then use fallback from localStorage or hardcoded
-    let deviceId = whatsappConnectionData.deviceId;
-
-    // If no deviceId in Redux, try to get from localStorage
-    if (!deviceId) {
-      try {
-        const userData = localStorage.getItem("user_data");
-        if (userData) {
-          const parsedData = JSON.parse(userData);
-          deviceId = parsedData.whatsapp_device_id;
-        }
-      } catch (error) {
-        console.error("Error parsing user_data from localStorage:", error);
-      }
-    }
-
-    // Final fallback to hardcoded deviceId
-    if (!deviceId) {
-      deviceId = "1082fe3c_device_1750494274779_67xmoijuo";
-      console.warn("Using fallback deviceId for manual refresh:", deviceId);
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await whatsappService.getStatus(deviceId);
-
-      if (response.success) {
-        const platform: WhatsAppPlatform = {
-          id: response.data.device_id,
-          name: response.data.device_name || "WhatsApp Business",
-          type: "whatsapp",
-          phone: response.data.phone_number,
-          description: `WhatsApp Business - ${response.data.status}`,
-          isActive: response.data.is_logged_in,
-          deviceId: response.data.device_id,
-          deviceName: response.data.device_name,
-          status: response.data.status,
-          sessionId: whatsappConnectionData.sessionId || "",
-          timestamp: response.data.timestamp,
-          isConnected: response.data.is_connected,
-          isLoggedIn: response.data.is_logged_in,
-          // Set default configuration values with existing values preserved
-          aiAgent: selectedPlatform?.aiAgent || "DISTCCTV AI",
-          teams: selectedPlatform?.teams || ["DISTCCTV"],
-          humanAgent: selectedPlatform?.humanAgent || "SPV DISTCCTV",
-          distributionMethod:
-            selectedPlatform?.distributionMethod || "least-assigned",
-          csatEnabled: selectedPlatform?.csatEnabled || false,
-        };
-        setWhatsappPlatforms([platform]);
-
-        // Update selected platform if it's the same device
-        if (selectedPlatform?.id === platform.id) {
-          setSelectedPlatform(platform);
-        } else if (!selectedPlatform) {
-          setSelectedPlatform(platform);
-        }
-      } else {
-        setError(`API Error: ${response.message || "Unknown error"}`);
-      }
-    } catch (err) {
-      console.error("Failed to fetch WhatsApp status (Manual):", err);
-      if (err instanceof Error) {
-        console.error("Error message:", err.message);
-        console.error("Error stack:", err.stack);
-      }
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch WhatsApp status"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filteredPlatforms = whatsappPlatforms.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );  const handleSave = async () => {
+  );
+
+  // Mock refresh function
+  const handleRefresh = () => {
+    setLoading(true);
+    // Simulate API call delay
+    setTimeout(() => {
+      setLoading(false);
+      setToast({
+        show: true,
+        type: "success",
+        title: "Platforms Refreshed",
+        description: "Platform status has been updated successfully.",
+      });
+    }, 1000);
+  };
+  const handleSave = async () => {
     if (!selectedPlatform) return;
 
     // Validate required fields
@@ -301,78 +215,68 @@ export default function ConnectedPlatformsPage() {
         show: true,
         type: "error",
         title: "Validation Error",
-        description: "Please select an AI Agent before saving."
-      });
-      return;
-    }    const whatsappNumber = whatsappConnectionData.phoneNumber || selectedPlatform.phone;
-    if (!whatsappNumber) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Validation Error",
-        description: "WhatsApp number is required."
+        description: "Please select an AI Agent before saving.",
       });
       return;
     }
 
-    const deviceId = whatsappConnectionData.deviceId || selectedPlatform.deviceId;
-    if (!deviceId) {
+    if (!selectedPlatform.phone) {
       setToast({
         show: true,
         type: "error",
         title: "Validation Error",
-        description: "Device ID is required."
+        description: "WhatsApp number is required.",
+      });
+      return;
+    }
+
+    if (!selectedPlatform.deviceId) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Validation Error",
+        description: "Device ID is required.",
       });
       return;
     }
 
     // Find the selected AI agent to get its ID
-    const selectedAIAgent = aiAgents.find(agent => agent.name === selectedPlatform.aiAgent);
+    const selectedAIAgent = aiAgents.find(
+      (agent) => agent.name === selectedPlatform.aiAgent
+    );
     if (!selectedAIAgent) {
       setToast({
         show: true,
         type: "error",
         title: "Validation Error",
-        description: "Selected AI Agent not found."
+        description: "Selected AI Agent not found.",
       });
       return;
     }
 
     setIsSaving(true);
-      try {      const requestData = {
-        whatsapp_number: whatsappNumber,
-        agent_id: selectedAIAgent.id,
-        is_active: true,
-        DeviceID: deviceId,
-        MappingType: "ai_agent"  // Assuming this is the mapping type for AI agents
-      };
+    try {
+      // Simulate API call with mock data
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log("Sending agent mapping request:", requestData);
-      
-      const response = await AgentMappingService.createMapping(requestData);
-      
-      if (response.status === "success") {
-        setToast({
-          show: true,
-          type: "success",
-          title: "Mapping Created Successfully",
-          description: `WhatsApp number ${whatsappNumber} has been mapped to ${selectedPlatform.aiAgent}`
-        });
+      setToast({
+        show: true,
+        type: "success",
+        title: "Mapping Saved Successfully",
+        description: `WhatsApp platform ${selectedPlatform.name} has been configured successfully.`,
+      });
 
-        // Update the platform in the list
-        setWhatsappPlatforms((prev) =>
-          prev.map((p) => (p.id === selectedPlatform.id ? selectedPlatform : p))
-        );
-      } else {
-        throw new Error(response.message || "Failed to create mapping");
-      }
+      // Update the platform in the list
+      setWhatsappPlatforms((prev) =>
+        prev.map((p) => (p.id === selectedPlatform.id ? selectedPlatform : p))
+      );
     } catch (error) {
-      console.error("Error creating agent mapping:", error);
+      console.error("Error saving platform configuration:", error);
       setToast({
         show: true,
         type: "error",
         title: "Save Failed",
-        description: error instanceof Error ? error.message : "Failed to save agent mapping"
+        description: "Failed to save platform configuration. Please try again.",
       });
     } finally {
       setIsSaving(false);
@@ -434,7 +338,7 @@ export default function ConnectedPlatformsPage() {
                   size="icon"
                   variant="outline"
                   className="rounded-full"
-                  onClick={fetchWhatsAppStatus}
+                  onClick={handleRefresh}
                   disabled={loading}
                 >
                   <RefreshCw
@@ -466,47 +370,6 @@ export default function ConnectedPlatformsPage() {
                   </p>
                 </div>
               </div>
-            ) : error ? (
-              <div className="p-8 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <XCircle className="h-6 w-6 text-red-400" />
-                  <div>
-                    <h3 className="text-sm font-medium text-foreground mb-1">
-                      Error loading platforms
-                    </h3>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      {error}
-                    </p>
-                    {/* Debug Info */}
-                    <div className="text-left bg-gray-50 p-3 rounded text-xs font-mono mb-4">
-                      <div>
-                        Redux deviceId:{" "}
-                        {whatsappConnectionData.deviceId || "null"}
-                      </div>
-                      <div>
-                        Redux sessionId:{" "}
-                        {whatsappConnectionData.sessionId || "null"}
-                      </div>
-                      <div>
-                        Redux isConnected:{" "}
-                        {whatsappConnectionData.isConnected ? "true" : "false"}
-                      </div>
-                      <div>
-                        Redux isLoggedIn:{" "}
-                        {whatsappConnectionData.isLoggedIn ? "true" : "false"}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={fetchWhatsAppStatus}
-                      disabled={loading}
-                    >
-                      {loading ? "Retrying..." : "Retry"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
             ) : filteredPlatforms.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="flex flex-col items-center gap-3">
@@ -522,43 +385,26 @@ export default function ConnectedPlatformsPage() {
                     </p>
                     {/* Debug Info */}
                     <div className="text-left bg-gray-50 p-3 rounded text-xs font-mono mb-4">
-                      <div>
-                        Redux deviceId:{" "}
-                        {whatsappConnectionData.deviceId || "null"}
-                      </div>
-                      <div>
-                        Redux sessionId:{" "}
-                        {whatsappConnectionData.sessionId || "null"}
-                      </div>
-                      <div>
-                        Redux isConnected:{" "}
-                        {whatsappConnectionData.isConnected ? "true" : "false"}
-                      </div>
-                      <div>
-                        Redux isLoggedIn:{" "}
-                        {whatsappConnectionData.isLoggedIn ? "true" : "false"}
-                      </div>
                       <div>Platforms count: {whatsappPlatforms.length}</div>
+                      <div>Selected: {selectedPlatform?.name || "None"}</div>
+                      <div>Loading: {loading ? "true" : "false"}</div>
                     </div>
                     {/* Debug Button */}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={fetchWhatsAppStatus}
+                        onClick={handleRefresh}
                         disabled={loading}
                       >
-                        {loading ? "Testing..." : "Test WhatsApp API"}
+                        {loading ? "Refreshing..." : "Refresh Platforms"}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          localStorage.removeItem("user_data");
-                          window.location.reload();
-                        }}
+                        onClick={() => window.location.reload()}
                       >
-                        Reset & Reload
+                        Reload Page
                       </Button>
                     </div>
                   </div>
@@ -689,7 +535,8 @@ export default function ConnectedPlatformsPage() {
                         </p>
                       )}
                     </div>
-                  </div>                  <div className="flex gap-2">
+                  </div>{" "}
+                  <div className="flex gap-2">
                     <Button
                       onClick={handleSave}
                       disabled={isSaving}
@@ -706,7 +553,8 @@ export default function ConnectedPlatformsPage() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>              </div>
+                </div>{" "}
+              </div>
 
               {/* Toast Notification */}
               {toast?.show && (
@@ -737,11 +585,7 @@ export default function ConnectedPlatformsPage() {
                             WhatsApp Number
                           </Label>
                           <Input
-                            value={
-                              whatsappConnectionData.phoneNumber ||
-                              selectedPlatform.phone ||
-                              ""
-                            }
+                            value={selectedPlatform.phone || ""}
                             readOnly
                             className="bg-gray-50"
                             placeholder="No phone number available"
@@ -770,7 +614,8 @@ export default function ConnectedPlatformsPage() {
                                   }
                                 />
                               </div>
-                            </SelectTrigger>{" "}                            <SelectContent>
+                            </SelectTrigger>{" "}
+                            <SelectContent>
                               {aiAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
@@ -781,7 +626,8 @@ export default function ConnectedPlatformsPage() {
                               ))}
                               {aiAgents.length === 0 && !agentsLoading && (
                                 <SelectItem value="no-agents" disabled>
-                                  No AI agents available (Count: {aiAgents.length})
+                                  No AI agents available (Count:{" "}
+                                  {aiAgents.length})
                                 </SelectItem>
                               )}
                             </SelectContent>
@@ -863,7 +709,8 @@ export default function ConnectedPlatformsPage() {
                                   }
                                 />
                               </div>
-                            </SelectTrigger>{" "}                            <SelectContent>
+                            </SelectTrigger>{" "}
+                            <SelectContent>
                               {humanAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
@@ -875,7 +722,8 @@ export default function ConnectedPlatformsPage() {
                               {humanAgents.length === 0 &&
                                 !humanAgentsLoading && (
                                   <SelectItem value="no-human-agents" disabled>
-                                    No human agents available (Count: {humanAgents.length})
+                                    No human agents available (Count:{" "}
+                                    {humanAgents.length})
                                   </SelectItem>
                                 )}
                             </SelectContent>

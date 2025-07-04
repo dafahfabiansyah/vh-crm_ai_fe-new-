@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import MainLayout from "@/main-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -6,49 +6,93 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
-import { HumanAgentsService, type HumanAgent } from "@/services/humanAgentsService"
+import { Search, Edit, Trash2, RefreshCw } from "lucide-react"
 import CreateHumanAgentModal from "@/components/CreateHumanAgentModal"
 import EditHumanAgentModal from "@/components/EditHumanAgentModal"
+
+// Mock data untuk human agents
+const mockHumanAgents = [
+  {
+    id: "1",
+    name: "Admin System",
+    user_email: "admin@company.com",
+    role: "superadmin",
+    department: "IT",
+    is_active: true,
+    created_at: "2024-01-15T10:30:00Z"
+  },
+  {
+    id: "2", 
+    name: "Sarah Johnson",
+    user_email: "sarah.j@company.com",
+    role: "human-agent",
+    department: "Customer Service",
+    is_active: true,
+    created_at: "2024-02-20T14:45:00Z"
+  },
+  {
+    id: "3",
+    name: "Michael Chen",
+    user_email: "michael.c@company.com", 
+    role: "manager",
+    department: "Sales",
+    is_active: true,
+    created_at: "2024-01-10T09:15:00Z"
+  },
+  {
+    id: "4",
+    name: "Emily Davis",
+    user_email: "emily.d@company.com",
+    role: "human-agent", 
+    department: "Support",
+    is_active: false,
+    created_at: "2024-03-05T16:20:00Z"
+  },
+  {
+    id: "5",
+    name: "David Wilson",
+    user_email: "david.w@company.com",
+    role: "human-agent",
+    department: "Customer Service", 
+    is_active: true,
+    created_at: "2024-02-28T11:00:00Z"
+  },
+  {
+    id: "6",
+    name: "Lisa Thompson",
+    user_email: "lisa.t@company.com",
+    role: "manager",
+    department: "Marketing",
+    is_active: true,
+    created_at: "2024-01-25T13:30:00Z"
+  }
+]
 
 export default function HumanAgentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [selectedAgent, setSelectedAgent] = useState<HumanAgent | null>(null)
-  const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<any>(null)
+  const [humanAgents, setHumanAgents] = useState(mockHumanAgents)
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [roleFilter, setRoleFilter] = useState("all-roles")// Fetch human agents from API
+  const [roleFilter, setRoleFilter] = useState("all-roles")  // Mock refresh function
   const fetchHumanAgents = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const agents = await HumanAgentsService.getHumanAgents()
-      console.log('Fetched agents:', agents); // Debug log
-      setHumanAgents(agents)
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch human agents')
-      console.error('Error fetching human agents:', err)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500))
+    setLoading(false)
+    console.log('Refreshed human agents (mock data)')
   }
-  useEffect(() => {
-    fetchHumanAgents()
-  }, [])
+
+  // Mock delete function
   const handleDeleteAgent = async (id: string) => {
-    try {
-      await HumanAgentsService.deleteHumanAgent(id)
+    if (window.confirm('Are you sure you want to delete this agent?')) {
       setHumanAgents(prev => prev.filter(agent => agent.id !== id))
-      console.log("Agent deleted successfully")
-    } catch (err: any) {
-      console.error("Error deleting agent:", err)
-      // You might want to show an error toast here
+      console.log("Agent deleted successfully (mock)")
     }
   }
 
-  const handleEditAgent = (agent: HumanAgent) => {
+  const handleEditAgent = (agent: any) => {
     setSelectedAgent(agent)
     setIsEditModalOpen(true)
   }
@@ -119,12 +163,8 @@ export default function HumanAgentsPage() {
                 <CardContent className="p-0">
                   {loading ? (
                     <div className="flex items-center justify-center p-8">
-                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
                       <span>Loading human agents...</span>
-                    </div>
-                  ) : error ? (
-                    <div className="flex items-center justify-center p-8 text-red-500">
-                      <span>Error: {error}</span>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -148,7 +188,8 @@ export default function HumanAgentsPage() {
                             </tr>
                           ) : (
                             filteredAgents.map((agent) => (
-                              <tr key={agent.id} className="border-b hover:bg-muted/25">                                <td className="p-4">
+                              <tr key={agent.id} className="border-b hover:bg-muted/25">
+                                <td className="p-4">
                                   <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -159,14 +200,25 @@ export default function HumanAgentsPage() {
                                   </div>
                                 </td>
                                 <td className="p-4 text-muted-foreground">{String(agent.user_email || '')}</td>
-                                <td className="p-4">{String(agent.role || '')}</td>
+                                <td className="p-4">
+                                  <span className={`px-2 py-1 text-xs rounded-full ${
+                                    agent.role === 'superadmin' ? 'bg-red-100 text-red-800' :
+                                    agent.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-green-100 text-green-800'
+                                  }`}>
+                                    {agent.role === 'superadmin' ? 'Super Admin' :
+                                     agent.role === 'manager' ? 'Manager' :
+                                     'Human Agent'}
+                                  </span>
+                                </td>
                                 <td className="p-4">{String(agent.department || '')}</td>
                                 <td className="p-4">
                                   <div className="flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${agent.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                     <span className="text-sm">{agent.is_active ? 'Active' : 'Inactive'}</span>
                                   </div>
-                                </td>                                <td className="p-4">
+                                </td>
+                                <td className="p-4">
                                   <div className="flex items-center gap-2">
                                     <Button 
                                       variant="ghost" 

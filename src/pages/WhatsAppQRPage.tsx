@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import MainLayout from "@/main-layout";
-import WhatsAppQRCode from "@/components/whatsapp-qr-code";
 import {
   Card,
   CardContent,
@@ -18,37 +17,122 @@ import {
   Smartphone,
   ArrowLeft,
   Settings,
+  QrCode,
 } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useAppSelector } from "@/hooks/redux";
-import {
-  selectWhatsAppConnectionData,
-  selectWhatsAppConnectionStatus,
-  selectWhatsAppError,
-} from "@/store/whatsappSlice";
+
+// Mock data for WhatsApp connection
+const mockConnectionData = {
+  deviceId: "1082fe3c_device_1750494274779_67xmoijuo",
+  phoneNumber: "+628526000993731",
+  deviceName: "DISTCCTV Business Phone",
+  sessionId: "mock_session_123",
+  isConnected: true,
+  isLoggedIn: true,
+};
+
+// Mock QR Code Component
+const DummyQRCode = ({ onDeviceConnected, onError }: { 
+  onDeviceConnected: (deviceId: string) => void; 
+  onError: (error: string) => void; 
+}) => {
+  const [isScanning, setIsScanning] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
+  const [qrCodeData] = useState("https://web.whatsapp.com/qr/ABC123XYZ789");
+
+  const handleSimulateConnection = () => {
+    setIsScanning(true);
+    setTimeout(() => {
+      setIsScanning(false);
+      setIsConnected(true);
+      onDeviceConnected(mockConnectionData.deviceId);
+    }, 2000);
+  };
+
+  const handleSimulateDisconnection = () => {
+    setIsConnected(false);
+    onError("Device disconnected for testing");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <QrCode className="h-5 w-5" />
+          WhatsApp QR Code
+        </CardTitle>
+        <CardDescription>
+          {isConnected ? "Device is connected" : "Scan this QR code with your WhatsApp mobile app"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-64 h-64 bg-gray-100 border-2 border-gray-200 rounded-lg flex items-center justify-center">
+            {isScanning ? (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Connecting...</p>
+              </div>
+            ) : isConnected ? (
+              <div className="text-center">
+                <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-2" />
+                <p className="text-sm text-green-600 font-medium">Connected</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Device: {mockConnectionData.deviceName}
+                </p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <QrCode className="h-16 w-16 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Dummy QR Code</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {qrCodeData}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 w-full">
+            {!isConnected && (
+              <Button 
+                onClick={handleSimulateConnection}
+                disabled={isScanning}
+                className="flex-1"
+              >
+                {isScanning ? "Connecting..." : "Simulate Connection"}
+              </Button>
+            )}
+            {isConnected && (
+              <Button 
+                onClick={handleSimulateDisconnection}
+                variant="outline"
+                className="flex-1"
+              >
+                Simulate Disconnect
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const WhatsAppQRPage = () => {
   const navigate = useNavigate();
 
-  // Get WhatsApp data from Redux store
-  const connectionData = useAppSelector(selectWhatsAppConnectionData);
-  const connectionStatus = useAppSelector(selectWhatsAppConnectionStatus);
-  const reduxError = useAppSelector(selectWhatsAppError);
-
-  // Local state for backward compatibility
-  const [errorMessage, setErrorMessage] = useState<string | null>(reduxError);
-
-  // Sync Redux error with local state
-  useEffect(() => {
-    setErrorMessage(reduxError);
-  }, [reduxError]);
+  // Mock connection state
+  const [connectionData] = useState(mockConnectionData);
+  const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "disconnected">("connected");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleDeviceConnected = (deviceId: string) => {
     setErrorMessage(null);
+    setConnectionStatus("connected");
     console.log("Device connected:", deviceId);
   };
 
   const handleError = (error: string) => {
     setErrorMessage(error);
+    setConnectionStatus("disconnected");
   };
 
   const handleBackToDashboard = () => {
@@ -115,7 +199,7 @@ const WhatsAppQRPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* QR Code Section */}
           <div className="space-y-6">
-            <WhatsAppQRCode
+            <DummyQRCode
               onDeviceConnected={handleDeviceConnected}
               onError={handleError}
             />
@@ -153,7 +237,7 @@ const WhatsAppQRPage = () => {
                       : "Disconnected"}
                   </Badge>
                 </div>
-                {/* {connectionData.deviceId && (
+                {connectionData.deviceId && connectionStatus === "connected" && (
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-600">Device ID:</p>
                     <code className="text-sm font-mono">
@@ -180,7 +264,7 @@ const WhatsAppQRPage = () => {
                       </>
                     )}
                   </div>
-                )} */}
+                )}
               </CardContent>
             </Card>
 
