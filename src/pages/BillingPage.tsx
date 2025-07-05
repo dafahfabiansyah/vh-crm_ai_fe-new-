@@ -114,33 +114,33 @@ export default function BillingPage() {
 
   return (
     <MainLayout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Package Details Card */}
           <Card className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-medium text-cyan-100">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-cyan-100">
                     Package Details
                   </CardTitle>
-                  <h2 className="text-xl font-bold mt-1">
+                  <h2 className="text-lg sm:text-xl font-bold mt-1 truncate">
                     {dashboardData.packageDetails.plan}
                   </h2>
                 </div>
-                <Shield className="h-6 w-6 text-cyan-200" />
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-200 flex-shrink-0" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="flex items-center gap-2 text-sm text-cyan-100 mb-3">
-                <Clock className="h-4 w-4" />
-                <span>{dashboardData.packageDetails.renewal}</span>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-cyan-100 mb-3">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="truncate">{dashboardData.packageDetails.renewal}</span>
               </div>
               <Button 
                 variant="secondary" 
                 size="sm"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
               >
                 View Current Subscription
               </Button>
@@ -151,35 +151,35 @@ export default function BillingPage() {
           <Card className="bg-gradient-to-br from-purple-400 to-purple-600 text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-medium text-purple-100">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-purple-100">
                     Monthly Active Users (Limit Tercapai)
                   </CardTitle>
-                  <h2 className="text-xl font-bold mt-1">
+                  <h2 className="text-lg sm:text-xl font-bold mt-1">
                     {dashboardData.monthlyUsers.current.toLocaleString()}
-                    <span className="text-sm font-normal text-purple-200 ml-2">
+                    <span className="text-xs sm:text-sm font-normal text-purple-200 ml-1 sm:ml-2 block sm:inline">
                       /{dashboardData.monthlyUsers.limit.toLocaleString()} MAU
                     </span>
                   </h2>
                 </div>
-                <Users className="h-6 w-6 text-purple-200" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-200 flex-shrink-0" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-sm text-purple-100 mb-3">
+              <div className="text-xs sm:text-sm text-purple-100 mb-3">
                 Additional MAU: {dashboardData.monthlyUsers.additional}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-2">
                 <Button 
                   variant="secondary" 
                   size="sm"
-                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs"
                 >
                   Top Up MAU
                 </Button>
               </div>
-              <div className="flex items-center gap-2 text-sm text-purple-200 mt-2">
-                <TrendingUp className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span>Reset Setup Tanggal 1</span>
               </div>
             </CardContent>
@@ -189,23 +189,23 @@ export default function BillingPage() {
           <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-medium text-blue-100">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-blue-100">
                     AI Responses
                   </CardTitle>
-                  <h2 className="text-xl font-bold mt-1">
+                  <h2 className="text-lg sm:text-xl font-bold mt-1">
                     {dashboardData.aiResponses.used.toLocaleString()} Used
-                    <span className="text-sm font-normal text-blue-200 ml-2">
+                    <span className="text-xs sm:text-sm font-normal text-blue-200 ml-1 sm:ml-2 block sm:inline">
                       /{dashboardData.aiResponses.limit.toLocaleString()} AI Responses Limit
                     </span>
                   </h2>
                 </div>
-                <Bot className="h-6 w-6 text-blue-200" />
+                <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 flex-shrink-0" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="flex items-center gap-2 text-sm text-blue-200 mb-3">
-                <Calendar className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-blue-200 mb-3">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span>{dashboardData.aiResponses.resetDate}</span>
               </div>
             </CardContent>
@@ -215,27 +215,27 @@ export default function BillingPage() {
           <Card className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-medium text-indigo-100">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-indigo-100">
                     Additional AI Responses
                   </CardTitle>
-                  <h2 className="text-xl font-bold mt-1">
+                  <h2 className="text-lg sm:text-xl font-bold mt-1">
                     {dashboardData.additionalResponses.count} Responses
                   </h2>
                 </div>
-                <Plus className="h-6 w-6 text-indigo-200" />
+                <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-200 flex-shrink-0" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               <Button 
                 variant="secondary" 
                 size="sm"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30 mb-3"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 mb-3 w-full sm:w-auto text-xs"
               >
                 Top Up Responses
               </Button>
-              <div className="flex items-center gap-2 text-sm text-indigo-200">
-                <Check className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-indigo-200">
+                <Check className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span>AI Responses Permanent</span>
               </div>
             </CardContent>
@@ -243,19 +243,19 @@ export default function BillingPage() {
         </div>
 
         {/* Pricing Period Selector */}
-        <div className="flex justify-center">
-          <div className="flex bg-muted rounded-lg p-1">
+        <div className="flex justify-center px-2">
+          <div className="flex bg-muted rounded-lg p-1 w-full max-w-2xl overflow-x-auto">
             {periods.map((period) => (
               <Button
                 key={period.id}
                 variant={selectedPeriod === period.id ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setSelectedPeriod(period.id)}
-                className="flex flex-col items-center gap-1 h-auto py-2 px-4"
+                className="flex flex-col items-center gap-1 h-auto py-2 px-2 sm:px-4 min-w-0 flex-1"
               >
-                <span className="text-sm font-medium">{period.label}</span>
+                <span className="text-xs sm:text-sm font-medium truncate">{period.label}</span>
                 {period.discount && (
-                  <span className="text-xs text-primary">{period.discount}</span>
+                  <span className="text-xs text-primary truncate">{period.discount}</span>
                 )}
               </Button>
             ))}
@@ -263,7 +263,7 @@ export default function BillingPage() {
         </div>
 
         {/* Pricing Plans */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {pricingPlans.map((plan) => {
             const IconComponent = plan.icon;
             return (
@@ -277,21 +277,21 @@ export default function BillingPage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">
+                    <Badge className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 text-xs">
                       Current Plan
                     </Badge>
                   </div>
                 )}
 
-                <CardHeader className="text-center pb-4">
+                <CardHeader className="text-center pb-3 sm:pb-4">
                   <div className="flex justify-center mb-2">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
                         plan.popular ? "bg-primary/10" : "bg-muted"
                       }`}
                     >
                       <IconComponent
-                        className={`h-5 w-5 ${
+                        className={`h-4 w-4 sm:h-5 sm:w-5 ${
                           plan.popular
                             ? "text-primary"
                             : "text-muted-foreground"
@@ -300,15 +300,15 @@ export default function BillingPage() {
                     </div>
                   </div>
 
-                  <CardTitle className="text-lg font-bold text-foreground">
+                  <CardTitle className="text-base sm:text-lg font-bold text-foreground">
                     {plan.name}
                   </CardTitle>
 
                   <div className="mt-2">
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-xl sm:text-2xl font-bold text-foreground">
                       {plan.price}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {plan.period}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
@@ -317,20 +317,20 @@ export default function BillingPage() {
                   </div>
 
                   <div className="mt-2">
-                    <div className="text-sm font-medium text-foreground">
+                    <div className="text-xs sm:text-sm font-medium text-foreground">
                       {plan.name} Features
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-3 px-4">
-                  <div className="space-y-2">
+                <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4">
+                  <div className="space-y-1 sm:space-y-2">
                     {plan.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center">
-                          <Check className="h-3 w-3 text-blue-600" />
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
                         </div>
-                        <span className="text-sm text-foreground">
+                        <span className="text-xs sm:text-sm text-foreground">
                           {feature.text}
                         </span>
                       </div>
@@ -338,10 +338,10 @@ export default function BillingPage() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-2 pt-4 px-4 pb-4">
+                <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
                   <Button
                     onClick={() => handleUpgrade(plan.id)}
-                    className={`w-full h-9 text-sm ${
+                    className={`w-full h-8 sm:h-9 text-xs sm:text-sm ${
                       plan.popular
                         ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                         : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
@@ -356,42 +356,42 @@ export default function BillingPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
-                  <CardDescription>Riwayat pembayaran dan transaksi Anda</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-semibold">Transaction History</CardTitle>
+                  <CardDescription className="text-sm">Riwayat pembayaran dan transaksi Anda</CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <FileText className="h-4 w-4 mr-2" />
                   Export
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {transactions.map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         transaction.type === 'subscription' 
                           ? 'bg-blue-100 text-blue-600' 
                           : 'bg-green-100 text-green-600'
                       }`}>
                         {transaction.type === 'subscription' ? (
-                          <CreditCard className="h-5 w-5" />
+                          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                         ) : (
-                          <Plus className="h-5 w-5" />
+                          <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                         )}
                       </div>
-                      <div>
-                        <h4 className="font-medium text-foreground">{transaction.description}</h4>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.description}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {new Date(transaction.date).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'long',
@@ -400,12 +400,12 @@ export default function BillingPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="font-semibold text-foreground">{transaction.amount}</div>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-0">
+                      <div className="text-left sm:text-right">
+                        <div className="font-semibold text-foreground text-sm sm:text-base">{transaction.amount}</div>
                         <Badge 
                           variant={transaction.status === 'paid' ? 'default' : 'secondary'}
-                          className="text-xs"
+                          className="text-xs mt-1"
                         >
                           {transaction.status === 'paid' ? 'Paid' : 'Pending'}
                         </Badge>
