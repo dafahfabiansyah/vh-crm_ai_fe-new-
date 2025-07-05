@@ -96,3 +96,58 @@ export interface WhatsAppPlatform {
   distributionMethod?: string;
   csatEnabled?: boolean;
 }
+
+// lead card interface
+export interface TimelineEvent {
+  id: string
+  type: 'created' | 'contacted' | 'moved' | 'note' | 'call' | 'email'
+  title: string
+  description: string
+  timestamp: string
+  user: string
+}
+
+export interface Lead {
+  id: string
+  name: string
+  phone: string
+  value: number
+  source: string
+  daysAgo: number
+  status: 'active' | 'new' | 'contacted'
+  email?: string
+  company?: string
+  location?: string
+  notes?: string
+  createdAt: string
+  lastActivity: string
+  timeline: TimelineEvent[]
+}
+
+export interface Lead {
+  id: string
+  name: string
+  phone: string
+  value: number
+  source: string
+  daysAgo: number
+  status: 'active' | 'new' | 'contacted'
+  email?: string
+  company?: string
+  location?: string
+  notes?: string
+  createdAt: string
+  lastActivity: string
+  timeline: TimelineEvent[]
+}
+
+
+
+export interface PipelineStage {
+  id: string
+  name: string
+  count: number
+  value: number
+  leads: Lead[]
+  color: string
+}

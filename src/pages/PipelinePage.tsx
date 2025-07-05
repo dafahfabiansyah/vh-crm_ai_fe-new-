@@ -1,360 +1,48 @@
-"use client"
-
-import React, { useState, useCallback } from 'react'
-import { DndProvider, useDrag, useDrop } from 'react-dnd'
+"use client";
+import { useState, useCallback } from 'react';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import MainLayout from '@/main-layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  ArrowLeft, 
-  Plus, 
-  TrendingUp, 
-  Users, 
-  Phone, 
-  Calendar,
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import {
+  ArrowLeft,
+  Plus,
+  TrendingUp,
+  Users,
+  Phone,
   MoreHorizontal,
-  Download
-} from 'lucide-react'
+  Download,
+  Clock,
+  User,
+  MessageCircle,
+  Mail,
+  MapPin,
+} from 'lucide-react';
 import { Link } from 'react-router'
-
-interface Lead {
-  id: string
-  name: string
-  phone: string
-  value: number
-  source: string
-  daysAgo: number
-  status: 'active' | 'new' | 'contacted'
-}
-
-interface PipelineStage {
-  id: string
-  name: string
-  count: number
-  value: number
-  leads: Lead[]
-  color: string
-}
-
-const ITEM_TYPE = 'LEAD'
-
-// Mock data
-const initialPipelineData: PipelineStage[] = [
-  {
-    id: 'new-lead',
-    name: 'New Lead',
-    count: 4,
-    value: 0,
-    color: 'blue',
-    leads: [
-      {
-        id: '1',
-        name: '628569009430',
-        phone: '+628569009430',
-        value: 0,
-        source: 'Jastip CS',
-        daysAgo: 7,
-        status: 'new'
-      },
-      {
-        id: '2',
-        name: '628511974697',
-        phone: '+628511974697',
-        value: 0,
-        source: 'Jastip CS',
-        daysAgo: 7,
-        status: 'new'
-      },
-      {
-        id: '3',
-        name: 'RD',
-        phone: '+628111388611',
-        value: 0,
-        source: 'Jastip CS',
-        daysAgo: 7,
-        status: 'new'
-      },
-      {
-        id: '4',
-        name: '628551000185',
-        phone: '+628551000185',
-        value: 0,
-        source: 'Jastip CS',
-        daysAgo: 7,
-        status: 'new'
-      }
-    ]
-  },
-  {
-    id: 'contacted',
-    name: 'Contacted',
-    count: 0,
-    value: 0,
-    color: 'yellow',
-    leads: []
-  },
-  {
-    id: 'qualified',
-    name: 'Qualified',
-    count: 0,
-    value: 0,
-    color: 'green',
-    leads: []
-  },
-  {
-    id: 'proposal',
-    name: 'Proposal',
-    count: 0,
-    value: 0,
-    color: 'purple',
-    leads: []
-  },
-  {
-    id: 'won',
-    name: 'Won',
-    count: 0,
-    value: 0,
-    color: 'green',
-    leads: []
-  },
-  {
-    id: 'lost',
-    name: 'Lost',
-    count: 0,
-    value: 0,
-    color: 'red',
-    leads: []
-  }
-]
-
-// Lead Card Component with Drag functionality
-const LeadCard: React.FC<{ 
-  lead: Lead; 
-  index: number; 
-  stageId: string; 
-  onUpdateLead: (leadId: string, newName: string) => void 
-}> = ({ lead, index, stageId, onUpdateLead }) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editName, setEditName] = useState(lead.name)
-
-  const [{ isDragging }, drag] = useDrag({
-    type: ITEM_TYPE,
-    item: { id: lead.id, index, sourceStage: stageId },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  })
-
-  const handleNameClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsEditing(true)
-  }
-
-  const handleNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (editName.trim() && editName !== lead.name) {
-      onUpdateLead(lead.id, editName.trim())
-    }
-    setIsEditing(false)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleNameSubmit(e as any)
-    } else if (e.key === 'Escape') {
-      setEditName(lead.name)
-      setIsEditing(false)
-    }
-  }
-
-  const handleBlur = () => {
-    if (editName.trim() && editName !== lead.name) {
-      onUpdateLead(lead.id, editName.trim())
-    } else {
-      setEditName(lead.name)
-    }
-    setIsEditing(false)
-  }
-
-  return (
-    <div
-      ref={drag as any}
-      className={`bg-white border border-gray-200 rounded-lg p-4 mb-3 transition-all duration-200 hover:shadow-md ${
-        isDragging ? 'opacity-50 rotate-2' : ''
-      } ${isEditing ? 'cursor-default' : 'cursor-move'}`}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          {isEditing ? (
-            <form onSubmit={handleNameSubmit} className="mb-1">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-              />
-            </form>
-          ) : (
-            <h4 
-              className="font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={handleNameClick}
-              title="Click to edit name"
-            >
-              {lead.name}
-            </h4>
-          )}
-          <div className="flex items-center gap-2 mt-1">
-            <Phone className="h-3 w-3 text-green-600" />
-            <span className="text-sm text-gray-600">{lead.phone}</span>
-          </div>
-        </div>
-        <Badge variant={lead.value > 0 ? 'default' : 'secondary'} className="text-xs">
-          Rp {lead.value.toLocaleString()}
-        </Badge>
-      </div>
-      
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <div className="flex items-center gap-1">
-          <Users className="h-3 w-3" />
-          <span>{lead.source}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
-          <span>{lead.daysAgo} hari yang lalu</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Pipeline Stage Component with Drop functionality
-const PipelineStageColumn: React.FC<{ 
-  stage: PipelineStage; 
-  onDropLead: (leadId: string, targetStageId: string) => void;
-  onUpdateLead: (leadId: string, newName: string) => void;
-  onUpdateStage: (stageId: string, newName: string) => void;
-}> = ({ stage, onDropLead, onUpdateLead, onUpdateStage }) => {
-  const [isEditingStage, setIsEditingStage] = useState(false)
-  const [editStageName, setEditStageName] = useState(stage.name)
-
-  const [{ isOver, canDrop }, drop] = useDrop({
-    accept: ITEM_TYPE,
-    drop: (item: { id: string; sourceStage: string }) => {
-      if (item.sourceStage !== stage.id) {
-        onDropLead(item.id, stage.id)
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
-    }),
-  })
-
-  const handleStageNameClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsEditingStage(true)
-  }
-
-  const handleStageNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (editStageName.trim() && editStageName !== stage.name) {
-      onUpdateStage(stage.id, editStageName.trim())
-    }
-    setIsEditingStage(false)
-  }
-
-  const handleStageKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleStageNameSubmit(e as any)
-    } else if (e.key === 'Escape') {
-      setEditStageName(stage.name)
-      setIsEditingStage(false)
-    }
-  }
-
-  const handleStageBlur = () => {
-    if (editStageName.trim() && editStageName !== stage.name) {
-      onUpdateStage(stage.id, editStageName.trim())
-    } else {
-      setEditStageName(stage.name)
-    }
-    setIsEditingStage(false)
-  }
-
-  return (
-    <div
-      ref={drop as any}
-      className={`flex-1 min-w-0 transition-all duration-200 ${
-        isOver && canDrop ? 'bg-blue-50 border-blue-200' : ''
-      }`}
-    >
-      <div className="bg-white border border-gray-200 rounded-lg p-4 h-full">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full bg-${stage.color}-500`} />
-            {isEditingStage ? (
-              <form onSubmit={handleStageNameSubmit} className="flex-1">
-                <input
-                  type="text"
-                  value={editStageName}
-                  onChange={(e) => setEditStageName(e.target.value)}
-                  onBlur={handleStageBlur}
-                  onKeyDown={handleStageKeyDown}
-                  className="px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </form>
-            ) : (
-              <h3 
-                className="font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={handleStageNameClick}
-                title="Click to edit stage name"
-              >
-                {stage.name}
-              </h3>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              {stage.count}
-            </Badge>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-medium text-gray-900">
-              Rp {stage.value.toLocaleString()}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3 min-h-[200px]">
-          {stage.leads.map((lead, index) => (
-            <LeadCard 
-              key={lead.id} 
-              lead={lead} 
-              index={index} 
-              stageId={stage.id} 
-              onUpdateLead={onUpdateLead}
-            />
-          ))}
-          
-          {isOver && canDrop && (
-            <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center text-blue-600 bg-blue-50">
-              Drop lead here
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+import type { Lead, PipelineStage } from '@/types';
+import { initialPipelineData } from '@/mock/data'
+import { PipelineStageColumn } from '@/components/pipeline-stage'
 
 const PipelinePage = () => {
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>(initialPipelineData)
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+  const handleLeadClick = (lead: Lead) => {
+    setSelectedLead(lead)
+    setIsDrawerOpen(true)
+  }
 
   const handleDropLead = useCallback((leadId: string, targetStageId: string) => {
     setPipelineData(prev => {
@@ -518,22 +206,134 @@ const PipelinePage = () => {
                   onDropLead={handleDropLead}
                   onUpdateLead={handleUpdateLead}
                   onUpdateStage={handleUpdateStage}
+                  onLeadClick={handleLeadClick}
                 />
               ))}
             </div>
           </div>
 
-          {/* Help Text */}
-          {/* <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="font-medium text-blue-900 mb-2">💡 Tips menggunakan Pipeline</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Drag dan drop lead untuk memindahkan antar stage</li>
-              <li>• Klik pada nama lead untuk mengedit nama lead</li>
-              <li>• Klik pada nama stage untuk mengedit nama stage</li>
-              <li>• Gunakan filter untuk mencari lead berdasarkan kriteria tertentu</li>
-              <li>• Set up automation untuk menggerakkan lead otomatis</li>
-            </ul>
-          </div> */}
+          {/* Lead Detail Drawer */}
+          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+            <DrawerContent className="max-h-[90vh]">
+              <DrawerHeader>
+                <DrawerTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  {selectedLead?.name || 'Lead Detail'}
+                </DrawerTitle>
+                <DrawerDescription>
+                  Detailed information and timeline for this lead
+                </DrawerDescription>
+              </DrawerHeader>
+              
+              {selectedLead && (
+                <div className="px-6 pb-6 space-y-6 overflow-y-auto">
+                  {/* Lead Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-gray-900">Contact Information</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Phone className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">{selectedLead.phone}</span>
+                        </div>
+                        {selectedLead.email && (
+                          <div className="flex items-center gap-3">
+                            <Mail className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm">{selectedLead.email}</span>
+                          </div>
+                        )}
+                        {selectedLead.location && (
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-4 w-4 text-red-600" />
+                            <span className="text-sm">{selectedLead.location}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-gray-900">Business Information</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm text-gray-600">Company</p>
+                          <p className="text-sm font-medium">{selectedLead.company || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Source</p>
+                          <p className="text-sm font-medium">{selectedLead.source}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Potential Value</p>
+                          <p className="text-sm font-medium">Rp {selectedLead.value.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {selectedLead.notes && (
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-gray-900">Notes</h3>
+                      <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                        {selectedLead.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Timeline */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900">Timeline</h3>
+                    <div className="space-y-4">
+                      {selectedLead.timeline.map((event) => (
+                        <div key={event.id} className="flex gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            {event.type === 'created' && <User className="h-4 w-4 text-blue-600" />}
+                            {event.type === 'contacted' && <MessageCircle className="h-4 w-4 text-green-600" />}
+                            {event.type === 'call' && <Phone className="h-4 w-4 text-orange-600" />}
+                            {event.type === 'email' && <Mail className="h-4 w-4 text-purple-600" />}
+                            {event.type === 'note' && <Clock className="h-4 w-4 text-gray-600" />}
+                            {event.type === 'moved' && <Users className="h-4 w-4 text-indigo-600" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                              <span className="text-xs text-gray-500">
+                                {new Date(event.timestamp).toLocaleString('id-ID', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                            <p className="text-xs text-gray-500 mt-1">by {event.user}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <DrawerFooter>
+                <div className="flex gap-2">
+                  <Button className="flex-1">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Send Message
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call
+                  </Button>
+                </div>
+                <DrawerClose asChild>
+                  <Button variant="outline">Close</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
         </div>
       </MainLayout>
     </DndProvider>

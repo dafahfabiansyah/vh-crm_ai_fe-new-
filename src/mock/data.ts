@@ -5,6 +5,7 @@ import type {
   ChatSession,
   Message,
   NavigationItem,
+  PipelineStage,
   Platform,
   PricingPlan,
   WhatsAppPlatform,
@@ -523,3 +524,189 @@ export const distributionMethods = [
   { value: "least-assigned", label: "Least Assigned First" },
   { value: "round-robin", label: "Round Robin" },
 ];
+
+
+export // Mock data
+const initialPipelineData: PipelineStage[] = [
+  {
+    id: 'new-lead',
+    name: 'New Lead',
+    count: 4,
+    value: 0,
+    color: 'blue',
+    leads: [
+      {
+        id: '1',
+        name: '628569009430',
+        phone: '+628569009430',
+        value: 0,
+        source: 'Jastip CS',
+        daysAgo: 7,
+        status: 'new',
+        email: 'customer1@example.com',
+        company: 'PT. Maju Jaya',
+        location: 'Jakarta',
+        notes: 'Interested in premium package',
+        createdAt: '2025-01-01T10:30:00Z',
+        lastActivity: '2025-01-01T10:30:00Z',
+        timeline: [
+          {
+            id: 't1',
+            type: 'created',
+            title: 'Lead Created',
+            description: 'Lead was created from WhatsApp contact',
+            timestamp: '2025-01-01T10:30:00Z',
+            user: 'System'
+          },
+          {
+            id: 't2',
+            type: 'note',
+            title: 'Initial Contact',
+            description: 'Customer showed interest in our services',
+            timestamp: '2025-01-01T10:35:00Z',
+            user: 'CS Agent'
+          }
+        ]
+      },
+      {
+        id: '2',
+        name: '628511974697',
+        phone: '+628511974697',
+        value: 0,
+        source: 'Jastip CS',
+        daysAgo: 7,
+        status: 'new',
+        email: 'customer2@example.com',
+        company: 'CV. Berkah Sejahtera',
+        location: 'Surabaya',
+        notes: 'Needs more information about pricing',
+        createdAt: '2025-01-01T11:15:00Z',
+        lastActivity: '2025-01-01T11:15:00Z',
+        timeline: [
+          {
+            id: 't3',
+            type: 'created',
+            title: 'Lead Created',
+            description: 'Lead was created from WhatsApp contact',
+            timestamp: '2025-01-01T11:15:00Z',
+            user: 'System'
+          },
+          {
+            id: 't4',
+            type: 'call',
+            title: 'Phone Call',
+            description: 'Attempted to call customer - no answer',
+            timestamp: '2025-01-01T14:20:00Z',
+            user: 'Sales Team'
+          }
+        ]
+      },
+      {
+        id: '3',
+        name: 'RD',
+        phone: '+628111388611',
+        value: 0,
+        source: 'Jastip CS',
+        daysAgo: 7,
+        status: 'new',
+        email: 'rd@company.com',
+        company: 'RD Solutions',
+        location: 'Bandung',
+        notes: 'Decision maker, high potential',
+        createdAt: '2025-01-01T13:45:00Z',
+        lastActivity: '2025-01-01T13:45:00Z',
+        timeline: [
+          {
+            id: 't5',
+            type: 'created',
+            title: 'Lead Created',
+            description: 'Lead was created from WhatsApp contact',
+            timestamp: '2025-01-01T13:45:00Z',
+            user: 'System'
+          },
+          {
+            id: 't6',
+            type: 'email',
+            title: 'Email Sent',
+            description: 'Welcome email with company brochure sent',
+            timestamp: '2025-01-01T14:00:00Z',
+            user: 'Marketing Team'
+          }
+        ]
+      },
+      {
+        id: '4',
+        name: '628551000185',
+        phone: '+628551000185',
+        value: 0,
+        source: 'Jastip CS',
+        daysAgo: 7,
+        status: 'new',
+        email: 'contact@business.com',
+        company: 'Global Trading',
+        location: 'Medan',
+        notes: 'Bulk order potential',
+        createdAt: '2025-01-01T09:20:00Z',
+        lastActivity: '2025-01-01T09:20:00Z',
+        timeline: [
+          {
+            id: 't7',
+            type: 'created',
+            title: 'Lead Created',
+            description: 'Lead was created from WhatsApp contact',
+            timestamp: '2025-01-01T09:20:00Z',
+            user: 'System'
+          },
+          {
+            id: 't8',
+            type: 'contacted',
+            title: 'First Contact',
+            description: 'Customer responded to initial WhatsApp message',
+            timestamp: '2025-01-01T09:25:00Z',
+            user: 'CS Agent'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'contacted',
+    name: 'Contacted',
+    count: 0,
+    value: 0,
+    color: 'yellow',
+    leads: []
+  },
+  {
+    id: 'qualified',
+    name: 'Qualified',
+    count: 0,
+    value: 0,
+    color: 'green',
+    leads: []
+  },
+  {
+    id: 'proposal',
+    name: 'Proposal',
+    count: 0,
+    value: 0,
+    color: 'purple',
+    leads: []
+  },
+  {
+    id: 'won',
+    name: 'Won',
+    count: 0,
+    value: 0,
+    color: 'green',
+    leads: []
+  },
+  {
+    id: 'lost',
+    name: 'Lost',
+    count: 0,
+    value: 0,
+    color: 'red',
+    leads: []
+  }
+]
