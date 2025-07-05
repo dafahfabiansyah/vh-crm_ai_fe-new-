@@ -33,13 +33,7 @@ import {
   ChevronDown,
   MessageCircle,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
 import MainLayout from "@/main-layout";
 
