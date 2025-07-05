@@ -624,7 +624,7 @@ export default function ConnectedPlatformsPage() {
                 <Button
                   size="icon"
                   variant="outline"
-                  className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
+                  className="rounded-full h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                   onClick={handleRefresh}
                   disabled={loading}
                 >
@@ -635,7 +635,7 @@ export default function ConnectedPlatformsPage() {
                 <Button
                   size="icon"
                   variant="outline"
-                  className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
+                  className="rounded-full h-8 w-8 sm:h-10 sm:w-10 touch-manipulation"
                   onClick={() => setIsAddPlatformModalOpen(true)}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -711,14 +711,14 @@ export default function ConnectedPlatformsPage() {
                   <div
                     key={platform.id}
                     onClick={() => handlePlatformClick(platform)}
-                    className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${
+                    className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-accent/50 active:bg-accent/70 transition-colors touch-manipulation ${
                       selectedPlatform?.id === platform.id
                         ? "bg-accent border-l-4 border-l-primary"
                         : ""
                     }`}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="relative">
+                      <div className="relative flex-shrink-0">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarFallback
                             className={`${
@@ -740,13 +740,13 @@ export default function ConnectedPlatformsPage() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between mb-1 gap-2">
                           <h3 className="font-medium text-sm sm:text-base text-foreground truncate">
                             {platform.name}
                           </h3>
                           <Badge
                             variant="outline"
-                            className={`text-xs border-gray-200 ${
+                            className={`text-xs border-gray-200 flex-shrink-0 ${
                               platform.isLoggedIn
                                 ? "bg-green-50 text-green-700"
                                 : platform.isConnected
@@ -760,32 +760,32 @@ export default function ConnectedPlatformsPage() {
 
                         {platform.phone && (
                           <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-1">
-                            <Phone className="h-3 w-3" />
+                            <Phone className="h-3 w-3 flex-shrink-0" />
                             <span className="truncate">{platform.phone}</span>
                           </div>
                         )}
 
                         {platform.description && (
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-muted-foreground truncate mb-2">
                             {platform.description}
                           </p>
                         )}
 
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1 sm:gap-2 mt-2 overflow-x-auto">
                           <Badge
                             variant="outline"
-                            className="text-xs bg-gray-50 text-gray-700 border-gray-200"
+                            className="text-xs bg-gray-50 text-gray-700 border-gray-200 flex-shrink-0"
                           >
                             <Users className="h-3 w-3 mr-1" />
-                            <span className="truncate">{platform.teams?.[0] || "No Team"}</span>
+                            <span className="truncate max-w-16 sm:max-w-none">{platform.teams?.[0] || "No Team"}</span>
                           </Badge>
                           {platform.aiAgent && (
                             <Badge
                               variant="outline"
-                              className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                              className="text-xs bg-blue-50 text-blue-700 border-blue-200 flex-shrink-0"
                             >
                               <Bot className="h-3 w-3 mr-1" />
-                              <span className="truncate">{platform.aiAgent.split(" ")[0]} AI</span>
+                              <span className="truncate max-w-16 sm:max-w-none">{platform.aiAgent.split(" ")[0]} AI</span>
                             </Badge>
                           )}
                         </div>
@@ -834,7 +834,7 @@ export default function ConnectedPlatformsPage() {
                     <Button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm touch-manipulation"
                     >
                       <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       {isSaving ? "Saving..." : "Save"}
@@ -842,7 +842,7 @@ export default function ConnectedPlatformsPage() {
                     <Button
                       variant="outline"
                       onClick={handleDelete}
-                      className="text-destructive border-destructive"
+                      className="text-destructive border-destructive touch-manipulation"
                       size="icon"
                     >
                       <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -867,7 +867,7 @@ export default function ConnectedPlatformsPage() {
               <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                 <div className="w-full">
                   <Tabs defaultValue="basic" className="space-y-4 sm:space-y-6">
-                    <TabsList className="w-full sm:w-auto">
+                    <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:grid-cols-none">
                       <TabsTrigger value="basic" className="text-sm">Basic</TabsTrigger>
                       <TabsTrigger value="flow" className="text-sm">Flow</TabsTrigger>
                     </TabsList>
@@ -1112,15 +1112,15 @@ export default function ConnectedPlatformsPage() {
         open={isAddPlatformModalOpen}
         onOpenChange={setIsAddPlatformModalOpen}
       >
-        <DialogContent className="sm:max-w-md mx-4">
-          <DialogHeader>
+        <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0">
+          <DialogHeader className="p-4 pb-0">
             <DialogTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               Connect Platform
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="p-4 space-y-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
               Choose a platform to connect to your inbox
             </p>
@@ -1132,16 +1132,16 @@ export default function ConnectedPlatformsPage() {
                   navigate("/connect/whatsapp");
                   setIsAddPlatformModalOpen(false);
                 }}
-                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 sm:gap-4"
+                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3 sm:gap-4 touch-manipulation"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-foreground text-sm sm:text-base">
+                <div className="text-left flex-1 min-w-0">
+                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
                     WhatsApp Business
                   </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     Connect your WhatsApp Business account
                   </p>
                 </div>
@@ -1153,14 +1153,14 @@ export default function ConnectedPlatformsPage() {
                   navigate("/connect/instagram");
                   setIsAddPlatformModalOpen(false);
                 }}
-                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 sm:gap-4"
+                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3 sm:gap-4 touch-manipulation"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
                 </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-foreground text-sm sm:text-base">Instagram</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                <div className="text-left flex-1 min-w-0">
+                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">Instagram</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     Connect your Instagram business account
                   </p>
                 </div>
@@ -1172,14 +1172,14 @@ export default function ConnectedPlatformsPage() {
                   navigate("/connect/webchat");
                   setIsAddPlatformModalOpen(false);
                 }}
-                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 sm:gap-4"
+                className="w-full p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3 sm:gap-4 touch-manipulation"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-foreground text-sm sm:text-base">Web Chat</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                <div className="text-left flex-1 min-w-0">
+                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">Web Chat</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     Add live chat widget to your website
                   </p>
                 </div>
@@ -1190,7 +1190,7 @@ export default function ConnectedPlatformsPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsAddPlatformModalOpen(false)}
-                className="w-full text-sm"
+                className="w-full text-sm h-10 touch-manipulation"
               >
                 Cancel
               </Button>
