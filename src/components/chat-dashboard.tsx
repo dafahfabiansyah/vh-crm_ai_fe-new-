@@ -3,6 +3,7 @@ import { useState } from "react"
 import ChatHistoryList from "./chat-history-list"
 import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { mockChatSessions, mockMessages, mockChatInfo } from "@/mock/data"
 
 // Default welcome content
@@ -54,37 +55,86 @@ function WelcomeContent() {
 export default function ChatDashboard() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [showInfo, setShowInfo] = useState(false)
 
   const selectedChat = selectedChatId ? mockChatSessions.find((chat) => chat.id === selectedChatId) : null
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Chat History */}
-      <div className="w-80 border-r border-border bg-card">
-        <ChatHistoryList
-          chatSessions={mockChatSessions}
-          selectedChatId={selectedChatId}
-          onSelectChat={setSelectedChatId}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
+    <div className="flex h-screen bg-background relative">
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex w-full">
+        {/* Left Sidebar - Chat History */}
+        <div className="w-80 border-r border-border bg-card">
+          <ChatHistoryList
+            chatSessions={mockChatSessions}
+            selectedChatId={selectedChatId}
+            onSelectChat={setSelectedChatId}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </div>
+
+        {/* Center Content */}
+        {selectedChatId ? (
+          <div className="flex-1 flex flex-col">
+            <ChatConversation 
+              messages={mockMessages} 
+              selectedChat={selectedChat}
+              onToggleInfo={() => {}} // No-op for desktop since info is always visible
+              showInfo={false} // Don't show active state on desktop
+            />
+          </div>
+        ) : (
+          <WelcomeContent />
+        )}
+
+        {/* Right Sidebar - Chat Information - Always visible on desktop when chat is selected */}
+        {selectedChatId && (
+          <div className="w-80 border-l border-border bg-card">
+            <ChatInformation chatInfo={mockChatInfo} />
+          </div>
+        )}
       </div>
 
-      {/* Center Content */}
-      {selectedChatId ? (
-        <div className="flex-1 flex flex-col">
-          <ChatConversation messages={mockMessages} selectedChat={selectedChat} />
-        </div>
-      ) : (
-        <WelcomeContent />
-      )}
+      {/* Mobile Layout */}
+      <div className="lg:hidden w-full">
+        {!selectedChatId ? (
+          /* Mobile Chat List - Full Screen */
+          <div className="w-full h-full">
+            <ChatHistoryList
+              chatSessions={mockChatSessions}
+              selectedChatId={selectedChatId}
+              onSelectChat={setSelectedChatId}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
+        ) : (
+          /* Mobile Chat Conversation - Full Screen */
+          <div className="w-full h-full">
+            <ChatConversation 
+              messages={mockMessages} 
+              selectedChat={selectedChat}
+              onToggleMobileMenu={() => setSelectedChatId(null)} // Back to chat list
+              showBackButton={true}
+              onToggleInfo={() => setShowInfo(!showInfo)}
+              showInfo={showInfo}
+            />
+          </div>
+        )}
 
-      {/* Right Sidebar - Chat Information */}
-      {selectedChatId && (
-        <div className="w-80 border-l border-border bg-card">
-          <ChatInformation chatInfo={mockChatInfo} />
-        </div>
-      )}
+        {/* Mobile Info Modal */}
+        <Dialog open={showInfo} onOpenChange={setShowInfo}>
+          <DialogContent className="w-[95vw] max-w-md h-[90vh] max-h-[90vh] p-0 overflow-hidden">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Chat Information</DialogTitle>
+            </DialogHeader>
+            <div className="h-full overflow-hidden">
+              <ChatInformation chatInfo={mockChatInfo} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }

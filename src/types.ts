@@ -100,6 +100,10 @@ export interface ChatHistoryListProps {
 export interface ChatConversationProps {
   messages: Message[]
   selectedChat?: ChatSession | null
+  onToggleMobileMenu?: () => void
+  showBackButton?: boolean
+  onToggleInfo?: () => void
+  showInfo?: boolean
 }
 // chat conversation types end
 

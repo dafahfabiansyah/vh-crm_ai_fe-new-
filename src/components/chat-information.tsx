@@ -28,8 +28,8 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-3 sm:p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="font-semibold text-foreground">Info</h2>
           {/* <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10">
             Create Ticket
@@ -37,10 +37,10 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         </div>
 
         {/* Customer Info */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+              <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-lg">
                 {chatInfo.customerName
                   .split(" ")
                   .map((n) => n[0])
@@ -48,20 +48,20 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
                   .slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="font-medium text-foreground">{chatInfo.customerName}</h3>
-              <p className="text-sm text-muted-foreground">{chatInfo.customerId}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-medium text-foreground text-sm sm:text-base truncate">{chatInfo.customerName}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{chatInfo.customerId}</p>
             </div>
           </div>
 
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 w-fit">
             {chatInfo.agent}
           </Badge>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         {/* Pipeline Status */}
         {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Select Pipeline Status</Label>
@@ -83,30 +83,30 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
           {chatInfo.labels.length === 0 ? (
             <p className="text-sm text-muted-foreground">No labels yet</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1 sm:gap-2">
               {chatInfo.labels.map((label, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                <Badge key={index} variant="secondary" className="flex items-center gap-1 text-xs">
                   {label}
                   <X className="h-3 w-3 cursor-pointer" />
                 </Badge>
               ))}
             </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               placeholder="Add label"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              className="flex-1"
+              className="flex-1 text-sm"
             />
             <Button
               onClick={handleAddLabel}
               size="sm"
               variant="outline"
-              className="text-primary border-primary hover:bg-primary/10"
+              className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto"
             >
-              <Plus className="h-4 w-4" />
-              Add Label
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Add Label</span>
             </Button>
           </div>
         </div>
@@ -114,11 +114,11 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         {/* Handled By */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Handled By</Label>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <span className="text-sm text-foreground">{chatInfo.handledBy}</span>
-            <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10">
-              <User className="h-4 w-4 mr-1" />
-              Assign Agent
+            <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto">
+              <User className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Assign Agent</span>
             </Button>
           </div>
         </div>
@@ -146,8 +146,8 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             </div>
           )}
           <Button size="sm" variant="outline" className="w-full text-primary border-primary hover:bg-primary/10">
-            <UserPlus className="h-4 w-4 mr-1" />
-            Add Collaborator
+            <UserPlus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Add Collaborator</span>
           </Button>
         </div>
 
@@ -166,8 +166,8 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">AI Summary</Label>
           <Button variant="outline" className="w-full text-primary border-primary hover:bg-primary/10">
-            <Sparkles className="h-4 w-4 mr-2" />
-            Generate AI Summary
+            <Sparkles className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Generate AI Summary</span>
           </Button>
         </div>
 
@@ -180,10 +180,11 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 mt-4">
-            <div className="flex gap-2">
-              <Input placeholder="Add new additional info" className="flex-1" />
-              <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10">
-                Add New Additional Info
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input placeholder="Add new additional info" className="flex-1 text-sm" />
+              <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto">
+                <span className="hidden sm:inline">Add New Additional Info</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </CollapsibleContent>

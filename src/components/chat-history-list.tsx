@@ -60,13 +60,13 @@ export default function ChatHistoryList({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-3 sm:p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="justify-between w-32">
-                All Agent
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="outline" className="justify-between w-24 sm:w-32">
+                <span className="truncate">All Agent</span>
+                <MoreHorizontal className="h-4 w-4 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -76,21 +76,21 @@ export default function ChatHistoryList({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
+          <div className="flex gap-1 sm:gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+              <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon">
-              <Plus className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+              <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative mb-4">
+        <div className="relative mb-3 sm:mb-4">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Cari percakapan..."
@@ -101,54 +101,56 @@ export default function ChatHistoryList({
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 text-sm overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('assigned')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              activeTab === 'assigned' 
-                ? 'bg-primary/10 text-primary border border-primary/20' 
-                : 'hover:bg-accent/50 text-muted-foreground'
-            }`}
-          >
-            <span>Assigned</span>
-            <Badge variant="secondary" className={`${
-              activeTab === 'assigned' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
-            }`}>
-              {assignedCount}
-            </Badge>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('unassigned')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              activeTab === 'unassigned' 
-                ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                : 'hover:bg-accent/50 text-muted-foreground'
-            }`}
-          >
-            <span>Unassigned</span>
-            <Badge variant="secondary" className={`${
-              activeTab === 'unassigned' ? 'bg-destructive/10 text-destructive' : 'bg-destructive text-primary-foreground'
-            }`}>
-              {unassignedCount}
-            </Badge>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('resolved')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              activeTab === 'resolved' 
-                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
-                : 'hover:bg-accent/50 text-muted-foreground'
-            }`}
-          >
-            <CheckCheck className="h-4 w-4" />
-            <Badge variant="secondary" className={`${
-              activeTab === 'resolved' ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
-            }`}>
-              {ResolveCount}
-            </Badge>
-          </button>
+        <div className="flex gap-1 sm:gap-2 text-sm overflow-x-auto scrollbar-thin pb-2 min-w-0">
+          <div className="flex gap-1 sm:gap-2 flex-nowrap">
+            <button
+              onClick={() => setActiveTab('assigned')}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
+                activeTab === 'assigned' 
+                  ? 'bg-primary/10 text-primary border border-primary/20' 
+                  : 'hover:bg-accent/50 text-muted-foreground'
+              }`}
+            >
+              <span>Assigned</span>
+              <Badge variant="secondary" className={`text-xs ${
+                activeTab === 'assigned' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+              }`}>
+                {assignedCount}
+              </Badge>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('unassigned')}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
+                activeTab === 'unassigned' 
+                  ? 'bg-destructive/10 text-destructive border border-destructive/20' 
+                  : 'hover:bg-accent/50 text-muted-foreground'
+              }`}
+            >
+              <span>Unassigned</span>
+              <Badge variant="secondary" className={`text-xs ${
+                activeTab === 'unassigned' ? 'bg-destructive/10 text-destructive' : 'bg-destructive text-primary-foreground'
+              }`}>
+                {unassignedCount}
+              </Badge>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('resolved')}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
+                activeTab === 'resolved' 
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                  : 'hover:bg-accent/50 text-muted-foreground'
+              }`}
+            >
+              <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Badge variant="secondary" className={`text-xs ${
+                activeTab === 'resolved' ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
+              }`}>
+                {ResolveCount}
+              </Badge>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -176,14 +178,14 @@ export default function ChatHistoryList({
           <div
             key={session.id}
             onClick={() => onSelectChat(session.id)}
-            className={`p-4 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${
+            className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${
               selectedChatId === session.id ? "bg-accent border-l-4 border-l-primary" : ""
             }`}
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2 sm:gap-3">
               <div className="relative">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">
                     {session.customerName
                       .split(" ")
                       .map((n) => n[0])
@@ -192,26 +194,26 @@ export default function ChatHistoryList({
                   </AvatarFallback>
                 </Avatar>
                 {session.isOnline && (
-                  <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
+                  <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 h-2 w-2 sm:h-3 sm:w-3 bg-green-500 border-2 border-background rounded-full" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-medium text-foreground truncate">{session.customerName}</h3>
+                  <h3 className="font-medium text-foreground truncate text-sm sm:text-base">{session.customerName}</h3>
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{session.timestamp}</span>
                 </div>
 
-                <p className="text-sm text-muted-foreground truncate mb-2">{session.lastMessage}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate mb-2">{session.lastMessage}</p>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     {session.status === "resolved" ? (
                       <CheckCircle2 className="h-3 w-3 text-green-500" />
                     ) : (
                       <Circle className="h-3 w-3 text-muted-foreground" />
                     )}
-                    <span className="text-xs text-muted-foreground">{session.agent}</span>
+                    <span className="text-xs text-muted-foreground truncate">{session.agent}</span>
                   </div>
 
                   <Badge variant="outline" className={`text-xs ${getStatusColor(session.status)}`}>

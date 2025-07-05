@@ -45,6 +45,7 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
+  Menu,
 } from "lucide-react";
 import type { TopbarProps } from "@/types";
 
@@ -98,7 +99,8 @@ export default function Topbar({
     email: "kapanpulang@gmail.com",
     plan: "Free",
   },
-}: TopbarProps) {
+  onToggleMobileMenu,
+}: TopbarProps & { onToggleMobileMenu?: () => void }) {
   const [notifications, setNotifications] = useState(mockNotifications);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [helpForm, setHelpForm] = useState({
@@ -197,21 +199,33 @@ export default function Topbar({
   };
 
   return (
-    <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between">
-      {/* Left Section - Status Alert */}
-      <div className="flex items-center">
-        <Alert className="border-green-200 bg-green-50 text-green-800 py-2 px-4 h-auto">
+    <div className="h-14 sm:h-16 bg-background border-b border-border px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
+      {/* Left Section - Mobile Menu Button & Status Alert */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 sm:h-10 sm:w-10 lg:hidden flex-shrink-0"
+          onClick={onToggleMobileMenu}
+        >
+          <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+        </Button>
+
+        {/* Status Alert */}
+        <Alert className="border-green-200 bg-green-50 text-green-800 py-1 sm:py-2 px-2 sm:px-4 h-auto w-auto">
           <div className="flex items-center">
-            <Shield className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-            <AlertDescription className="text-sm font-medium">
-              Anda sedang menggunakan paket standar
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 mr-1 sm:mr-2 flex-shrink-0" />
+            <AlertDescription className="text-xs sm:text-sm font-medium whitespace-nowrap">
+              <span className="hidden sm:inline">Anda sedang menggunakan paket standar</span>
+              <span className="sm:hidden">Paket Standar</span>
             </AlertDescription>
           </div>
         </Alert>
       </div>
 
       {/* Center Section - Help Links */}
-      <div className="flex items-center gap-3">
+      <div className="hidden md:flex items-center gap-3">
         <Button
           variant="outline"
           size="sm"
@@ -233,22 +247,34 @@ export default function Topbar({
       </div>
 
       {/* Right Section - Notifications & User Menu */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+        {/* Mobile Help Button */}
+        <div className="md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-10"
+            onClick={() => setIsHelpModalOpen(true)}
+          >
+            <HelpCircle className="h-4 w-4 text-blue-600" />
+          </Button>
+        </div>
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-muted-foreground" />
+            <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
+              <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground">
-                  {unreadCount}
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground">
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </Badge>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuContent align="end" className="w-72 sm:w-80">
             <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notifications</span>
+              <span className="text-sm sm:text-base">Notifications</span>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -261,32 +287,32 @@ export default function Topbar({
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
+                <div className="p-3 sm:p-4 text-center text-xs sm:text-sm text-muted-foreground">
                   No notifications
                 </div>
               ) : (
                 notifications.map((notification) => (
                   <DropdownMenuItem
                     key={notification.id}
-                    className={`p-3 cursor-pointer ${
+                    className={`p-2 sm:p-3 cursor-pointer ${
                       !notification.isRead
                         ? "bg-blue-50 border-l-4 border-l-primary"
                         : ""
                     }`}
                     onClick={() => handleNotificationClick(notification.id)}
                   >
-                    <div className="flex items-start gap-3 w-full">
+                    <div className="flex items-start gap-2 sm:gap-3 w-full">
                       <div className="flex-shrink-0 mt-0.5">
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-foreground truncate">
+                          <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                             {notification.title}
                           </p>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <span className="text-xs text-muted-foreground">
                               {notification.timestamp}
                             </span>
@@ -318,7 +344,7 @@ export default function Topbar({
         </DropdownMenu>
 
         {/* Online Status */}
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full border border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <span className="text-sm font-medium text-green-700">Online</span>
@@ -330,16 +356,16 @@ export default function Topbar({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-2 py-1 h-auto"
+              className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 py-1 h-auto"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
                   {user.email.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col items-start">
+              <div className="hidden sm:flex flex-col items-start">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-medium text-foreground truncate max-w-24">
                     {user.email}
                   </span>
                   <Badge
@@ -350,16 +376,24 @@ export default function Topbar({
                   </Badge>
                 </div>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-48 sm:w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">
+                <p className="text-xs leading-none text-muted-foreground truncate">
                   {user.email}
                 </p>
+                <div className="sm:hidden">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs px-2 py-0 bg-blue-100 text-blue-700 border-blue-200 w-fit"
+                  >
+                    {user.plan}
+                  </Badge>
+                </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -374,7 +408,19 @@ export default function Topbar({
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
-            </DropdownMenuItem>{" "}
+            </DropdownMenuItem>
+            {/* Mobile-only help items */}
+            <div className="md:hidden">
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setIsHelpModalOpen(true)}>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Pusat Bantuan</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                <span>Bantuan via WA</span>
+              </DropdownMenuItem>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive"
@@ -389,29 +435,30 @@ export default function Topbar({
 
       {/* Help Modal */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-blue-600">Pusat Bantuan</DialogTitle>
+            <DialogTitle className="text-blue-600 text-lg sm:text-xl">Pusat Bantuan</DialogTitle>
           </DialogHeader>
 
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-sm text-gray-600 mb-4 sm:mb-6">
             Silakan isi judul dan deskripsi pengaduan Anda
           </p>
 
           <form onSubmit={handleHelpSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="title">Masalah Utama *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Masalah Utama *</Label>
               <Input
                 id="title"
                 placeholder="Masalah Utama *"
                 value={helpForm.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 required
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Deskripsi masalah *</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Deskripsi masalah *</Label>
               <Textarea
                 id="description"
                 placeholder="Deskripsi masalah *"
@@ -421,19 +468,20 @@ export default function Topbar({
                 }
                 rows={4}
                 required
+                className="mt-1"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="priority">Prioritas</Label>
+                <Label htmlFor="priority" className="text-sm font-medium">Prioritas</Label>
                 <Select
                   value={helpForm.priority}
                   onValueChange={(value) =>
                     handleInputChange("priority", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Prioritas" />
                   </SelectTrigger>
                   <SelectContent>
@@ -445,8 +493,8 @@ export default function Topbar({
               </div>
 
               <div>
-                <Label htmlFor="tags">Tags</Label>
-                <div className="space-y-2">
+                <Label htmlFor="tags" className="text-sm font-medium">Tags</Label>
+                <div className="space-y-2 mt-1">
                   <div className="text-sm text-gray-500">
                     {helpForm.tags.length} Selected
                   </div>
@@ -474,12 +522,12 @@ export default function Topbar({
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsHelpModalOpen(false)}
-                className="flex-1"
+                className="flex-1 order-2 sm:order-1"
               >
                 Batal
               </Button>
@@ -488,7 +536,7 @@ export default function Topbar({
                 disabled={
                   isSubmitting || !helpForm.title || !helpForm.description
                 }
-                className="flex-1"
+                className="flex-1 order-1 sm:order-2"
               >
                 {isSubmitting ? "Mengirim..." : "Kirim Pengaduan"}
               </Button>

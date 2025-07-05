@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Search, Info, MoreHorizontal, Send, Paperclip, Smile, CheckCheck} from 'lucide-react'
+import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft } from 'lucide-react'
 import type { ChatConversationProps } from "@/types"
 
 
-export default function ChatConversation({ messages, selectedChat }: ChatConversationProps) {
+export default function ChatConversation({ messages, selectedChat, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [isTakenOver, setIsTakenOver] = useState(false)
@@ -56,16 +56,97 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
   return (
     <div className="flex flex-col h-full">
       {/* Header - Sticky Top */}
-      <div className="sticky top-0 z-10 p-4 border-b border-border bg-card">
-        <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 p-3 sm:p-4 border-b border-border bg-card">
+        {/* Mobile Layout - Stacked */}
+        <div className="lg:hidden">
+          {/* Top Row - Back Button + Customer Info + Info Button */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {/* Back Button - Mobile Only */}
+              {showBackButton && (
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="flex-shrink-0"
+                  onClick={() => {
+                    console.log('Back button clicked')
+                    onToggleMobileMenu?.()
+                  }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
+
+              <Avatar className="h-10 w-10 flex-shrink-0">
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {selectedChat.customerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold text-foreground truncate text-sm">{selectedChat.customerName}</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">628217328523</span>
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    {selectedChat.agent}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Action Buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Mobile Menu Button - Only show when no back button */}
+              {!showBackButton && (
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => {
+                    console.log('Mobile menu button clicked')
+                    onToggleMobileMenu?.()
+                  }}
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              )}
+                  {/* Info Button - Hidden on desktop since info sidebar is always visible */}
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={onToggleInfo}
+              className={`lg:hidden ${showInfo ? "bg-primary/10 border-primary text-primary" : ""}`}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Layout - Single Row */}
+        <div className="hidden lg:flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
+            {/* Back Button - Mobile Only */}
+            {showBackButton && (
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="lg:hidden"
+                onClick={() => {
+                  console.log('Back button clicked')
+                  onToggleMobileMenu?.()
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-primary/10 text-primary">
                 {selectedChat.customerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h2 className="font-semibold text-foreground">{selectedChat.customerName}</h2>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-foreground truncate">{selectedChat.customerName}</h2>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">628217328523</span>
                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
@@ -76,7 +157,23 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
+            {/* Mobile Menu Button - Only show when no back button */}
+            {!showBackButton && (
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="lg:hidden"
+                onClick={() => {
+                  console.log('Mobile menu button clicked')
+                  onToggleMobileMenu?.()
+                }}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
+
+            {/* Search - Hidden on mobile */}
+            <div className="relative hidden md:block">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Cari Percakapan"
@@ -85,18 +182,27 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
                 className="pl-10 w-64"
               />
             </div>
-            <Button variant="outline" size="icon">
+            
+            {/* Info Button - Hidden on desktop since info sidebar is always visible */}
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={onToggleInfo}
+              className={`lg:hidden ${showInfo ? "bg-primary/10 border-primary text-primary" : ""}`}
+            >
               <Info className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon">
+            
+            {/* More Options */}
+            {/* <Button variant="outline" size="icon">
               <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
 
       {/* Messages - Scrollable Area */}
-      <div className="flex-1 overflow-y-auto p-4 pb-6 space-y-4 scroll-smooth scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 pb-4 sm:pb-6 space-y-4 scroll-smooth scrollbar-thin">
         {messages.map((message) => (
           <div key={message.id} className="space-y-2">
             {message.isSystem ? (
@@ -148,7 +254,7 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
       </div>
 
       {/* Sticky Bottom - Takeover Chat Button or Message Input */}
-      <div className="sticky bottom-0 z-10 p-4 border-t border-border bg-card">
+      <div className="sticky bottom-0 z-10 p-3 sm:p-4 border-t border-border bg-card">
         {!isTakenOver ? (
           <Button 
             onClick={handleTakeOver}
