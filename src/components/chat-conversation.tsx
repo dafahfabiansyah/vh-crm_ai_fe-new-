@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -12,12 +12,29 @@ import type { ChatConversationProps } from "@/types"
 export default function ChatConversation({ messages, selectedChat }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [isTakenOver, setIsTakenOver] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleTakeOver = () => {
+    setIsTakenOver(true)
+    console.log("Chat taken over by agent")
+  }
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       // Handle sending message
       console.log("Sending message:", newMessage)
       setNewMessage("")
+      // Scroll to bottom after sending message
+      setTimeout(() => scrollToBottom(), 100)
     }
   }
 
@@ -78,8 +95,8 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar-thin chat-messages-container">
         {messages.map((message) => (
           <div key={message.id} className="space-y-2">
             {message.isSystem ? (
@@ -90,13 +107,15 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
               </div>
             ) : (
               <div className={`flex ${message.sender === "agent" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[70%] ${
-                  message.sender === "agent" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground"
-                } rounded-lg p-3 space-y-1`}>
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <div className="flex items-center justify-between text-xs opacity-70">
+                <div className={`flex flex-col ${message.sender === "agent" ? "items-end" : "items-start"} space-y-1`}>
+                  <div className={`max-w-[70%] ${
+                    message.sender === "agent" 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-foreground"
+                  } rounded-lg p-3`}>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  </div>
+                  <div className={`flex items-center gap-2 text-xs text-muted-foreground ${message.sender === "agent" ? "justify-end" : "justify-start"}`}>
                     <span>{message.timestamp}</span>
                     {message.sender === "agent" && (
                       <div className="flex items-center gap-1">
@@ -123,44 +142,49 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
             This conversation resolved by SPV DISTCCTV
           </div>
         </div>
+        
+        {/* Invisible div to scroll to bottom */}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Takeover Chat Button */}
-      <div className="p-4 border-t border-border">
-        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-          👥 Takeover Chat
-        </Button>
-      </div>
-
-      {/* Message Input */}
-      <div className="p-4 border-t border-border bg-card">
-        <div className="flex items-end gap-2">
-          <div className="flex-1 relative">
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="pr-20"
-              multiple
-            />
-            <div className="absolute right-2 top-2 flex gap-1">
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Smile className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      {/* Sticky Bottom - Takeover Chat Button or Message Input */}
+      <div className="sticky bottom-0 p-4 border-t border-border bg-card">
+        {!isTakenOver ? (
           <Button 
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            onClick={handleTakeOver}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            <Send className="h-4 w-4" />
+            👥 Takeover Chat
           </Button>
-        </div>
+        ) : (
+          <div className="flex items-end gap-2">
+            <div className="flex-1 relative">
+              <Input
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pr-20"
+                multiple
+              />
+              <div className="absolute right-2 top-2 flex gap-1">
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
