@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -30,7 +31,15 @@ import {
   RefreshCw,
   FileText,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
 import MainLayout from "@/main-layout";
 
@@ -64,6 +73,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAdditionalSettingsOpen, setIsAdditionalSettingsOpen] =
     useState(false);
+
   // Mock data - in real app, this would come from API
   const [agentData, setAgentData] = useState<AIAgentData>({
     id: agentId,
@@ -71,15 +81,15 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     description: "AI agent for customer support",
     type: "Customer Service AI",
     behavior:
-      "You are a helpful customer service assistant. Your goal is to resolve customer queries and issues efficiently and professionally. Be empathetic, patient, and focus on customer satisfaction.",
+      "",
     welcomeMessage:
-      "Hello! I'm your customer service assistant. How can I help you today? I'm here to assist with any questions or issues you might have.",
+      "",
     transferConditions:
-      "I need to speak with a human\nTransfer to agent\nI want to talk to a real person",
+      "",
     stopAIAfterHandoff: true,
     isActive: true,
     // Additional Settings default values
-    model: "GPT-4.1",
+    model: "GPT-4",
     aiHistoryLimit: 20,
     aiContextLimit: 10,
     messageAwait: 1,
@@ -121,25 +131,27 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     <MainLayout>
       <div className="bg-gray-50">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="bg-white border-b border-gray-200 px-3 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Button variant="ghost" size="icon" onClick={handleBack}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
 
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
+                <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
                   <AvatarFallback className="bg-green-100 text-green-700">
-                    <Bot className="h-6 w-6" />
+                    <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
                   </AvatarFallback>
                 </Avatar>
 
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">
+                  <h1 className="text-lg sm:text-2xl font-bold text-foreground">
                     {agentData.name}
                   </h1>
-                  <p className="text-green-600 font-medium">{agentData.type}</p>
+                  <p className="text-green-600 font-medium text-sm sm:text-base">
+                    {agentData.type}
+                  </p>
                 </div>
               </div>
             </div>
@@ -147,7 +159,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
             <Button
               onClick={handleSaveChanges}
               disabled={!hasChanges || isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary text-white text-sm sm:text-base h-9 sm:h-10"
             >
               {isLoading ? (
                 <>
@@ -155,61 +167,84 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   Saving...
                 </>
               ) : (
-                "SAVE CHANGES"
+                "Save Changes"
               )}
             </Button>
           </div>
         </div>
 
         {/* Content Area - Always Scrollable */}
-        <div className="px-6 py-6 pb-20">
+        <div className="px-3 sm:px-6 py-4 sm:py-6 pb-20">
           <Tabs defaultValue="general" className="w-full">
             {/* Navigation Tabs */}
-            <div className="bg-white rounded-lg mb-6 shadow-sm border border-gray-200">
-              <TabsList className="grid w-full grid-cols-5 bg-transparent h-auto p-0">
+            <div className="bg-white rounded-lg mb-4 sm:mb-6 shadow-sm border border-gray-200">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 bg-transparent h-auto p-0">
                 <TabsTrigger
                   value="general"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
+                  className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3"
                 >
-                  <Settings className="h-4 w-4" />
-                  General
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">General</span>
+                  <span className="sm:hidden">General</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="knowledge"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
+                  className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3"
                 >
-                  <Database className="h-4 w-4" />
-                  Knowledge Sources
+                  <Database className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Knowledge Sources</span>
+                  <span className="sm:hidden">Knowledge</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="integrations"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
+                  className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 col-span-2 sm:col-span-1"
                 >
-                  <Link className="h-4 w-4" />
-                  Integrations
+                  <Link className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Integrations</span>
+                  <span className="sm:hidden">Integrations</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="followups"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
+                  className="hidden sm:flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-sm px-4 py-3"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Followups
                 </TabsTrigger>
                 <TabsTrigger
                   value="existing"
-                  className="flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none"
+                  className="hidden sm:flex items-center gap-2 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-sm px-4 py-3"
                 >
                   <FileText className="h-4 w-4" />
                   Existing Knowledge Sources
                 </TabsTrigger>
               </TabsList>
+
+              {/* Mobile-only additional tabs */}
+              <div className="sm:hidden mt-2">
+                <TabsList className="grid w-full grid-cols-2 bg-transparent h-auto p-0">
+                  <TabsTrigger
+                    value="followups"
+                    className="flex items-center gap-1 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-xs px-2 py-2"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Followups
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="existing"
+                    className="flex items-center gap-1 data-[state=active]:bg-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none outline-none focus:outline-none text-xs px-2 py-2"
+                  >
+                    <FileText className="h-3 w-3" />
+                    Existing
+                  </TabsTrigger>
+                </TabsList>
+              </div>
             </div>
 
             {/* Main Content Layout */}
-            <div className="flex gap-8">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
               {/* Left Panel - Configuration */}
               <div className="flex-1">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6">
                   <TabsContent value="general" className="mt-0 space-y-6">
                     {/* Agent Name */}
                     <div className="space-y-2">
@@ -254,8 +289,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                           AI Agent Behavior
                         </Label>
                         <p className="text-sm text-muted-foreground mt-1">
-                          This is the AI Prompt that will determine the speaking
-                          style and identity of the AI.
+                          Ini adalah AI Prompt yang akan menentukan gaya bicara
+                          dan identitas AI.
                         </p>
                       </div>
 
@@ -379,9 +414,10 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="GPT-4.1">GPT-4.1</SelectItem>
-                              <SelectItem value="GPT-4">GPT-4</SelectItem>
-                              <SelectItem value="GPT-3.5">GPT-3.5</SelectItem>
+                              <SelectItem value="GPT-4.1">Very High Intelligence</SelectItem>
+                              <SelectItem value="GPT-4">High Intelligence (Recommended)</SelectItem>
+                              <SelectItem value="GPT-3.5">Medium Intelligence</SelectItem>
+                              <SelectItem value="GPT-3.5">Low Intelligence</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -523,33 +559,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             </SelectContent>
                           </Select>
                         </div>
-
-                        {/* Selected Labels */}
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="selectedLabels"
-                            className="text-sm font-medium"
-                          >
-                            Selected Labels
-                          </Label>
-                          <Select>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select labels" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="support">Support</SelectItem>
-                              <SelectItem value="sales">Sales</SelectItem>
-                              <SelectItem value="technical">
-                                Technical
-                              </SelectItem>
-                              <SelectItem value="billing">Billing</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-muted-foreground">
-                            AI dapat secara otomatis melabeli chat. Pilih label
-                            yang digunakan untuk digunakan oleh AI
-                          </p>
-                        </div>
                       </CollapsibleContent>
                     </Collapsible>
                   </TabsContent>
@@ -558,34 +567,34 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     <Tabs defaultValue="text" className="w-full">
                       {/* Knowledge Sources Nested Tabs */}
                       <div className="border-b border-gray-200 mb-6">
-                        <TabsList className="grid w-full grid-cols-5 bg-transparent h-auto p-0">
+                        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 bg-transparent h-auto p-0">
                           <TabsTrigger
                             value="text"
-                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-2 sm:py-3 outline-none focus:outline-none text-xs sm:text-sm"
                           >
                             Text
                           </TabsTrigger>
                           <TabsTrigger
                             value="website"
-                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-2 sm:py-3 outline-none focus:outline-none text-xs sm:text-sm"
                           >
                             Website
                           </TabsTrigger>
                           <TabsTrigger
                             value="product"
-                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-2 sm:py-3 outline-none focus:outline-none text-xs sm:text-sm"
                           >
                             Product
                           </TabsTrigger>
                           <TabsTrigger
                             value="file"
-                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-2 sm:py-3 outline-none focus:outline-none text-xs sm:text-sm"
                           >
                             File
                           </TabsTrigger>
                           <TabsTrigger
                             value="qa"
-                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 outline-none focus:outline-none"
+                            className="data-[state=active]:bg-transparent  data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-2 sm:py-3 outline-none focus:outline-none text-xs sm:text-sm"
                           >
                             Q&A
                           </TabsTrigger>
@@ -600,7 +609,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               Text Knowledge Source
                             </h4>
                             <p className="text-muted-foreground mb-4">
-                              Add text-based knowledge for your AI agent.
+                              Tambahkan pengetahuan berbasis teks
+                              langsung ke AI Anda.
                             </p>
                           </div>
                           <div className="space-y-3">
@@ -642,7 +652,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               Website Knowledge Source
                             </h4>
                             <p className="text-muted-foreground mb-4">
-                              Import knowledge from websites and URLs.
+                              Tambahkan pengetahuan dari situs web
+                              eksternal untuk melatih AI Anda.
                             </p>
                           </div>
                           <div className="space-y-3">
@@ -696,7 +707,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               Add product information and specifications.
                             </p>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-3">
                               <Label
                                 htmlFor="productName"
@@ -762,7 +773,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               File Knowledge Source
                             </h4>
                             <p className="text-muted-foreground mb-4">
-                              Upload documents and files as knowledge sources.
+                              Unggah file untuk melatih AI Anda sebagai
+                              informasi tambahan.
                             </p>
                           </div>
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -773,9 +785,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             <p className="text-muted-foreground mb-4">
                               Drag and drop files here, or click to browse
                             </p>
-                            <p className="text-sm text-muted-foreground mb-4">
+                            {/* <p className="text-sm text-muted-foreground mb-4">
                               Supported formats: PDF, DOC, DOCX, TXT, CSV
-                            </p>
+                            </p> */}
                             <Button variant="outline">Browse Files</Button>
                           </div>
                           <div className="space-y-3">
@@ -801,8 +813,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               Q&A Knowledge Source
                             </h4>
                             <p className="text-muted-foreground mb-4">
-                              Create question and answer pairs for specific
-                              scenarios.
+                              Buat skenario tanya jawab untuk melatih AI Anda.
                             </p>
                           </div>
                           <div className="space-y-4">
@@ -892,8 +903,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 </div>
               </div>
 
-              {/* Right Panel - Chat Preview (Always Visible) */}
-              <div className="w-96 flex-shrink-0">
+              {/* Right Panel - Chat Preview (Desktop Only) */}
+              <div className="hidden lg:block w-full lg:w-96 lg:flex-shrink-0">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <AIAgentChatPreview
                     agentName={agentData.name}
@@ -901,11 +912,31 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   />
                 </div>
               </div>
-              
             </div>
           </Tabs>
         </div>
       </div>
+
+      {/* Floating Chat Button (Mobile Only) */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button
+            size="icon"
+            className="lg:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-white shadow-lg"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md p-0">
+          {/* <DialogHeader className="p-4 pb-0">
+            <DialogTitle>Chat Preview</DialogTitle>
+          </DialogHeader> */}
+          <AIAgentChatPreview
+            agentName={agentData.name}
+            welcomeMessage={agentData.welcomeMessage}
+          />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
