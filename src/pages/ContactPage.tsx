@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   Search,
   Filter,
@@ -32,7 +33,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
-  X,
+  Phone,
+  Building,
+  CheckCircle,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 
@@ -178,6 +181,7 @@ export default function ContactsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(100);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
   const [whatsAppForm, setWhatsAppForm] = useState({
     phone: "",
     deviceName: "",
@@ -185,6 +189,13 @@ export default function ContactsPage() {
     message: "Hello, this is an initial message.",
     title: "Customer inquiry",
     notes: "Customer asked about product X"
+  });
+  const [addContactForm, setAddContactForm] = useState({
+    phone: "",
+    name: "",
+    businessName: "",
+    businessAccount: false,
+    verified: false
   });
 
   const handleOpenWhatsAppModal = (contact: Contact) => {
@@ -200,6 +211,21 @@ export default function ContactsPage() {
     // Handle form submission here
     console.log("WhatsApp message data:", whatsAppForm);
     setIsWhatsAppModalOpen(false);
+  };
+
+  const handleAddContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle add contact form submission here
+    console.log("Add contact data:", addContactForm);
+    setIsAddContactOpen(false);
+    // Reset form
+    setAddContactForm({
+      phone: "",
+      name: "",
+      businessName: "",
+      businessAccount: false,
+      verified: false
+    });
   };
 
   const totalContacts = 9153;
@@ -276,17 +302,104 @@ export default function ContactsPage() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by Name or Phone Number"
+                placeholder="Cari berdasarkan Nama atau Nomor Telepon"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
 
-            <Button variant="outline" size="sm">
-              <Send className="h-4 w-4 mr-2" />
-              Recipient/Campaign
-            </Button>
+            <Dialog open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Send className="h-4 w-4 mr-2" />
+                  Tambah Kontak
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-green-600">
+                    <Phone className="h-5 w-5" />
+                    Tambah Kontak WhatsApp
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddContactSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPhone" className="text-sm font-medium">
+                      Nomor Telepon *
+                    </Label>
+                    <Input
+                      id="contactPhone"
+                      value={addContactForm.phone}
+                      onChange={(e) => setAddContactForm(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Nomor Telepon *"
+                      className="font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contactName" className="text-sm font-medium">
+                      Nama
+                    </Label>
+                    <Input
+                      id="contactName"
+                      value={addContactForm.name}
+                      onChange={(e) => setAddContactForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Nama"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="businessName" className="text-sm font-medium">
+                      Business Name
+                    </Label>
+                    <Input
+                      id="businessName"
+                      value={addContactForm.businessName}
+                      onChange={(e) => setAddContactForm(prev => ({ ...prev, businessName: e.target.value }))}
+                      placeholder="Business Name"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="businessAccount"
+                        checked={addContactForm.businessAccount}
+                        onCheckedChange={(checked) => 
+                          setAddContactForm(prev => ({ ...prev, businessAccount: checked as boolean }))
+                        }
+                      />
+                      <Label htmlFor="businessAccount" className="text-sm flex items-center gap-1">
+                        <Building className="h-4 w-4 text-blue-500" />
+                        Business Account
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="verified"
+                        checked={addContactForm.verified}
+                        onCheckedChange={(checked) => 
+                          setAddContactForm(prev => ({ ...prev, verified: checked as boolean }))
+                        }
+                      />
+                      <Label htmlFor="verified" className="text-sm flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        Verified
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                      Add Contact
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
 
             <Button
               variant="outline"
@@ -310,7 +423,7 @@ export default function ContactsPage() {
         </div>
 
         {/* Table */}
-        <div className="border border-border rounded-lg bg-card">
+        <div className="border border-border rounded-lg bg-card capitalize">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -320,16 +433,16 @@ export default function ContactsPage() {
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="w-20">ACTION</TableHead>
-                <TableHead>NAME</TableHead>
-                <TableHead>PHONE</TableHead>
-                <TableHead>NOTE</TableHead>
-                <TableHead>LABEL NAMES</TableHead>
-                <TableHead>INBOX</TableHead>
-                <TableHead>PIPELINE STATUS</TableHead>
-                <TableHead>CHAT STATUS</TableHead>
-                <TableHead>CHAT CREATED AT</TableHead>
-                <TableHead>HANDLED BY</TableHead>
+                <TableHead className="w-20">action</TableHead>
+                <TableHead>name</TableHead>
+                <TableHead>phone</TableHead>
+                <TableHead>note</TableHead>
+                <TableHead>label names</TableHead>
+                <TableHead>inbox</TableHead>
+                <TableHead>pipeline status</TableHead>
+                <TableHead>chat status</TableHead>
+                <TableHead>chat created at</TableHead>
+                <TableHead>handled by</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -396,10 +509,10 @@ export default function ContactsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>
-              Page {currentPage} of {totalPages}
+              Halaman {currentPage} dari {totalPages}
             </span>
             <div className="flex items-center gap-2">
-              <span>Items per page:</span>
+              <span>Item per Halaman:</span>
               <Select
                 value={itemsPerPage.toString()}
                 onValueChange={(value) => setItemsPerPage(Number(value))}
@@ -471,123 +584,110 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* WhatsApp Modal */}
-      {isWhatsAppModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md p-0 m-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border bg-accent-foreground text-white rounded-t-lg">
-              <div className="flex items-center gap-2">
-                <Send className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">Kirim Pesan WhatsApp</h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsWhatsAppModalOpen(false)}
-                className="text-white hover:bg-blue-700"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+      {/* WhatsApp Modal - Using shadcn Dialog */}
+      <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Send className="h-5 w-5" />
+              Kirim Pesan WhatsApp
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleWhatsAppSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium">
+                Nomor Telepon
+              </Label>
+              <Input
+                id="phone"
+                value={whatsAppForm.phone}
+                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+628526000993731"
+                className="font-mono"
+              />
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleWhatsAppSubmit} className="p-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-muted-foreground">
-                  Nomor Telepon
-                </Label>
-                <Input
-                  id="phone"
-                  value={whatsAppForm.phone}
-                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+628526000993731"
-                  className="font-mono"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="deviceName" className="text-sm font-medium">
+                Device Name
+              </Label>
+              <Select
+                value={whatsAppForm.deviceName}
+                onValueChange={(value) => setWhatsAppForm(prev => ({ ...prev, deviceName: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="tenant_69b86cc342e043d4a8abcd7633f440dd_dev..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
+                    tenant_69b86cc342e043d4a8abcd7633f440dd_dev...
+                  </SelectItem>
+                  <SelectItem value="device_2">Device 2</SelectItem>
+                  <SelectItem value="device_3">Device 3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="deviceName" className="text-sm font-medium text-muted-foreground">
-                  Device Name
-                </Label>
-                <Select
-                  value={whatsAppForm.deviceName}
-                  onValueChange={(value) => setWhatsAppForm(prev => ({ ...prev, deviceName: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="tenant_69b86cc342e043d4a8abcd7633f440dd_dev..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
-                      tenant_69b86cc342e043d4a8abcd7633f440dd_dev...
-                    </SelectItem>
-                    <SelectItem value="device_2">Device 2</SelectItem>
-                    <SelectItem value="device_3">Device 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="agentId" className="text-sm font-medium">
+                Agent ID
+              </Label>
+              <Input
+                id="agentId"
+                value={whatsAppForm.agentId}
+                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, agentId: e.target.value }))}
+                placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
+                className="font-mono text-sm"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="agentId" className="text-sm font-medium text-muted-foreground">
-                  Agent ID
-                </Label>
-                <Input
-                  id="agentId"
-                  value={whatsAppForm.agentId}
-                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, agentId: e.target.value }))}
-                  placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
-                  className="font-mono text-sm"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="message" className="text-sm font-medium">
+                Pesan yang akan Dikirim *
+              </Label>
+              <Textarea
+                id="message"
+                value={whatsAppForm.message}
+                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Hello, this is an initial message."
+                rows={4}
+                required
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message" className="text-sm font-medium text-muted-foreground">
-                  Pesan yang akan Dikirim *
-                </Label>
-                <Textarea
-                  id="message"
-                  value={whatsAppForm.message}
-                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Hello, this is an initial message."
-                  rows={4}
-                  required
-                />
-              </div>
+            {/* <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium">
+                Tujuan
+              </Label>
+              <Input
+                id="title"
+                value={whatsAppForm.title}
+                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Customer inquiry"
+              />
+            </div> */}
 
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
-                  Tujuan
-                </Label>
-                <Input
-                  id="title"
-                  value={whatsAppForm.title}
-                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Customer inquiry"
-                />
-              </div>
+            {/* <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">
+                Catatan Tambahan
+              </Label>
+              <Input
+                id="notes"
+                value={whatsAppForm.notes}
+                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Customer asked about product X"
+              />
+            </div> */}
 
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium text-muted-foreground">
-                  Catatan Tambahan
-                </Label>
-                <Input
-                  id="notes"
-                  value={whatsAppForm.notes}
-                  onChange={(e) => setWhatsAppForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Customer asked about product X"
-                />
-              </div>
-
-              <div className="pt-4">
-                <Button type="submit" className="w-full bg-accent-foreground ">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Message
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="pt-4">
+              <Button type="submit" className="w-full bg-primary text-white">
+                <Send className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

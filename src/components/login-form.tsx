@@ -1,128 +1,134 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useNavigate } from "react-router"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react"
-import type { LoginFormData, FormErrors } from "@/types"
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import type { LoginFormData, FormErrors } from "@/types";
 
 export default function LoginForm() {
-  const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
-  
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [showPassword, setShowPassword] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: FormErrors = {};
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      newErrors.email = "Email Diperlukan";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      newErrors.password = "Password Diperlukan";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
-    }    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    if (!validateForm()) return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
 
     // Clear any existing errors
-    setErrors({})
-    setIsLoading(true)
+    setErrors({});
+    setIsLoading(true);
 
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Simulate successful login
       console.log("Login successful (simulated):", {
         email: formData.email,
         password: formData.password,
-      })
+      });
 
       // Show success message
-      alert("Login successful! Redirecting to dashboard...")
-      
+      alert("Login successful! Redirecting to dashboard...");
+
       // Redirect to dashboard
-      navigate("/dashboard", { replace: true })
-      
+      navigate("/dashboard", { replace: true });
     } catch (error) {
-      console.error("Login error:", error)
-      setErrors({ general: "An unexpected error occurred. Please try again." })
+      console.error("Login error:", error);
+      setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.email) {
-      setErrors({ email: "Please enter your email address" })
-      return
+      setErrors({ email: "Please enter your email address" });
+      return;
     }
 
     // Clear errors
-    setErrors({})
-    setIsLoading(true)
+    setErrors({});
+    setIsLoading(true);
 
     try {
       // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      
-      // Simulate successful password reset
-      alert("Password reset link sent to your email!")
-      setShowForgotPassword(false)
-    } catch (error) {
-      console.error("Password reset failed:", error)  
-      setErrors({ general: "Failed to send reset email. Please try again." })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const handleInputChange = (field: keyof LoginFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
+      // Simulate successful password reset
+      alert("Password reset link sent to your email!");
+      setShowForgotPassword(false);
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      setErrors({ general: "Failed to send reset email. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
+
+  const handleInputChange =
+    (field: keyof LoginFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
+    };
 
   if (showForgotPassword) {
     return (
-      <form onSubmit={handleForgotPassword} className="space-y-4">        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Reset Password</h3>
-          <p className="text-sm text-muted-foreground">Enter your email address and we'll send you a reset link</p>
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        {" "}
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-foreground">
+            Reset Password
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Enter your email address and we'll send you a reset link
+          </p>
         </div>
-
         {errors.general && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{errors.general}</AlertDescription>
           </Alert>
         )}
-
         <div className="space-y-2">
           <Label htmlFor="reset-email" className="text-foreground">
             Email
@@ -135,13 +141,16 @@ export default function LoginForm() {
               placeholder="Enter your email"
               value={formData.email}
               onChange={handleInputChange("email")}
-              className={`pl-10 ${errors.email ? "border-destructive" : "border-border"}`}
+              className={`pl-10 ${
+                errors.email ? "border-destructive" : "border-border"
+              }`}
               disabled={isLoading}
             />
           </div>
-          {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+          {errors.email && (
+            <p className="text-sm text-destructive">{errors.email}</p>
+          )}
         </div>
-
         <div className="flex gap-2">
           <Button
             type="button"
@@ -161,7 +170,7 @@ export default function LoginForm() {
           </Button>
         </div>
       </form>
-    )
+    );
   }
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -181,10 +190,12 @@ export default function LoginForm() {
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="Masukan Email"
             value={formData.email}
             onChange={handleInputChange("email")}
-            className={`pl-10 ${errors.email ? "border-destructive" : "border-border"}`}
+            className={`pl-10 ${
+              errors.email ? "border-destructive" : "border-border"
+            }`}
             disabled={isLoading}
             aria-describedby={errors.email ? "email-error" : undefined}
           />
@@ -205,10 +216,12 @@ export default function LoginForm() {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder="Masukan Password"
             value={formData.password}
             onChange={handleInputChange("password")}
-            className={`pl-10 pr-10 ${errors.password ? "border-destructive" : "border-border"}`}
+            className={`pl-10 pr-10 ${
+              errors.password ? "border-destructive" : "border-border"
+            }`}
             disabled={isLoading}
             aria-describedby={errors.password ? "password-error" : undefined}
           />
@@ -218,7 +231,11 @@ export default function LoginForm() {
             className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
         {errors.password && (
@@ -232,7 +249,7 @@ export default function LoginForm() {
         <button
           type="button"
           onClick={() => setShowForgotPassword(true)}
-          className="text-sm text-secondary hover:text-secondary/80 underline"
+          className="text-sm text-secondary-foreground hover:text-foreground/80 underline"
         >
           Forgot password?
         </button>
@@ -246,5 +263,5 @@ export default function LoginForm() {
         {isLoading ? "Signing in..." : "Sign In"}
       </Button>
     </form>
-  )
+  );
 }

@@ -62,7 +62,7 @@ export default function ChatConversation({ messages, selectedChat }: ChatConvers
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search messages"
+                placeholder="Cari Percakapan"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-64"

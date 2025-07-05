@@ -80,7 +80,7 @@ export default function RegisterForm() {
 
     // Username validation
     if (!formData.username) {
-      newErrors.username = "Username is required";
+      newErrors.username = "Username harus diisi";
     } else if (formData.username.length < 3) {
       newErrors.username = "Username must be at least 3 characters";
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
@@ -88,7 +88,7 @@ export default function RegisterForm() {
         "Username can only contain letters, numbers, and underscores";
     } // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email harus diisi";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
@@ -110,7 +110,7 @@ export default function RegisterForm() {
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Password harus diisi";
     } else {
       const strength = checkPasswordStrength(formData.password);
       if (strength.score < 3) {
@@ -120,14 +120,14 @@ export default function RegisterForm() {
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = "Harap konfirmasi password";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
     // Terms acceptance validation
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "You must accept the terms and conditions";
+      newErrors.acceptTerms = "Anda harus menerima syarat dan ketentuan";
     }
 
     setErrors(newErrors);
@@ -208,7 +208,7 @@ export default function RegisterForm() {
           <Input
             id="username"
             type="text"
-            placeholder="Choose a username"
+            placeholder="Pilih username Anda"
             value={formData.username}
             onChange={handleInputChange("username")}
             className={`pl-10 ${
@@ -233,7 +233,7 @@ export default function RegisterForm() {
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="Masukan Email anda"
             value={formData.email}
             onChange={handleInputChange("email")}
             className={`pl-10 ${
@@ -258,7 +258,7 @@ export default function RegisterForm() {
           <Input
             id="businessName"
             type="text"
-            placeholder="Enter your business name"
+            placeholder="Masukan Nama Bisnis Anda"
             value={formData.businessName}
             onChange={handleInputChange("businessName")}
             className={`pl-10 ${
@@ -285,7 +285,7 @@ export default function RegisterForm() {
           <Input
             id="phoneNumber"
             type="tel"
-            placeholder="Enter your phone number"
+            placeholder="Masukan Nomor Telepon Anda"
             value={formData.phoneNumber}
             onChange={handleInputChange("phoneNumber")}
             className={`pl-10 ${
@@ -312,7 +312,7 @@ export default function RegisterForm() {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Create a password"
+            placeholder="Buat password"
             value={formData.password}
             onChange={handleInputChange("password")}
             className={`pl-10 pr-10 ${
@@ -380,7 +380,7 @@ export default function RegisterForm() {
           <Input
             id="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm your password"
+            placeholder="Konfirmasi Password"
             value={formData.confirmPassword}
             onChange={handleInputChange("confirmPassword")}
             className={`pl-10 pr-10 ${
@@ -429,21 +429,21 @@ export default function RegisterForm() {
         />
         <Label
           htmlFor="terms"
-          className="text-sm text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="capitalize text-sm text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          I accept the{" "}
+          saya menerima {" "}
           <button
             type="button"
             className="text-secondary hover:text-secondary/80 underline"
           >
-            Terms and Conditions
+            ketentuan layanan
           </button>{" "}
-          and{" "}
+          dan{" "}
           <button
             type="button"
             className="text-secondary hover:text-secondary/80 underline"
           >
-            Privacy Policy
+            kebijakan privasi
           </button>
         </Label>
       </div>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Send, MoreHorizontal, User } from "lucide-react"
+import { Send, MoreHorizontal, User, RotateCw } from "lucide-react";
 
 interface Message {
   id: string
@@ -24,8 +24,8 @@ interface AIAgentChatPreviewProps {
 }
 
 export default function AIAgentChatPreview({ agentName, welcomeMessage, className }: AIAgentChatPreviewProps) {
-  const [isTestingMode, setIsTestingMode] = useState(true)
   const [message, setMessage] = useState("")
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "system-1",
@@ -86,20 +86,52 @@ export default function AIAgentChatPreview({ agentName, welcomeMessage, classNam
     }
   }
 
-  const toggleTestingMode = () => {
-    setIsTestingMode(!isTestingMode)
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    
+    // Reset messages to initial state
+    setTimeout(() => {
+      const initialMessages: Message[] = [
+        {
+          id: "system-1",
+          content:
+            "AI starts fresh with no memory of previous conversations.\n\nRefresh the page to start a completely new session.",
+          sender: "system",
+          timestamp: new Date().toISOString(),
+        },
+      ]
+      
+      // Add welcome message if exists
+      if (welcomeMessage && welcomeMessage.trim()) {
+        const welcomeMsg: Message = {
+          id: "welcome-1",
+          content: welcomeMessage,
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+        }
+        initialMessages.push(welcomeMsg)
+      }
+      
+      setMessages(initialMessages)
+      setMessage("")
+      setIsRefreshing(false)
+    }, 1000) // 1 second animation
   }
+
   return (
     <Card className={`flex flex-col ${className}`} style={{ height: 'fit-content', minHeight: '500px' }}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-lg font-semibold">Chat Preview</CardTitle>
         <Button
-          variant={isTestingMode ? "default" : "outline"}
-          size="sm"
-          onClick={toggleTestingMode}
-          className={isTestingMode ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+          variant="ghost"
+          size="icon"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="h-8 w-8"
         >
-          Testing Mode
+          <RotateCw className={`h-4 w-4 transition-transform duration-1000 ${
+            isRefreshing ? 'animate-spin' : ''
+          }`} />
         </Button>
       </CardHeader>
 

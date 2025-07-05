@@ -31,9 +31,9 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-foreground">Info</h2>
-          <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10">
+          {/* <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10">
             Create Ticket
-          </Button>
+          </Button> */}
         </div>
 
         {/* Customer Info */}
@@ -63,7 +63,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Pipeline Status */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Select Pipeline Status</Label>
           <Select defaultValue={chatInfo.status}>
             <SelectTrigger>
@@ -75,7 +75,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               <SelectItem value="resolved">Resolved</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* Labels */}
         <div className="space-y-2">

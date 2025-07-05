@@ -524,7 +524,7 @@ const PipelinePage = () => {
           </div>
 
           {/* Help Text */}
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          {/* <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-medium text-blue-900 mb-2">💡 Tips menggunakan Pipeline</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Drag dan drop lead untuk memindahkan antar stage</li>
@@ -533,7 +533,7 @@ const PipelinePage = () => {
               <li>• Gunakan filter untuk mencari lead berdasarkan kriteria tertentu</li>
               <li>• Set up automation untuk menggerakkan lead otomatis</li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </MainLayout>
     </DndProvider>

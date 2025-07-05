@@ -15,8 +15,8 @@ export default function RegisterPage() {
         <CardContent>
           <RegisterForm />
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
+            <p className="capitalize text-sm text-muted-foreground">
+              sudah punya akun?{" "}
               <Link 
                 to="/auth/login" 
                 className="text-primary hover:text-primary/80 font-medium underline"

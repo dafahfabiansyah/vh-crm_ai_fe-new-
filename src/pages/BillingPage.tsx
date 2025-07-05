@@ -10,66 +10,260 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, MessageCircle, Shield } from "lucide-react";
+import {
+  Check,
+  Shield,
+  Users,
+  Bot,
+  Plus,
+  TrendingUp,
+  Calendar,
+  CreditCard,
+  FileText,
+  Clock,
+} from "lucide-react";
 import MainLayout from "@/main-layout";
 import { pricingPlans } from "@/mock/data";
 
 
 
 export default function BillingPage() {
-//   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("3months");
 
   const handleUpgrade = (planId: string) => {
     setSelectedPlan(planId);
-    // Handle upgrade logic here
     console.log(`Upgrading to plan: ${planId}`);
   };
-  const handleContactSupport = () => {
-    // Handle contact support logic here
-    console.log("Opening support chat...");
+
+
+
+  // Mock data for dashboard cards
+  const dashboardData = {
+    packageDetails: {
+      plan: "BUSINESS Plan",
+      renewal: "Renewalt Automatically on 19 July 2025",
+      status: "active"
+    },
+    monthlyUsers: {
+      current: 1420,
+      limit: 10000,
+      additional: 0
+    },
+    aiResponses: {
+      used: 8168,
+      limit: 25000,
+      resetDate: "Reset Setup Tanggal 1"
+    },
+    additionalResponses: {
+      count: -3,
+      permanent: true
+    }
   };
+
+  // Mock transaction data
+  const transactions = [
+    {
+      id: 1,
+      date: "2025-07-01",
+      description: "Business Plan - Monthly Subscription",
+      amount: "IDR 3,609,050",
+      status: "paid",
+      type: "subscription"
+    },
+    {
+      id: 2,
+      date: "2025-06-15",
+      description: "Additional AI Responses - Top Up",
+      amount: "IDR 500,000",
+      status: "paid",
+      type: "topup"
+    },
+    {
+      id: 3,
+      date: "2025-06-01",
+      description: "Business Plan - Monthly Subscription",
+      amount: "IDR 3,609,050",
+      status: "paid",
+      type: "subscription"
+    },
+    {
+      id: 4,
+      date: "2025-05-20",
+      description: "Additional MAU - Top Up",
+      amount: "IDR 750,000",
+      status: "paid",
+      type: "topup"
+    },
+    {
+      id: 5,
+      date: "2025-05-01",
+      description: "Business Plan - Monthly Subscription",
+      amount: "IDR 3,609,050",
+      status: "pending",
+      type: "subscription"
+    }
+  ];
+
+  const periods = [
+    { id: "monthly", label: "Monthly", discount: null },
+    { id: "3months", label: "3 Months", discount: "5% Discount" },
+    { id: "halfyearly", label: "Half-Yearly", discount: "10% Discount" },
+    { id: "yearly", label: "Yearly", discount: "20% Discount" }
+  ];
 
   return (
     <MainLayout>
-      <div className="p-3 max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-3">
-          <h1 className="text-xl font-bold text-foreground mb-1">
-            Choose Your Plan
-          </h1>
-          <p className="text-xs text-muted-foreground max-w-xl mx-auto">
-            Pilih paket yang sesuai dengan kebutuhan bisnis Anda. Mulai dengan
-            trial gratis atau langsung berlangganan untuk akses penuh.
-          </p>
-        </div>{" "}
-        {/* Current Plan Status */}
-        <div className="mb-3">
-          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-            <CardContent className="p-2">
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Package Details Card */}
+          <Card className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-white border-0">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Shield className="h-3 w-3 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-semibold text-foreground">
-                      Current Plan: Free
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      Anda sedang menggunakan paket gratis dengan fitur terbatas
-                    </p>
-                  </div>
+                <div>
+                  <CardTitle className="text-sm font-medium text-cyan-100">
+                    Package Details
+                  </CardTitle>
+                  <h2 className="text-xl font-bold mt-1">
+                    {dashboardData.packageDetails.plan}
+                  </h2>
                 </div>
-                <Badge className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-0.5">
-                  Active
-                </Badge>
+                <Shield className="h-6 w-6 text-cyan-200" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center gap-2 text-sm text-cyan-100 mb-3">
+                <Clock className="h-4 w-4" />
+                <span>{dashboardData.packageDetails.renewal}</span>
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                View Current Subscription
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Monthly Active Users Card */}
+          <Card className="bg-gradient-to-br from-purple-400 to-purple-600 text-white border-0">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-medium text-purple-100">
+                    Monthly Active Users (Limit Tercapai)
+                  </CardTitle>
+                  <h2 className="text-xl font-bold mt-1">
+                    {dashboardData.monthlyUsers.current.toLocaleString()}
+                    <span className="text-sm font-normal text-purple-200 ml-2">
+                      /{dashboardData.monthlyUsers.limit.toLocaleString()} MAU
+                    </span>
+                  </h2>
+                </div>
+                <Users className="h-6 w-6 text-purple-200" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-sm text-purple-100 mb-3">
+                Additional MAU: {dashboardData.monthlyUsers.additional}
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  Top Up MAU
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-purple-200 mt-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>Reset Setup Tanggal 1</span>
               </div>
             </CardContent>
           </Card>
-        </div>{" "}
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-3 mb-4">
+
+          {/* AI Responses Card */}
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white border-0">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-medium text-blue-100">
+                    AI Responses
+                  </CardTitle>
+                  <h2 className="text-xl font-bold mt-1">
+                    {dashboardData.aiResponses.used.toLocaleString()} Used
+                    <span className="text-sm font-normal text-blue-200 ml-2">
+                      /{dashboardData.aiResponses.limit.toLocaleString()} AI Responses Limit
+                    </span>
+                  </h2>
+                </div>
+                <Bot className="h-6 w-6 text-blue-200" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center gap-2 text-sm text-blue-200 mb-3">
+                <Calendar className="h-4 w-4" />
+                <span>{dashboardData.aiResponses.resetDate}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional AI Responses Card */}
+          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-0">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-medium text-indigo-100">
+                    Additional AI Responses
+                  </CardTitle>
+                  <h2 className="text-xl font-bold mt-1">
+                    {dashboardData.additionalResponses.count} Responses
+                  </h2>
+                </div>
+                <Plus className="h-6 w-6 text-indigo-200" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 mb-3"
+              >
+                Top Up Responses
+              </Button>
+              <div className="flex items-center gap-2 text-sm text-indigo-200">
+                <Check className="h-4 w-4" />
+                <span>AI Responses Permanent</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Pricing Period Selector */}
+        <div className="flex justify-center">
+          <div className="flex bg-muted rounded-lg p-1">
+            {periods.map((period) => (
+              <Button
+                key={period.id}
+                variant={selectedPeriod === period.id ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedPeriod(period.id)}
+                className="flex flex-col items-center gap-1 h-auto py-2 px-4"
+              >
+                <span className="text-sm font-medium">{period.label}</span>
+                {period.discount && (
+                  <span className="text-xs text-primary">{period.discount}</span>
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Pricing Plans */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {pricingPlans.map((plan) => {
             const IconComponent = plan.icon;
             return (
@@ -77,27 +271,27 @@ export default function BillingPage() {
                 key={plan.id}
                 className={`relative transition-all duration-300 hover:shadow-md ${
                   plan.popular
-                    ? "border-primary shadow-md scale-[1.01]"
+                    ? "border-primary shadow-md scale-[1.02]"
                     : "border-border hover:border-primary/50"
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">
-                      Most Popular
+                    <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">
+                      Current Plan
                     </Badge>
                   </div>
                 )}
 
-                <CardHeader className="text-center pb-2">
-                  <div className="flex justify-center mb-1">
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-2">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         plan.popular ? "bg-primary/10" : "bg-muted"
                       }`}
                     >
                       <IconComponent
-                        className={`h-4 w-4 ${
+                        className={`h-5 w-5 ${
                           plan.popular
                             ? "text-primary"
                             : "text-muted-foreground"
@@ -106,52 +300,37 @@ export default function BillingPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-center mb-1">
-                    <Badge
-                      variant="outline"
-                      className={`${plan.badgeColor} text-xs px-2 py-0.5`}
-                    >
-                      {plan.badge}
-                    </Badge>
-                  </div>
-
-                  <CardTitle className="text-base font-bold text-foreground">
+                  <CardTitle className="text-lg font-bold text-foreground">
                     {plan.name}
                   </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground leading-tight">
-                    {plan.description}
-                  </CardDescription>
 
-                  <div className="mt-1">
-                    <div className="text-xl font-bold text-foreground">
+                  <div className="mt-2">
+                    <div className="text-2xl font-bold text-foreground">
                       {plan.price}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-sm text-muted-foreground">
                       {plan.period}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Quarterly Package
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <div className="text-sm font-medium text-foreground">
+                      {plan.name} Features
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-1 px-4">
-                  <div className="space-y-0.5">
+                <CardContent className="space-y-3 px-4">
+                  <div className="space-y-2">
                     {plan.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <div
-                          className={`w-3 h-3 rounded-full flex items-center justify-center ${
-                            feature.included
-                              ? "bg-green-100 text-green-600"
-                              : "bg-gray-100 text-gray-400"
-                          }`}
-                        >
-                          <Check className="h-2 w-2" />
+                        <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Check className="h-3 w-3 text-blue-600" />
                         </div>
-                        <span
-                          className={`text-xs leading-tight ${
-                            feature.included
-                              ? "text-foreground"
-                              : "text-muted-foreground line-through"
-                          }`}
-                        >
+                        <span className="text-sm text-foreground">
                           {feature.text}
                         </span>
                       </div>
@@ -159,29 +338,84 @@ export default function BillingPage() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-1.5 pt-2 px-4 pb-3">
+                <CardFooter className="flex flex-col gap-2 pt-4 px-4 pb-4">
                   <Button
                     onClick={() => handleUpgrade(plan.id)}
-                    className={`w-full h-8 text-xs ${
+                    className={`w-full h-9 text-sm ${
                       plan.popular
                         ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                         : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                     }`}
                   >
                     {plan.id === "trial" ? "Start Free Trial" : "Upgrade Now"}
-                  </Button>{" "}
-                  <Button
-                    variant="outline"
-                    onClick={handleContactSupport}
-                    className="w-full text-primary border-primary hover:bg-primary/10 h-7 text-xs"
-                  >
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Mau tanya dulu? kesini aja
                   </Button>
                 </CardFooter>
               </Card>
             );
           })}
+        </div>
+
+        {/* Transaction History */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
+                  <CardDescription>Riwayat pembayaran dan transaksi Anda</CardDescription>
+                </div>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {transactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        transaction.type === 'subscription' 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'bg-green-100 text-green-600'
+                      }`}>
+                        {transaction.type === 'subscription' ? (
+                          <CreditCard className="h-5 w-5" />
+                        ) : (
+                          <Plus className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground">{transaction.description}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(transaction.date).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="font-semibold text-foreground">{transaction.amount}</div>
+                        <Badge 
+                          variant={transaction.status === 'paid' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {transaction.status === 'paid' ? 'Paid' : 'Pending'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </MainLayout>

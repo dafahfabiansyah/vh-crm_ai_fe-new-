@@ -9,7 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 interface CreateHumanAgentModalProps {
   isOpen: boolean;
@@ -94,21 +100,15 @@ export default function CreateHumanAgentModal({
   };
 
   if (!isOpen) return null;
+  
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 relative z-10">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-semibold">Create Agent</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Agent</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-600 text-sm">{error}</p>
@@ -234,7 +234,7 @@ export default function CreateHumanAgentModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

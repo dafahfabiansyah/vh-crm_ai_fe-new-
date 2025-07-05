@@ -93,7 +93,7 @@ export default function ChatHistoryList({
         <div className="relative mb-4">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Cari percakapan..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -155,20 +155,20 @@ export default function ChatHistoryList({
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {/* Tab Indicator */}
-        <div className="p-3 bg-accent/30 border-b border-border">
+        {/* <div className="p-3 bg-accent/30 border-b border-border">
           <p className="text-sm text-muted-foreground">
             Showing <span className="font-medium text-foreground">
               {activeTab === 'assigned' ? 'Assigned' : 
                activeTab === 'unassigned' ? 'Unassigned' : 'Resolved'}
             </span> conversations ({filteredSessions.length})
           </p>
-        </div>
+        </div> */}
         
         {filteredSessions.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-muted-foreground">No conversations found</p>
+          <div className="p-8 text-center capitalize">
+            <p className="text-muted-foreground">tidak ada percakapan</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Try adjusting your search or tab selection
+              cek tab lain atau mulai percakapan baru
             </p>
           </div>
         ) : (

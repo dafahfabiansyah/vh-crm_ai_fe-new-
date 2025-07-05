@@ -1,24 +1,19 @@
-"use client";
-
+"use client";;
 import React, { useState } from "react";
 import MainLayout from "@/main-layout";
 import { CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
-  Plus,
   Users,
   MessageSquare,
   Calendar,
-  MoreHorizontal,
   Clock,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Search,
-  Filter,
 } from "lucide-react";
 import { Link } from "react-router";
 
@@ -308,7 +303,7 @@ const TicketPage = () => {
               </h1>
             </div>
             
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
@@ -317,16 +312,13 @@ const TicketPage = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Ticket
               </Button>
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6">
+            </div> */}
+           <div className="flex items-center gap-3">
             <CardContent className="p-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search tickets by title, customer, or category..."
+                  placeholder="Cari tiket"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -334,18 +326,34 @@ const TicketPage = () => {
               </div>
             </CardContent>
           </div>
+          </div>
+
+          {/* Search Bar */}
+          {/* <div className="mb-6">
+            <CardContent className="p-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Cari ticket berdasarkan judul, customer, atau kategori"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </CardContent>
+          </div> */}
         </div>
 
         {/* Ticket Status Columns */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               Ticket Status
             </h2>
             <Button variant="outline" size="sm">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </div>
+          </div> */}
 
           <div className="flex gap-6 overflow-x-auto pb-4">
             {ticketStatuses.map((status) => (

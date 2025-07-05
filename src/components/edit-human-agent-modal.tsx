@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 interface EditHumanAgentModalProps {
   isOpen: boolean;
@@ -100,25 +107,16 @@ export default function EditHumanAgentModal({
     }));
   };
 
-  if (!isOpen || !agent) return null;
+  if (!agent) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 relative z-10">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-semibold">Edit Agent</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Agent</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-600 text-sm">{error}</p>
@@ -230,13 +228,11 @@ export default function EditHumanAgentModal({
           </div>
 
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="active"
               checked={formData.active}
-              onChange={(e) => handleInputChange("active", e.target.checked)}
+              onCheckedChange={(checked) => handleInputChange("active", checked)}
               disabled={isLoading}
-              className="h-4 w-4 text-blue-600"
             />
             <Label htmlFor="active" className="text-sm text-gray-600">
               Active
@@ -256,14 +252,14 @@ export default function EditHumanAgentModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 flex items-center gap-2"
+              className="bg-primary text-white px-6 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isLoading ? "UPDATING..." : "UPDATE"}
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

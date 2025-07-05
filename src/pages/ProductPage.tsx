@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { 
   ArrowLeft, 
   Plus, 
@@ -13,7 +19,6 @@ import {
   Edit, 
   Trash2, 
   Eye,
-  X,
   Package
 } from 'lucide-react'
 import { Link } from 'react-router'
@@ -434,22 +439,13 @@ const ProductPage = () => {
         </Card>
 
         {/* Create Product Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">Create Product</h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Product</DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
                     <Input
@@ -579,13 +575,11 @@ const ProductPage = () => {
                     </Button>
                   </div>
                 </form>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </MainLayout>
-  )
-}
-
-export default ProductPage
+            </DialogContent>
+          </Dialog>
+        </div>
+      </MainLayout>
+    )
+  }
+  
+  export default ProductPage

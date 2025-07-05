@@ -90,10 +90,10 @@ export default function CreatePipelinePage() {
 
           {/* Title and Description */}
           <div className="space-y-3">
-            <CardTitle className="text-2xl font-bold text-foreground">Create New Pipeline</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground capitalize">buat Pipeline baru</CardTitle>
             <CardDescription className="text-base text-muted-foreground leading-relaxed">
-              Create a new pipeline to manage and automate your business processes. Define stages, assign tasks, and
-              track progress all in one place.
+              Buat pipeline baru untuk mengelola proses bisnis Anda. Berikan nama dan deskripsi yang sesuai untuk
+              memulai.
             </CardDescription>
           </div>
         </CardHeader>
@@ -108,7 +108,7 @@ export default function CreatePipelinePage() {
               <Input
                 id="pipelineName"
                 type="text"
-                placeholder="Pipeline Name"
+                placeholder="Nama pipeline Anda"
                 value={formData.name}
                 onChange={handleInputChange("name")}
                 className="w-full"
@@ -124,7 +124,7 @@ export default function CreatePipelinePage() {
               </Label>
               <Textarea
                 id="description"
-                placeholder="Description"
+                placeholder="Deskripsi singkat tentang pipeline ini"
                 value={formData.description}
                 onChange={handleInputChange("description")}
                 className="w-full min-h-[120px] resize-none"
@@ -152,7 +152,7 @@ export default function CreatePipelinePage() {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Creating...
+                    Membuat...
                   </>
                 ) : (
                   <>
@@ -167,7 +167,7 @@ export default function CreatePipelinePage() {
       </Card>
 
       {/* Additional Information */}
-      <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-border">
+      {/* <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-border">
         <h3 className="font-medium text-foreground mb-2">What happens next?</h3>
         <ul className="text-sm text-muted-foreground space-y-1">
           <li>• You'll be able to add stages to your pipeline</li>
@@ -175,7 +175,7 @@ export default function CreatePipelinePage() {
           <li>• Assign team members and set permissions</li>
           <li>• Start tracking your business processes</li>
         </ul>
-      </div>
+      </div> */}
     </div>
   </MainLayout>
   )

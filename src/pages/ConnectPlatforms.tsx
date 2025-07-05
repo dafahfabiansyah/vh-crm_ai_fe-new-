@@ -13,6 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -27,13 +33,13 @@ import {
   User,
   Settings,
   Star,
-  X,
   CheckCircle,
   XCircle,
   Clock,
   RefreshCw,
   Instagram,
   Globe,
+  X,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import type { AIAgent, WhatsAppPlatform } from "@/types";
@@ -219,7 +225,7 @@ export default function ConnectedPlatformsPage() {
                   Inboxes
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  This is where you can connect all your platforms
+                  Kelola platform yang terhubung dengan sistem Anda
                 </p>
               </div>
               <div className="flex gap-2">
@@ -708,43 +714,52 @@ export default function ConnectedPlatformsPage() {
         </div>
       </div>
 
-      {/* Add Platform Modal */}
-      {isAddPlatformModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Connect Platform</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsAddPlatformModalOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* Add Platform Modal - Using shadcn Dialog */}
+      <Dialog
+        open={isAddPlatformModalOpen}
+        onOpenChange={setIsAddPlatformModalOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Plus className="h-5 w-5" />
+              Connect Platform
+            </DialogTitle>
+          </DialogHeader>
 
-            <p className="text-sm text-muted-foreground mb-6">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
               Choose a platform to connect to your inbox
             </p>
 
             <div className="space-y-3">
               {/* WhatsApp Option */}
               <button
-                onClick={() => navigate('/connect/whatsapp')}
+                onClick={() => {
+                  navigate("/connect/whatsapp");
+                  setIsAddPlatformModalOpen(false);
+                }}
                 className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
               >
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <MessageSquare className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="text-left">
-                  <h3 className="font-medium text-foreground">WhatsApp Business</h3>
-                  <p className="text-sm text-muted-foreground">Connect your WhatsApp Business account</p>
+                  <h3 className="font-medium text-foreground">
+                    WhatsApp Business
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Connect your WhatsApp Business account
+                  </p>
                 </div>
               </button>
 
               {/* Instagram Option */}
               <button
-                onClick={() => navigate('/connect/instagram')}
+                onClick={() => {
+                  navigate("/connect/instagram");
+                  setIsAddPlatformModalOpen(false);
+                }}
                 className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
               >
                 <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
@@ -752,13 +767,18 @@ export default function ConnectedPlatformsPage() {
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium text-foreground">Instagram</h3>
-                  <p className="text-sm text-muted-foreground">Connect your Instagram business account</p>
+                  <p className="text-sm text-muted-foreground">
+                    Connect your Instagram business account
+                  </p>
                 </div>
               </button>
 
               {/* Web Chat Option */}
               <button
-                onClick={() => navigate('/connect/webchat')}
+                onClick={() => {
+                  navigate("/connect/webchat");
+                  setIsAddPlatformModalOpen(false);
+                }}
                 className="w-full p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-4"
               >
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -766,12 +786,14 @@ export default function ConnectedPlatformsPage() {
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium text-foreground">Web Chat</h3>
-                  <p className="text-sm text-muted-foreground">Add live chat widget to your website</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add live chat widget to your website
+                  </p>
                 </div>
               </button>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="pt-4 border-t border-gray-200">
               <Button
                 variant="outline"
                 onClick={() => setIsAddPlatformModalOpen(false)}
@@ -781,8 +803,8 @@ export default function ConnectedPlatformsPage() {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

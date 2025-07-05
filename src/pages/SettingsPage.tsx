@@ -54,7 +54,7 @@ const SettingsPage = () => {
             <Settings className="h-6 w-6 text-gray-600" />
             <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
           </div>
-          <p className="text-gray-600">Manage your application settings and configurations</p>
+          {/* <p className="text-gray-600">Manage your application settings and configurations</p> */}
         </div>
 
         {/* Settings Grid */}
