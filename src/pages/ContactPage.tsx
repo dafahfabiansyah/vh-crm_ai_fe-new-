@@ -280,26 +280,22 @@ export default function ContactsPage() {
 
   return (
     <MainLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-primary">Contacts</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Contacts</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Total Contacts: {totalContacts.toLocaleString()}
               </p>
             </div>
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-
-            <div className="relative flex-1 max-w-md">
+          <div className="space-y-3">
+            {/* Search Bar */}
+            <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Cari berdasarkan Nama atau Nomor Telepon"
@@ -309,20 +305,26 @@ export default function ContactsPage() {
               />
             </div>
 
-            <Dialog open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Send className="h-4 w-4 mr-2" />
-                  Tambah Kontak
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-green-600">
-                    <Phone className="h-5 w-5" />
-                    Tambah Kontak WhatsApp
-                  </DialogTitle>
-                </DialogHeader>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+              <Dialog open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                    <Send className="h-4 w-4 mr-2" />
+                    Tambah Kontak
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+                  <DialogHeader className="pb-4">
+                    <DialogTitle className="flex items-center gap-2 text-green-600 text-lg">
+                      <Phone className="h-5 w-5" />
+                      Tambah Kontak WhatsApp
+                    </DialogTitle>
+                  </DialogHeader>
                 <form onSubmit={handleAddContactSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="contactPhone" className="text-sm font-medium">
@@ -332,8 +334,8 @@ export default function ContactsPage() {
                       id="contactPhone"
                       value={addContactForm.phone}
                       onChange={(e) => setAddContactForm(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Nomor Telepon *"
-                      className="font-mono"
+                      placeholder="+628526000993731"
+                      className="font-mono text-sm"
                       required
                     />
                   </div>
@@ -346,7 +348,8 @@ export default function ContactsPage() {
                       id="contactName"
                       value={addContactForm.name}
                       onChange={(e) => setAddContactForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Nama"
+                      placeholder="Masukkan nama kontak"
+                      className="text-sm"
                     />
                   </div>
 
@@ -358,156 +361,263 @@ export default function ContactsPage() {
                       id="businessName"
                       value={addContactForm.businessName}
                       onChange={(e) => setAddContactForm(prev => ({ ...prev, businessName: e.target.value }))}
-                      placeholder="Business Name"
+                      placeholder="Masukkan nama bisnis"
+                      className="text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="businessAccount"
-                        checked={addContactForm.businessAccount}
-                        onCheckedChange={(checked) => 
-                          setAddContactForm(prev => ({ ...prev, businessAccount: checked as boolean }))
-                        }
-                      />
-                      <Label htmlFor="businessAccount" className="text-sm flex items-center gap-1">
-                        <Building className="h-4 w-4 text-blue-500" />
-                        Business Account
-                      </Label>
-                    </div>
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="businessAccount"
+                          checked={addContactForm.businessAccount}
+                          onCheckedChange={(checked) => 
+                            setAddContactForm(prev => ({ ...prev, businessAccount: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="businessAccount" className="text-sm flex items-center gap-2">
+                          <Building className="h-4 w-4 text-blue-500" />
+                          Business Account
+                        </Label>
+                      </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="verified"
-                        checked={addContactForm.verified}
-                        onCheckedChange={(checked) => 
-                          setAddContactForm(prev => ({ ...prev, verified: checked as boolean }))
-                        }
-                      />
-                      <Label htmlFor="verified" className="text-sm flex items-center gap-1">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Verified
-                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="verified"
+                          checked={addContactForm.verified}
+                          onCheckedChange={(checked) => 
+                            setAddContactForm(prev => ({ ...prev, verified: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="verified" className="text-sm flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Verified Account
+                        </Label>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pt-4">
-                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white">
-                      Add Contact
+                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsAddContactOpen(false)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Batal
+                    </Button>
+                    <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Tambah Kontak
                     </Button>
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
 
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={selectedContacts.length === 0}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Selected
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={selectedContacts.length === 0}
+                className="flex-1 sm:flex-none"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
 
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
 
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Customize Columns
-            </Button>
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none sm:hidden lg:flex">
+                <Settings className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Customize</span>
+                <span className="sm:hidden">Settings</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="border border-border rounded-lg bg-card capitalize">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedContacts.length === mockContacts.length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="w-20">action</TableHead>
-                <TableHead>name</TableHead>
-                <TableHead>phone</TableHead>
-                <TableHead>note</TableHead>
-                <TableHead>label names</TableHead>
-                <TableHead>inbox</TableHead>
-                <TableHead>pipeline status</TableHead>
-                <TableHead>chat status</TableHead>
-                <TableHead>chat created at</TableHead>
-                <TableHead>handled by</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredContacts.map((contact) => (
-                <TableRow key={contact.id} className="hover:bg-muted/30">
-                  <TableCell>
+                {/* Table - Desktop / Card Layout - Mobile */}
+        <div className="border border-border rounded-lg bg-card overflow-hidden">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table className="min-w-full">
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedContacts.includes(contact.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectContact(contact.id, checked as boolean)
-                      }
+                      checked={selectedContacts.length === mockContacts.length}
+                      onCheckedChange={handleSelectAll}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
+                  </TableHead>
+                  <TableHead className="w-20">Action</TableHead>
+                  <TableHead className="min-w-32">Name</TableHead>
+                  <TableHead className="min-w-32">Phone</TableHead>
+                  <TableHead className="min-w-24">Note</TableHead>
+                  <TableHead className="min-w-24">Labels</TableHead>
+                  <TableHead className="min-w-40">Inbox</TableHead>
+                  <TableHead className="min-w-32">Pipeline</TableHead>
+                  <TableHead className="min-w-24">Status</TableHead>
+                  <TableHead className="min-w-40">Created</TableHead>
+                  <TableHead className="min-w-32">Handler</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredContacts.map((contact) => (
+                  <TableRow key={contact.id} className="hover:bg-muted/30">
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedContacts.includes(contact.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectContact(contact.id, checked as boolean)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7"
+                          onClick={() => handleOpenWhatsAppModal(contact)}
+                        >
+                          <MessageSquare className="h-3 w-3 text-blue-600" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7">
+                          <Edit className="h-3 w-3 text-orange-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-sm">
+                      {contact.name || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm font-mono">
+                      {contact.phone || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {contact.note || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {contact.labelNames.length > 0
+                        ? contact.labelNames.join(", ")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                      >
+                        {contact.inbox}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{contact.pipelineStatus}</TableCell>
+                    <TableCell>{getStatusBadge(contact.chatStatus)}</TableCell>
+                    <TableCell className="text-muted-foreground font-mono text-xs">
+                      {contact.chatCreatedAt}
+                    </TableCell>
+                    <TableCell className="text-sm">{contact.handledBy || "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="md:hidden">
+            {/* Mobile Header */}
+            <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedContacts.length === mockContacts.length}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm font-medium">Select All</span>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {selectedContacts.length} selected
+              </span>
+            </div>
+
+            {/* Mobile Contact Cards */}
+            <div className="divide-y divide-border">
+              {filteredContacts.map((contact) => (
+                <div key={contact.id} className="p-4 space-y-3">
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={selectedContacts.includes(contact.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectContact(contact.id, checked as boolean)
+                        }
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-sm truncate">
+                            {contact.name || "No Name"}
+                          </h3>
+                          {getStatusBadge(contact.chatStatus)}
+                        </div>
+                        <p className="text-sm text-muted-foreground font-mono">
+                          {contact.phone || "No Phone"}
+                        </p>
+                        <div className="mt-2">
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                          >
+                            {contact.inbox}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-1 ml-2">
                       <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="h-8 w-8"
+                        className="h-8 w-8 flex-shrink-0"
                         onClick={() => handleOpenWhatsAppModal(contact)}
                       >
                         <MessageSquare className="h-4 w-4 text-blue-600" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0">
                         <Edit className="h-4 w-4 text-orange-600" />
                       </Button>
                     </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {contact.name || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {contact.phone || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {contact.note || "-"}
-                  </TableCell>
-                  <TableCell>
-                    {contact.labelNames.length > 0
-                      ? contact.labelNames.join(", ")
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="bg-blue-50 text-blue-700 border-blue-200"
-                    >
-                      {contact.inbox}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{contact.pipelineStatus}</TableCell>
-                  <TableCell>{getStatusBadge(contact.chatStatus)}</TableCell>
-                  <TableCell className="text-muted-foreground font-mono text-sm">
-                    {contact.chatCreatedAt}
-                  </TableCell>
-                  <TableCell>{contact.handledBy || "-"}</TableCell>
-                </TableRow>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pl-7">
+                    <div>
+                      <span className="font-medium">Pipeline:</span> {contact.pipelineStatus}
+                    </div>
+                    <div>
+                      <span className="font-medium">Handler:</span> {contact.handledBy || "-"}
+                    </div>
+                    <div className="col-span-2">
+                      <span className="font-medium">Created:</span> {contact.chatCreatedAt}
+                    </div>
+                    {contact.note && contact.note !== "-" && (
+                      <div className="col-span-2">
+                        <span className="font-medium">Note:</span> {contact.note}
+                      </div>
+                    )}
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </div>
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
             <span>
               Halaman {currentPage} dari {totalPages}
             </span>
@@ -529,66 +639,73 @@ export default function ContactsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground mr-4">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <span className="text-sm text-muted-foreground">
               Total: {totalContacts.toLocaleString()}
             </span>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            {/* Page Numbers */}
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className={
-                    currentPage === page
-                      ? "bg-primary text-primary-foreground"
-                      : ""
-                  }
-                >
-                  {page}
-                </Button>
-              ))}
-              <span className="px-2 py-1 text-muted-foreground">...</span>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(totalPages)}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
               >
-                {totalPages}
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              {/* Page Numbers - Hidden on mobile */}
+              <div className="hidden sm:flex gap-1">
+                {[1, 2, 3, 4, 5].map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className={
+                      currentPage === page
+                        ? "bg-primary text-primary-foreground"
+                        : ""
+                    }
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <span className="px-2 py-1 text-muted-foreground">...</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                >
+                  {totalPages}
+                </Button>
+              </div>
+
+              {/* Mobile page indicator */}
+              <div className="sm:hidden px-3 py-1 text-sm text-muted-foreground">
+                {currentPage} / {totalPages}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
 
       {/* WhatsApp Modal - Using shadcn Dialog */}
       <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-primary">
+        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="flex items-center gap-2 text-primary text-lg">
               <Send className="h-5 w-5" />
               Kirim Pesan WhatsApp
             </DialogTitle>
@@ -603,7 +720,7 @@ export default function ContactsPage() {
                 value={whatsAppForm.phone}
                 onChange={(e) => setWhatsAppForm(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="+628526000993731"
-                className="font-mono"
+                className="font-mono text-sm"
               />
             </div>
 
@@ -615,15 +732,28 @@ export default function ContactsPage() {
                 value={whatsAppForm.deviceName}
                 onValueChange={(value) => setWhatsAppForm(prev => ({ ...prev, deviceName: value }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="tenant_69b86cc342e043d4a8abcd7633f440dd_dev..." />
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Pilih device..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
-                    tenant_69b86cc342e043d4a8abcd7633f440dd_dev...
+                    <div className="flex flex-col">
+                      <span className="text-sm">tenant_69b86cc342e043d4a8abcd7633f440dd_dev</span>
+                      <span className="text-xs text-muted-foreground">Primary Device</span>
+                    </div>
                   </SelectItem>
-                  <SelectItem value="device_2">Device 2</SelectItem>
-                  <SelectItem value="device_3">Device 3</SelectItem>
+                  <SelectItem value="device_2">
+                    <div className="flex flex-col">
+                      <span className="text-sm">Device 2</span>
+                      <span className="text-xs text-muted-foreground">Secondary Device</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="device_3">
+                    <div className="flex flex-col">
+                      <span className="text-sm">Device 3</span>
+                      <span className="text-xs text-muted-foreground">Backup Device</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -637,7 +767,7 @@ export default function ContactsPage() {
                 value={whatsAppForm.agentId}
                 onChange={(e) => setWhatsAppForm(prev => ({ ...prev, agentId: e.target.value }))}
                 placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
-                className="font-mono text-sm"
+                className="font-mono text-xs sm:text-sm"
               />
             </div>
 
@@ -650,39 +780,27 @@ export default function ContactsPage() {
                 value={whatsAppForm.message}
                 onChange={(e) => setWhatsAppForm(prev => ({ ...prev, message: e.target.value }))}
                 placeholder="Hello, this is an initial message."
-                rows={4}
+                rows={3}
+                className="text-sm resize-none"
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Maksimal 1000 karakter
+              </p>
             </div>
 
-            {/* <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium">
-                Tujuan
-              </Label>
-              <Input
-                id="title"
-                value={whatsAppForm.title}
-                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Customer inquiry"
-              />
-            </div> */}
-
-            {/* <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-medium">
-                Catatan Tambahan
-              </Label>
-              <Input
-                id="notes"
-                value={whatsAppForm.notes}
-                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Customer asked about product X"
-              />
-            </div> */}
-
-            <div className="pt-4">
-              <Button type="submit" className="w-full bg-primary text-white">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="flex-1 sm:flex-none"
+              >
+                Batal
+              </Button>
+              <Button type="submit" className="flex-1 bg-primary text-white">
                 <Send className="h-4 w-4 mr-2" />
-                Send Message
+                Kirim Pesan
               </Button>
             </div>
           </form>
