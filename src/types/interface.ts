@@ -154,3 +154,32 @@ export interface PipelineStage {
   leads: Lead[]
   color: string
 }
+
+// AI Agent interface
+export interface AIAgentData {
+  // Basic agent info
+  id: string;
+  name: string;
+  description: string;
+  id_settings: string;
+  created_at: string;
+  updated_at: string;
+  // Settings data
+  behaviour: string;
+  welcomeMessage: string;
+  transferConditions: string;
+  model: string;
+  aiHistoryLimit: number;
+  aiContextLimit: number;
+  messageAwait: number;
+  aiMessageLimit: number;
+  // UI state
+  isActive: boolean;
+  stopAIAfterHandoff: boolean;
+  timezone: string;
+  selectedLabels: string[];
+}
+
+export interface AIAgentDetailPageProps {
+  agentId?: string;
+}
