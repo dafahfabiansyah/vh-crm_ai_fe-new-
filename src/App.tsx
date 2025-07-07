@@ -6,7 +6,7 @@ import { ProtectedRoute, PublicRoute } from "@/components/route";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import Dashboard from "@/pages/Dashboard";
-import AIAgentsPage from "./pages/Ai-agentPage";
+import AIAgentsPage from "./pages/AiAgentPage";
 import HumanAgentsPage from "./pages/HumanAgent";
 import NotFoundPage from "@/pages/NotFoundPage";
 import ErrorBoundary from "@/components/error-boundary";

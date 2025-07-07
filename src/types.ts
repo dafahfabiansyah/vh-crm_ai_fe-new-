@@ -189,9 +189,8 @@ export interface AgentRole {
 export interface AIAgent {
   id: string;
   name: string;
-  role_id: string;
-  is_active: boolean;
-  role: AgentRole;
+  description: string;
+  id_settings: string;
   created_at: string;
   updated_at: string;
 }

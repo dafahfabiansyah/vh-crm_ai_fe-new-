@@ -1,14 +1,13 @@
-"use client"
-
+"use client";
 import type React from "react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Send, MoreHorizontal, User, RotateCw } from "lucide-react";
+import { Send, MoreHorizontal, User, RotateCw, Loader2 } from "lucide-react";
+import { ChatService } from "@/services/chatService";
 
 interface Message {
   id: string
@@ -18,64 +17,77 @@ interface Message {
 }
 
 interface AIAgentChatPreviewProps {
+  agentId: string
   agentName: string
   welcomeMessage?: string
   className?: string
 }
 
-export default function AIAgentChatPreview({ agentName, welcomeMessage, className }: AIAgentChatPreviewProps) {
+export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage, className }: AIAgentChatPreviewProps) {
   const [message, setMessage] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "system-1",
-      content:
-        "AI starts fresh with no memory of previous conversations.\n\nRefresh the page to start a completely new session.",
-      sender: "system",
-      timestamp: new Date().toISOString(),
-    },
-  ])
+  const [isSending, setIsSending] = useState(false)
+  const [sessionId, setSessionId] = useState(() => ChatService.generateSessionId())
+  const [messages, setMessages] = useState<Message[]>([])
 
   // Add welcome message when it changes
   useEffect(() => {
     if (welcomeMessage && welcomeMessage.trim()) {
-      const welcomeMsg: Message = {
-        id: "welcome-1",
-        content: welcomeMessage,
-        sender: "ai",
-        timestamp: new Date().toISOString(),
-      }
+      // const welcomeMsg: Message = {
+      //   id: "welcome-1",
+      //   content: welcomeMessage,
+      //   sender: "ai",
+      //   timestamp: new Date().toISOString(),
+      // }
 
       setMessages((prev) => {
         // Remove existing welcome message if any
         const filtered = prev.filter((msg) => !msg.id.startsWith("welcome-"))
-        return [...filtered, welcomeMsg]
+        return [...filtered]
+        // return [...filtered, welcomeMsg]
       })
     }
   }, [welcomeMessage])
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
+  const handleSendMessage = async () => {
+    if (message.trim() && !isSending) {
+      const userMessage: Message = {
         id: `user-${Date.now()}`,
         content: message,
         sender: "user",
         timestamp: new Date().toISOString(),
       }
-      setMessages((prev) => [...prev, newMessage])
+      
+      setMessages((prev) => [...prev, userMessage])
+      const currentMessage = message
       setMessage("")
+      setIsSending(true)
 
-      // Simulate AI response with typing delay
-      setTimeout(() => {
+      try {
+        // Call the real API
+        const response = await ChatService.sendMessage(agentId, currentMessage, sessionId)
+        
+        // Add AI response to messages
         const aiResponse: Message = {
           id: `ai-${Date.now()}`,
-          content:
-            "Thank you for your message! I'm here to help you with any questions or concerns you might have. How can I assist you today?",
+          content: response.response,
           sender: "ai",
           timestamp: new Date().toISOString(),
         }
         setMessages((prev) => [...prev, aiResponse])
-      }, 1500)
+      } catch (error: any) {
+        console.error('Error sending message:', error)
+        // Add error message
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          content: "Sorry, I'm having trouble responding right now. Please try again.",
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+        }
+        setMessages((prev) => [...prev, errorMessage])
+      } finally {
+        setIsSending(false)
+      }
     }
   }
 
@@ -89,17 +101,12 @@ export default function AIAgentChatPreview({ agentName, welcomeMessage, classNam
   const handleRefresh = () => {
     setIsRefreshing(true)
     
+    // Generate new session ID for fresh conversation
+    setSessionId(ChatService.generateSessionId())
+    
     // Reset messages to initial state
     setTimeout(() => {
-      const initialMessages: Message[] = [
-        {
-          id: "system-1",
-          content:
-            "AI starts fresh with no memory of previous conversations.\n\nRefresh the page to start a completely new session.",
-          sender: "system",
-          timestamp: new Date().toISOString(),
-        },
-      ]
+      const initialMessages: Message[] = []
       
       // Add welcome message if exists
       if (welcomeMessage && welcomeMessage.trim()) {
@@ -146,9 +153,9 @@ export default function AIAgentChatPreview({ agentName, welcomeMessage, classNam
             </Avatar>
             <div>
               <p className="font-medium text-sm">{agentName}</p>
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+              {/* <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                 Fresh Session (No Memory)
-              </Badge>
+              </Badge> */}
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -181,11 +188,6 @@ export default function AIAgentChatPreview({ agentName, welcomeMessage, classNam
           ))}
         </div>
 
-        {/* Message Delay Info */}
-        <div className="text-center text-sm text-muted-foreground">
-          <span className="font-medium">Message Delay:</span> 1 seconds + natural typing speed
-        </div>
-
         {/* Message Input */}
         <div className="flex gap-2">
           <Input
@@ -197,11 +199,15 @@ export default function AIAgentChatPreview({ agentName, welcomeMessage, classNam
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!message.trim()}
+            disabled={!message.trim() || isSending}
             size="icon"
             className="bg-primary hover:bg-primary/90"
           >
-            <Send className="h-4 w-4" />
+            {isSending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </CardContent>

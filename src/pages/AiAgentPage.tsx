@@ -10,52 +10,40 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 import MainLayout from "@/main-layout";
-import { mockAIAgents } from "@/mock/data";
+import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
 import CreateAgentModal from "@/components/create-agent-modal";
 
 export default function AIAgentsPage() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [agents, setAgents] = useState<AIAgent[]>(mockAIAgents);
+  const [agents, setAgents] = useState<AIAgent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Simulate loading on initial render
+  // Fetch agents on component mount
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    fetchAgents();
   }, []);
 
   const fetchAgents = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Keep existing agents and merge with mock data if needed
-      setAgents(prevAgents => {
-        // If no previous agents, use mock data
-        if (prevAgents.length === 0) {
-          return mockAIAgents;
-        }
-        // Otherwise keep existing agents (which includes newly created ones)
-        return prevAgents;
-      });
-    } catch (err: unknown) {
-      const error = err as { message?: string };
+      
+      const agentsData = await AgentsService.getAgents();
+      setAgents(agentsData);
+    } catch (err: any) {
       console.error("Error fetching agents:", err);
-      setError(error.message || "Failed to load AI agents");
+      setError(err.message || "Failed to load AI agents");
       setAgents([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAgentCreated = (newAgent?: any) => {
+  const handleAgentCreated = (newAgent?: AIAgent) => {
     if (newAgent) {
       // Add the new agent to the existing agents
       setAgents(prev => [...prev, newAgent]);
@@ -69,21 +57,13 @@ export default function AIAgentsPage() {
       setLoading(true);
       setError(null);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await AgentsService.deleteAgent(agent.id);
 
-      // Update agent to set is_active: false (soft delete) in local state
-      setAgents(prev => 
-        prev.map(a => 
-          a.id === agent.id 
-            ? { ...a, is_active: false } 
-            : a
-        )
-      );
-    } catch (err: unknown) {
-      const error = err as { message?: string };
+      // Remove the agent from local state
+      setAgents(prev => prev.filter(a => a.id !== agent.id));
+    } catch (err: any) {
       console.error("Error deleting agent:", err);
-      setError(error.message || "Failed to delete agent");
+      setError(err.message || "Failed to delete agent");
     } finally {
       setLoading(false);
     }
@@ -143,7 +123,7 @@ export default function AIAgentsPage() {
             onClick={() => setIsModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            BUAT AGEN AI BARU
+            Buat AI Agent Baru
           </Button>
         </div>
 
@@ -215,14 +195,10 @@ export default function AIAgentsPage() {
                       <div>
                         <h3 className="font-bold text-lg">{agent.name}</h3>
                         <Badge
-                          variant={agent.is_active ? "default" : "secondary"}
-                          className={`text-xs ${
-                            agent.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
+                          variant="default"
+                          className="text-xs bg-green-100 text-green-800"
                         >
-                          {agent.role?.name || "Unknown Role"}
+                          AI Agent
                         </Badge>
                       </div>
                     </div>{" "}
@@ -244,20 +220,18 @@ export default function AIAgentsPage() {
 
                   {/* Description */}
                   <p className="text-gray-600 text-sm mb-4">
-                    {agent.role?.description || "AI agent for automated tasks"}
+                    {agent.description || "AI agent for automated tasks"}
                   </p>
 
                   {/* Status */}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Created: {formatDate(agent.created_at)}</span>
-                    <Badge
+                    {/* <Badge
                       variant="outline"
-                      className={`text-xs ${
-                        agent.is_active ? "text-green-600" : "text-gray-500"
-                      }`}
+                      className="text-xs text-green-600"
                     >
-                      {agent.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                      Active
+                    </Badge> */}
                   </div>
                 </CardContent>
               </Card>
