@@ -5,69 +5,73 @@ import type {
   LoginResponse,
   User,
 } from "../types/interface";
+import Cookies from 'js-cookie';
 
-// Mock data untuk simulasi
-const mockUsers = [
-  {
-    id: "1",
-    email: "test@example.com",
-    name: "Test User",
-    business_name: "Test Business",
-    phone_number: "+1234567890",
-    password: "password123" // In real app, this would be hashed
-  }
-];
+// Cookie configuration
+const COOKIE_OPTIONS = {
+  expires: 7, // 7 days
+  secure: process.env.NODE_ENV === 'production', // Only secure in production
+  sameSite: 'strict' as const,
+  path: '/'
+};
+
+const USER_DATA_COOKIE = 'user_data';
+const AUTH_TOKEN_COOKIE = 'auth_token';
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:8080/v1';
 
 export class AuthService {
   /**
-   * Register a new user (Mock implementation)
+   * Register a new user (Real API implementation)
    */
   static async register(
     userData: RegisterRequest
   ): Promise<RegisterResponse> {
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          password: userData.password,
+          business_name: userData.business_name || "",
+          phone_number: userData.phone_number || "",
+          type: "Owner" // Default type as required
+        }),
+      });
 
-      // Check if user already exists
-      const existingUser = mockUsers.find(u => u.email === userData.email);
-      if (existingUser) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
         throw {
-          message: "User already exists with this email",
-          status: 409,
+          message: errorData?.message || `HTTP error! status: ${response.status}`,
+          status: response.status,
         };
       }
 
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
-        email: userData.email,
-        name: userData.name,
-        business_name: userData.business_name || "",
-        phone_number: userData.phone_number || "",
-        password: userData.password
-      };
-
-      mockUsers.push(newUser);
-
-      // Generate mock token
-      const token = `mock_token_${Date.now()}`;
+      const apiResponse = await response.json();
       
-      const response: RegisterResponse = {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        business_name: newUser.business_name,
-        phone_number: newUser.phone_number,
-        created_at: new Date().toISOString(),
-        token,
+      // Transform API response to match our RegisterResponse interface
+      const transformedResponse: RegisterResponse = {
+        id: apiResponse.id,
+        email: apiResponse.email,
+        name: apiResponse.name,
+        business_name: apiResponse.business_name,
+        phone_number: apiResponse.phone_number,
+        created_at: apiResponse.created_at,
+        token: `bearer_${apiResponse.id}`, // Generate token since API doesn't return one
       };
 
-      // Store in localStorage
-      localStorage.setItem("user_data", JSON.stringify(response));
+      // Store in cookies
+      this.setUserData(apiResponse);
+      this.setAuthToken(transformedResponse.token);
 
-      return response;
+      return transformedResponse;
     } catch (error: any) {
+      console.error('Registration error:', error);
       throw {
         message: error.message || "Registration failed",
         status: error.status || 500,
@@ -76,72 +80,83 @@ export class AuthService {
   }
 
   /**
-   * Login user (Mock implementation)
+   * Login user (Real API implementation)
    */
   static async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+        }),
+      });
 
-      // Check if user exists
-      const user = mockUsers.find(u => 
-        u.email === credentials.email && u.password === credentials.password
-      );
-      
-      if (!user) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
         throw {
-          message: "Invalid email or password",
-          status: 401,
+          message: errorData?.message || `HTTP error! status: ${response.status}`,
+          status: response.status,
         };
       }
 
-      // Generate mock token
-      const token = `mock_token_${Date.now()}`;
+      const apiResponse = await response.json();
       
-      const response: LoginResponse = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        business_name: user.business_name,
-        phone_number: user.phone_number,
-        token,
+      // Transform API response to match our LoginResponse interface
+      const transformedResponse: LoginResponse = {
+        id: apiResponse.user.id,
+        email: apiResponse.user.email,
+        name: apiResponse.user.name,
+        business_name: apiResponse.user.business_name,
+        phone_number: apiResponse.user.phone_number,
+        token: apiResponse.token,
       };
 
-      // Store in localStorage
-      localStorage.setItem("user_data", JSON.stringify(response));
+      // Store in cookies
+      this.setUserData(apiResponse.user);
+      this.setAuthToken(apiResponse.token);
 
-      return response;
+      return transformedResponse;
     } catch (error: any) {
+      console.error('Login error:', error);
       throw {
         message: error.message || "Login failed",
         status: error.status || 500,
       };
     }
   }
+
   /**
    * Logout user
    */
   static logout(): void {
-    localStorage.removeItem("user_data");
+    Cookies.remove(USER_DATA_COOKIE, { path: '/' });
+    Cookies.remove(AUTH_TOKEN_COOKIE, { path: '/' });
   }
+
   /**
-   * Get stored user data
+   * Get stored user data from cookies
    */
   static getStoredUser(): User | null {
     try {
-      const userData = localStorage.getItem("user_data");
+      const userData = Cookies.get(USER_DATA_COOKIE);
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      console.error("Error parsing user data from cookies:", error);
       return null;
     }
   }
+
   /**
-   * Get stored token
+   * Get stored token from cookies
    */
   static getStoredToken(): string | null {
-    return localStorage.getItem("user_data") ? JSON.parse(localStorage.getItem("user_data") || "{}").token || null : null;
+    return Cookies.get(AUTH_TOKEN_COOKIE) || null;
   }
+
   /**
    * Check if user is authenticated
    */
@@ -149,5 +164,30 @@ export class AuthService {
     const token = this.getStoredToken();
     const user = this.getStoredUser();
     return !!(token && user);
+  }
+
+  /**
+   * Set user data in cookies
+   */
+  private static setUserData(userData: User): void {
+    Cookies.set(USER_DATA_COOKIE, JSON.stringify(userData), COOKIE_OPTIONS);
+  }
+
+  /**
+   * Set auth token in cookies
+   */
+  private static setAuthToken(token: string): void {
+    Cookies.set(AUTH_TOKEN_COOKIE, token, COOKIE_OPTIONS);
+  }
+
+  /**
+   * Update user data in cookies
+   */
+  static updateUserData(userData: Partial<User>): void {
+    const currentUser = this.getStoredUser();
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...userData };
+      this.setUserData(updatedUser);
+    }
   }
 }

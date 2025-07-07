@@ -1,4 +1,7 @@
 import { Routes, Route, Navigate, useParams } from "react-router";
+import { useEffect } from "react";
+import { useAppDispatch } from "@/hooks/redux";
+import { syncWithCookies } from "@/store/authSlice";
 import { ProtectedRoute, PublicRoute } from "@/components/route";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -26,6 +29,13 @@ function AIAgentDetailWrapper() {
 }
 
 export default function App() {
+  const dispatch = useAppDispatch();
+
+  // Initialize auth from cookies when app loads
+  useEffect(() => {
+    dispatch(syncWithCookies());
+  }, [dispatch]);
+
   return (
     <ErrorBoundary>
       <Routes>

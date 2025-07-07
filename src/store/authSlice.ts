@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/tool
 import { AuthService } from '../services/authService';
 import type { AuthState, RegisterRequest, LoginRequest, ApiError } from '../types/interface';
 
-// Initial state
+// Initial state - Initialize from cookies
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: AuthService.getStoredUser(),
+  token: AuthService.getStoredToken(),
   isLoading: false,
   error: null,
-  isAuthenticated: false,
+  isAuthenticated: AuthService.isAuthenticated(),
   isInitialized: false,
 };
 
@@ -68,6 +68,17 @@ const authSlice = createSlice({
       }
       state.isInitialized = true;
     },
+    // Sync state with cookies
+    syncWithCookies: (state) => {
+      const user = AuthService.getStoredUser();
+      const token = AuthService.getStoredToken();
+      const isAuthenticated = AuthService.isAuthenticated();
+      
+      state.user = user;
+      state.token = token;
+      state.isAuthenticated = isAuthenticated;
+      state.isInitialized = true;
+    },
   },
   extraReducers: (builder) => {
     // Register cases
@@ -108,5 +119,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, logout, setCredentials, initializeAuth } = authSlice.actions;
+export const { clearError, logout, setCredentials, initializeAuth, syncWithCookies } = authSlice.actions;
 export default authSlice.reducer;

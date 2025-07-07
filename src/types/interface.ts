@@ -19,7 +19,10 @@ export interface User {
   name: string;
   business_name: string;
   phone_number?: string;
+  type?: String;
+  status?: Boolean; 
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface RegisterResponse extends User {

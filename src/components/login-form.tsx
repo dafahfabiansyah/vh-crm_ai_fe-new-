@@ -1,19 +1,31 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { loginUser, clearError } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
-import type { LoginFormData, FormErrors } from "@/types";
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -28,17 +40,18 @@ export default function LoginForm() {
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email Diperlukan";
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password Diperlukan";
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -50,30 +63,25 @@ export default function LoginForm() {
 
     // Clear any existing errors
     setErrors({});
-    setIsLoading(true);
+    dispatch(clearError());
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Simulate successful login
-      console.log("Login successful (simulated):", {
+      const result = await dispatch(loginUser({
         email: formData.email,
         password: formData.password,
-      });
+      })).unwrap();
 
-      // Show success message
-      alert("Login successful! Redirecting to dashboard...");
+      // Login successful
+      console.log("Login successful:", result);
 
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      setErrors({ general: "An unexpected error occurred. Please try again." });
-    } finally {
-      setIsLoading(false);
+      setErrors({ general: error.message || "Login failed. Please try again." });
     }
   };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -84,8 +92,7 @@ export default function LoginForm() {
 
     // Clear errors
     setErrors({});
-    setIsLoading(true);
-
+    
     try {
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -96,8 +103,6 @@ export default function LoginForm() {
     } catch (error) {
       console.error("Password reset failed:", error);
       setErrors({ general: "Failed to send reset email. Please try again." });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -114,7 +119,6 @@ export default function LoginForm() {
   if (showForgotPassword) {
     return (
       <form onSubmit={handleForgotPassword} className="space-y-4">
-        {" "}
         <div className="text-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">
             Reset Password
@@ -172,12 +176,13 @@ export default function LoginForm() {
       </form>
     );
   }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {errors.general && (
+      {(errors.general || error) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general}</AlertDescription>
+          <AlertDescription>{errors.general || error}</AlertDescription>
         </Alert>
       )}
 
@@ -190,7 +195,7 @@ export default function LoginForm() {
           <Input
             id="email"
             type="email"
-            placeholder="Masukan Email"
+            placeholder="Enter your email"
             value={formData.email}
             onChange={handleInputChange("email")}
             className={`pl-10 ${
@@ -216,7 +221,7 @@ export default function LoginForm() {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Masukan Password"
+            placeholder="Enter your password"
             value={formData.password}
             onChange={handleInputChange("password")}
             className={`pl-10 pr-10 ${

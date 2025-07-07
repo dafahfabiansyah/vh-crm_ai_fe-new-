@@ -726,7 +726,8 @@ export default function ContactsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="deviceName" className="text-sm font-medium">
-                Device Name
+                {/* Device Name */}
+                Platform Inbox
               </Label>
               <Select
                 value={whatsAppForm.deviceName}

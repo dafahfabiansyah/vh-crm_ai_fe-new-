@@ -3,6 +3,8 @@
 import type React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { registerUser, clearError } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +25,8 @@ import type { RegisterFormData, FormErrors, PasswordStrength } from "@/types";
 
 export default function RegisterForm() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
   
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
@@ -139,31 +142,26 @@ export default function RegisterForm() {
 
     // Clear any existing errors
     setErrors({});
-    setIsLoading(true);
+    dispatch(clearError());
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate successful registration
-      console.log("Registration successful (simulated):", {
+      const result = await dispatch(registerUser({
         email: formData.email,
-        username: formData.username,
-        businessName: formData.businessName,
-        phoneNumber: formData.phoneNumber,
-      });
+        password: formData.password,
+        name: formData.username,
+        business_name: formData.businessName || "",
+        phone_number: formData.phoneNumber || "",
+      })).unwrap();
 
-      // Show success message
-      alert("Registration successful! Redirecting to dashboard...");
+      // Registration successful
+      console.log("Registration successful:", result);
       
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
-      setErrors({ general: "An unexpected error occurred. Please try again." });
-    } finally {
-      setIsLoading(false);
+      setErrors({ general: error.message || "Registration failed. Please try again." });
     }
   };
 
@@ -193,10 +191,10 @@ export default function RegisterForm() {
   const strengthLabels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {errors.general && (
+      {(errors.general || error) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general}</AlertDescription>
+          <AlertDescription>{errors.general || error}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">

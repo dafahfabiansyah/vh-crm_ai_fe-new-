@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAppDispatch } from "@/hooks/redux";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { logout } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,6 @@ import {
   Info,
   Menu,
 } from "lucide-react";
-import type { TopbarProps } from "@/types";
 
 // Mock notification data
 const mockNotifications = [
@@ -94,13 +93,8 @@ const mockNotifications = [
 ];
 
 export default function Topbar({
-  user = {
-    name: "User",
-    email: "kapanpulang@gmail.com",
-    plan: "Free",
-  },
   onToggleMobileMenu,
-}: TopbarProps & { onToggleMobileMenu?: () => void }) {
+}: { onToggleMobileMenu?: () => void }) {
   const [notifications, setNotifications] = useState(mockNotifications);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [helpForm, setHelpForm] = useState({
@@ -110,6 +104,16 @@ export default function Topbar({
     tags: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get user data from Redux state (which is loaded from cookies)
+  const { user } = useAppSelector((state) => state.auth);
+  
+  // Use default values if user data is not available
+  const userData = {
+    name: user?.name || "User",
+    email: user?.email || "user@example.com",
+    plan: "Free",
+  };
 
   // Calculate unread notifications count
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -360,19 +364,19 @@ export default function Topbar({
             >
               <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
-                  {user.email.charAt(0).toUpperCase()}
+                  {userData.email.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="hidden sm:flex flex-col items-start">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground truncate max-w-24">
-                    {user.email}
+                    {userData.name}
                   </span>
                   <Badge
                     variant="secondary"
                     className="text-xs px-2 py-0 bg-blue-100 text-blue-700 border-blue-200"
                   >
-                    {user.plan}
+                    {userData.plan}
                   </Badge>
                 </div>
               </div>
@@ -382,16 +386,16 @@ export default function Topbar({
           <DropdownMenuContent align="end" className="w-48 sm:w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
+                <p className="text-sm font-medium leading-none">{userData.name}</p>
                 <p className="text-xs leading-none text-muted-foreground truncate">
-                  {user.email}
+                  {userData.email}
                 </p>
                 <div className="sm:hidden">
                   <Badge
                     variant="secondary"
                     className="text-xs px-2 py-0 bg-blue-100 text-blue-700 border-blue-200 w-fit"
                   >
-                    {user.plan}
+                    {userData.plan}
                   </Badge>
                 </div>
               </div>
