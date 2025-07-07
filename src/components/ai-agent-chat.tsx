@@ -14,6 +14,7 @@ interface Message {
   content: string
   sender: "user" | "ai" | "system"
   timestamp: string
+  tokens_used : number
 }
 
 interface AIAgentChatPreviewProps {
@@ -56,6 +57,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
         content: message,
         sender: "user",
         timestamp: new Date().toISOString(),
+        tokens_used: 0,
       }
       
       setMessages((prev) => [...prev, userMessage])
@@ -73,7 +75,9 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
           content: response.response,
           sender: "ai",
           timestamp: new Date().toISOString(),
+          tokens_used: response.tokens_used
         }
+        console.log("AI Response:", aiResponse)
         setMessages((prev) => [...prev, aiResponse])
       } catch (error: any) {
         console.error('Error sending message:', error)
@@ -83,6 +87,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
           content: "Sorry, I'm having trouble responding right now. Please try again.",
           sender: "ai",
           timestamp: new Date().toISOString(),
+          tokens_used: 0,
         }
         setMessages((prev) => [...prev, errorMessage])
       } finally {
@@ -103,26 +108,6 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
     
     // Generate new session ID for fresh conversation
     setSessionId(ChatService.generateSessionId())
-    
-    // Reset messages to initial state
-    setTimeout(() => {
-      const initialMessages: Message[] = []
-      
-      // Add welcome message if exists
-      if (welcomeMessage && welcomeMessage.trim()) {
-        const welcomeMsg: Message = {
-          id: "welcome-1",
-          content: welcomeMessage,
-          sender: "ai",
-          timestamp: new Date().toISOString(),
-        }
-        initialMessages.push(welcomeMsg)
-      }
-      
-      setMessages(initialMessages)
-      setMessage("")
-      setIsRefreshing(false)
-    }, 1000) // 1 second animation
   }
 
   return (
@@ -153,9 +138,6 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
             </Avatar>
             <div>
               <p className="font-medium text-sm">{agentName}</p>
-              {/* <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                Fresh Session (No Memory)
-              </Badge> */}
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -180,7 +162,14 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
                       msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                     }`}
                   >
-                    {msg.content}
+                    <div className="mb-1">
+                      {msg.content}
+                    </div>
+                    {msg.tokens_used > 0 && (
+                      <div className="text-xs opacity-70 mt-2">
+                        {Math.round(msg.tokens_used / 1500)} tokens used
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
