@@ -1,147 +1,76 @@
-import axiosInstance from './axios';
+// WhatsApp Service - Simplified version
+import { AuthService } from './authService';
 
-export interface WhatsAppQRCodeRequest {
-  device_id: string;
+const API_BASE_URL = import.meta.env.VITE_API_WHATSAPP_URL || 'http://localhost:8080';
+
+export interface CreateSessionRequest {
+  session: string;
 }
 
-export interface WhatsAppQRCodeResponse {
+export interface CreateSessionResponse {
   success: boolean;
   message: string;
-  data: {
-    qr_code: string;
-    qr_code_image: string;
-    session_id: string;
-    device_id: string;
-    expires_at: string;
-    instructions: string;
-  };
+  session: string;
+  status: string;
+  qr: string;
 }
 
-export interface WhatsAppStatusResponse {
-  success: boolean;
-  message: string;
-  data: {
-    is_connected: boolean;
-    is_logged_in: boolean;
-    phone_number: string;
-    device_id: string;
-    device_name: string;
-    status: string;
-    timestamp: string;
-  };
-}
-
-export interface WhatsAppSession {
-  id: string;
-  tenant_id: string;
-  device_id: string;
-  status: 'active' | 'inactive' | 'connecting';
-  created_at: string;
-  updated_at: string;
-  last_activity_at: string;
-}
-
-export interface WhatsAppBusinessSessionsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    sessions: WhatsAppSession[];
-    tenant_id: string;
-    total_sessions: number;
-  };
+export interface GetStatusResponse {
+  session: string;
+  status: string;
 }
 
 export const whatsappService = {
-  getQRCode: async (device_id: string): Promise<WhatsAppQRCodeResponse> => {
+  createSession: async (sessionName: string): Promise<CreateSessionResponse> => {
     try {
-      const response = await axiosInstance.post<WhatsAppQRCodeResponse>(
-        '/tenant/whatsapp/meow/qr',
-        { device_id }
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('WhatsApp QR Code Error:', error);
-
-      // Handle different types of errors
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Unable to connect to WhatsApp service. Please check if the server is running.');
-      } else if (error.response?.status === 404) {
-        throw new Error('WhatsApp service endpoint not found.');
-      } else if (error.response?.status === 401) {
-        throw new Error('Authentication required. Please login again.');
-      } else if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Failed to generate QR code. Please try again.');
-      }
-    }
-  },
-
-  getStatus: async (device_id: string): Promise<WhatsAppStatusResponse> => {
-    try {
-      const response = await axiosInstance.get<WhatsAppStatusResponse>(
-        `/tenant/whatsapp/meow/status?device_id=${device_id}`
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('WhatsApp Status Error:', error);
-
-      // Handle different types of errors
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Unable to connect to WhatsApp service.');
-      } else if (error.response?.status === 404) {
-        throw new Error('Device not found or WhatsApp service unavailable.');
-      } else if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Failed to check WhatsApp status.');
-      }
-    }
-  },
-
-  getBusinessSessions: async (device_id: string): Promise<WhatsAppBusinessSessionsResponse> => {
-    try {
-      const response = await axiosInstance.get<WhatsAppBusinessSessionsResponse>(
-        `/tenant/whatsapp/meow/business-sessions?device_id=${device_id}`
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('WhatsApp Business Sessions Error:', error);
-
-      // Handle different types of errors
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Unable to connect to WhatsApp service.');
-      } else if (error.response?.status === 404) {
-        throw new Error('Device not found or WhatsApp service unavailable.');
-      } else if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Failed to retrieve WhatsApp business sessions.');
-      }
-    }
-  },
-
-  getAllBusinessSessions: async (): Promise<WhatsAppBusinessSessionsResponse> => {
-    try {
-      const response = await axiosInstance.get<WhatsAppBusinessSessionsResponse>(
-        '/tenant/whatsapp/business-sessions'
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('WhatsApp Business Sessions Error:', error);
+      // Get token from cookies
+      const token = AuthService.getStoredToken();
       
-      // Handle different types of errors
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Unable to connect to WhatsApp service. Please check if the server is running.');
-      } else if (error.response?.status === 404) {
-        throw new Error('WhatsApp business sessions endpoint not found.');
-      } else if (error.response?.status === 401) {
-        throw new Error('Authentication required. Please login again.');
-      } else if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Failed to fetch WhatsApp business sessions. Please try again.');
+      const response = await fetch(`${API_BASE_URL}/create-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          session: sessionName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('WhatsApp Create Session Error:', error);
+      throw new Error(error.message || 'Failed to create session');
+    }
+  },
+
+  getStatus: async (sessionId: string): Promise<GetStatusResponse> => {
+    try {
+      // Get token from cookies
+      const token = AuthService.getStoredToken();
+      
+      const response = await fetch(`${API_BASE_URL}/status/${sessionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('WhatsApp Get Status Error:', error);
+      throw new Error(error.message || 'Failed to get status');
     }
   },
 };
