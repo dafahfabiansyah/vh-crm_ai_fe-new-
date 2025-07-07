@@ -39,34 +39,7 @@ import MainLayout from "@/main-layout";
 import { AgentsService } from "@/services/agentsService";
 import KnowledgeTab from "@/components/knowledge-tab";
 import ExistingKnowledgeList from "@/components/existing-knowledge-list";
-
-interface AIAgentData {
-  // Basic agent info
-  id: string;
-  name: string;
-  description: string;
-  id_settings: string;
-  created_at: string;
-  updated_at: string;
-  // Settings data
-  behaviour: string;
-  welcomeMessage: string;
-  transferConditions: string;
-  model: string;
-  aiHistoryLimit: number;
-  aiContextLimit: number;
-  messageAwait: number;
-  aiMessageLimit: number;
-  // UI state
-  isActive: boolean;
-  stopAIAfterHandoff: boolean;
-  timezone: string;
-  selectedLabels: string[];
-}
-
-interface AIAgentDetailPageProps {
-  agentId?: string;
-}
+import type { AIAgentData, AIAgentDetailPageProps } from "@/types";
 
 export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const navigate = useNavigate();
