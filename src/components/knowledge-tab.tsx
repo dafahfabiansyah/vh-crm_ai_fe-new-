@@ -4,14 +4,7 @@ import { TabsContent } from "./ui/tabs";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import { FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { KnowledgeService } from "@/services/knowledgeService";
 
 interface KnowledgeTabProps {
@@ -27,29 +20,6 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
   const [textSuccess, setTextSuccess] = useState(false);
   const [textError, setTextError] = useState<string | null>(null);
 
-  // Website Knowledge State
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [websiteTitle, setWebsiteTitle] = useState("");
-  const [websiteLoading, setWebsiteLoading] = useState(false);
-  const [websiteSuccess, setWebsiteSuccess] = useState(false);
-  const [websiteError, setWebsiteError] = useState<string | null>(null);
-
-  // Product Knowledge State
-  const [productName, setProductName] = useState("");
-  const [productCategory, setProductCategory] = useState("");
-  const [productDescription, setProductDescription] = useState("");
-  const [productLoading, setProductLoading] = useState(false);
-  const [productSuccess, setProductSuccess] = useState(false);
-  const [productError, setProductError] = useState<string | null>(null);
-
-  // Q&A Knowledge State
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [keywords, setKeywords] = useState("");
-  const [qaLoading, setQaLoading] = useState(false);
-  const [qaSuccess, setQaSuccess] = useState(false);
-  const [qaError, setQaError] = useState<string | null>(null);
-
   const handleAddTextKnowledge = async () => {
     if (!textTitle.trim() || !textDescription.trim() || !textContent.trim()) {
       setTextError("Title, description, and content are required");
@@ -61,12 +31,17 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
     setTextSuccess(false);
 
     try {
-      await KnowledgeService.createTextKnowledge(agentId, textTitle, textContent, textDescription);
+      await KnowledgeService.createTextKnowledge(
+        agentId,
+        textTitle,
+        textContent,
+        textDescription
+      );
       setTextSuccess(true);
       setTextTitle("");
       setTextDescription("");
       setTextContent("");
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setTextSuccess(false), 3000);
     } catch (error: any) {
@@ -76,94 +51,14 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
     }
   };
 
-  const handleAddWebsiteKnowledge = async () => {
-    if (!websiteUrl.trim()) {
-      setWebsiteError("Website URL is required");
-      return;
-    }
+  
 
-    setWebsiteLoading(true);
-    setWebsiteError(null);
-    setWebsiteSuccess(false);
+  
 
-    try {
-      await KnowledgeService.createWebsiteKnowledge(
-        agentId,
-        websiteTitle || websiteUrl,
-        websiteUrl,
-        websiteTitle
-      );
-      setWebsiteSuccess(true);
-      setWebsiteUrl("");
-      setWebsiteTitle("");
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setWebsiteSuccess(false), 3000);
-    } catch (error: any) {
-      setWebsiteError(error.message || "Failed to add website knowledge");
-    } finally {
-      setWebsiteLoading(false);
-    }
-  };
-
-  const handleAddProductKnowledge = async () => {
-    if (!productName.trim() || !productCategory.trim() || !productDescription.trim()) {
-      setProductError("Product name, category, and description are required");
-      return;
-    }
-
-    setProductLoading(true);
-    setProductError(null);
-    setProductSuccess(false);
-
-    try {
-      await KnowledgeService.createProductKnowledge(
-        agentId,
-        productName,
-        productCategory,
-        productDescription
-      );
-      setProductSuccess(true);
-      setProductName("");
-      setProductCategory("");
-      setProductDescription("");
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setProductSuccess(false), 3000);
-    } catch (error: any) {
-      setProductError(error.message || "Failed to add product knowledge");
-    } finally {
-      setProductLoading(false);
-    }
-  };
-
-  const handleAddQAKnowledge = async () => {
-    if (!question.trim() || !answer.trim()) {
-      setQaError("Question and answer are required");
-      return;
-    }
-
-    setQaLoading(true);
-    setQaError(null);
-    setQaSuccess(false);
-
-    try {
-      await KnowledgeService.createQAKnowledge(agentId, question, answer, keywords);
-      setQaSuccess(true);
-      setQuestion("");
-      setAnswer("");
-      setKeywords("");
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setQaSuccess(false), 3000);
-    } catch (error: any) {
-      setQaError(error.message || "Failed to add Q&A knowledge");
-    } finally {
-      setQaLoading(false);
-    }
-  };
+  
   return (
     <>
+      {/* text knowledge */}
       <TabsContent value="text" className="mt-0">
         <div className="space-y-4">
           <div>
@@ -187,7 +82,9 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
           {textSuccess && (
             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-700">Text knowledge added successfully!</span>
+              <span className="text-sm text-green-700">
+                Text knowledge added successfully!
+              </span>
             </div>
           )}
 
@@ -230,10 +127,15 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               disabled={textLoading}
             />
           </div>
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90"
             onClick={handleAddTextKnowledge}
-            disabled={textLoading || !textTitle.trim() || !textDescription.trim() || !textContent.trim()}
+            disabled={
+              textLoading ||
+              !textTitle.trim() ||
+              !textDescription.trim() ||
+              !textContent.trim()
+            }
           >
             {textLoading ? (
               <>
@@ -241,13 +143,24 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                 Adding...
               </>
             ) : (
-              'Add Text Knowledge'
+              "Add Text Knowledge"
             )}
           </Button>
         </div>
       </TabsContent>
 
+      {/* website knowledge  */}
       <TabsContent value="website" className="mt-0">
+        <div className="text-center py-12">
+          <h4 className="text-lg font-semibold text-foreground mb-2">
+            Coming Soon
+          </h4>
+          <p className="text-muted-foreground">
+            Website knowledge import feature is coming soon
+          </p>
+        </div>
+        
+        {/* 
         <div className="space-y-4">
           <div>
             <h4 className="text-lg font-semibold text-foreground mb-2">
@@ -260,22 +173,24 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
           </div>
 
           {/* Error Display */}
-          {websiteError && (
+          {/* {websiteError && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <span className="text-sm text-red-700">{websiteError}</span>
             </div>
-          )}
+          )} */}
 
           {/* Success Display */}
-          {websiteSuccess && (
+          {/* {websiteSuccess && (
             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-700">Website knowledge added successfully!</span>
+              <span className="text-sm text-green-700">
+                Website knowledge added successfully!
+              </span>
             </div>
-          )}
+          )} */}
 
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <Label htmlFor="websiteUrl" className="text-sm font-medium">
               Website URL
             </Label>
@@ -301,7 +216,7 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               disabled={websiteLoading}
             />
           </div>
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90"
             onClick={handleAddWebsiteKnowledge}
             disabled={websiteLoading || !websiteUrl.trim()}
@@ -312,13 +227,25 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                 Importing...
               </>
             ) : (
-              'Import from Website'
+              "Import from Website"
             )}
           </Button>
         </div>
+        */}
       </TabsContent>
 
+      {/* product knowledge */}
       <TabsContent value="product" className="mt-0">
+        <div className="text-center py-12">
+          <h4 className="text-lg font-semibold text-foreground mb-2">
+            Coming Soon
+          </h4>
+          <p className="text-muted-foreground">
+            Product knowledge feature is coming soon
+          </p>
+        </div>
+        
+        {/* 
         <div className="space-y-4">
           <div>
             <h4 className="text-lg font-semibold text-foreground mb-2">
@@ -330,22 +257,24 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
           </div>
 
           {/* Error Display */}
-          {productError && (
+          {/* {productError && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <span className="text-sm text-red-700">{productError}</span>
             </div>
-          )}
+          )} */}
 
           {/* Success Display */}
-          {productSuccess && (
+          {/* {productSuccess && (
             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-700">Product knowledge added successfully!</span>
+              <span className="text-sm text-green-700">
+                Product knowledge added successfully!
+              </span>
             </div>
-          )}
+          )} */}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-3">
               <Label htmlFor="productName" className="text-sm font-medium">
                 Product Name
@@ -363,8 +292,8 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               <Label htmlFor="productCategory" className="text-sm font-medium">
                 Category
               </Label>
-              <Select 
-                value={productCategory} 
+              <Select
+                value={productCategory}
                 onValueChange={setProductCategory}
                 disabled={productLoading}
               >
@@ -396,10 +325,15 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               disabled={productLoading}
             />
           </div>
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90"
             onClick={handleAddProductKnowledge}
-            disabled={productLoading || !productName.trim() || !productCategory.trim() || !productDescription.trim()}
+            disabled={
+              productLoading ||
+              !productName.trim() ||
+              !productCategory.trim() ||
+              !productDescription.trim()
+            }
           >
             {productLoading ? (
               <>
@@ -407,13 +341,25 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                 Adding...
               </>
             ) : (
-              'Add Product Knowledge'
+              "Add Product Knowledge"
             )}
           </Button>
         </div>
+        */}
       </TabsContent>
 
+      {/* file knowledge */}
       <TabsContent value="file" className="mt-0">
+        <div className="text-center py-12">
+          <h4 className="text-lg font-semibold text-foreground mb-2">
+            Coming Soon
+          </h4>
+          <p className="text-muted-foreground">
+            File upload feature is coming soon
+          </p>
+        </div>
+        
+        {/* 
         <div className="space-y-4">
           <div>
             <h4 className="text-lg font-semibold text-foreground mb-2">
@@ -431,9 +377,6 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
             <p className="text-muted-foreground mb-4">
               Drag and drop files here, or click to browse
             </p>
-            {/* <p className="text-sm text-muted-foreground mb-4">
-                              Supported formats: PDF, DOC, DOCX, TXT, CSV
-                            </p> */}
             <Button variant="outline">Browse Files</Button>
           </div>
           <div className="space-y-3">
@@ -447,9 +390,21 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
             />
           </div>
         </div>
+        */}
       </TabsContent>
 
+      {/* Q&A knowledge */}
       <TabsContent value="qa" className="mt-0">
+        <div className="text-center py-12">
+          <h4 className="text-lg font-semibold text-foreground mb-2">
+            Coming Soon
+          </h4>
+          <p className="text-muted-foreground">
+            Q&A knowledge feature is coming soon
+          </p>
+        </div>
+        
+        {/* 
         <div className="space-y-4">
           <div>
             <h4 className="text-lg font-semibold text-foreground mb-2">
@@ -461,22 +416,24 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
           </div>
 
           {/* Error Display */}
-          {qaError && (
+          {/* {qaError && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <span className="text-sm text-red-700">{qaError}</span>
             </div>
-          )}
+          )} */}
 
           {/* Success Display */}
-          {qaSuccess && (
+          {/* {qaSuccess && (
             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-700">Q&A knowledge added successfully!</span>
+              <span className="text-sm text-green-700">
+                Q&A knowledge added successfully!
+              </span>
             </div>
-          )}
+          )} */}
 
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <div className="space-y-3">
               <Label htmlFor="question" className="text-sm font-medium">
                 Question
@@ -517,7 +474,7 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               />
             </div>
           </div>
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90"
             onClick={handleAddQAKnowledge}
             disabled={qaLoading || !question.trim() || !answer.trim()}
@@ -528,10 +485,11 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                 Adding...
               </>
             ) : (
-              'Add Q&A Pair'
+              "Add Q&A Pair"
             )}
           </Button>
         </div>
+        */}
       </TabsContent>
     </>
   );

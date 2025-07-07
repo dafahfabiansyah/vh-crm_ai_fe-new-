@@ -49,6 +49,31 @@ export interface ExistingKnowledge {
   updated_at: string;
 }
 
+export interface KnowledgeContentItem {
+  id: string;
+  id_knowledge: string;
+  source_id: string;
+  source_type: string;
+  status: boolean;
+  created_at: string;
+  updated_at: string;
+  content: {
+    content: string;
+    // Other potential fields
+  };
+}
+
+export interface KnowledgeSourceContent {
+  id: string;
+  name: string;
+  description: string;
+  status: boolean;
+  content: KnowledgeContent;
+  created_at: string;
+  updated_at: string;
+  contentItems?: KnowledgeContentItem[];
+}
+
 export class KnowledgeService {
   /**
    * Create knowledge for an AI agent
@@ -156,6 +181,53 @@ export class KnowledgeService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch existing knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get knowledge source content by ID
+   */
+  static async getKnowledgeSourceContent(knowledgeId: string): Promise<KnowledgeSourceContent> {
+    try {
+      // Get the basic knowledge source information
+      const baseResponse = await axiosInstance.get<ExistingKnowledge>(`/v1/ai/knowledge/base/${knowledgeId}`);
+      const baseData = baseResponse.data;
+      
+      // Get the content items for this knowledge source
+      const contentResponse = await axiosInstance.get<KnowledgeContentItem[]>(`/v1/ai/knowledge/source/knowledge/${knowledgeId}`);
+      const contentItems = contentResponse.data;
+      
+      // Create a combined response with both the base knowledge info and the content items
+      const result: KnowledgeSourceContent = {
+        id: baseData.id,
+        name: baseData.name,
+        description: baseData.description,
+        status: baseData.status,
+        created_at: baseData.created_at,
+        updated_at: baseData.updated_at,
+        contentItems: contentItems,
+        // Set a default content for backward compatibility
+        content: { 
+          type: 'Text', 
+          text: { 
+            content: contentItems[0]?.content?.content || 'No content available' 
+          } 
+        }
+      };
+      
+      return result;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch knowledge content',
           status: error.response.status,
           errors: error.response.data.errors,
         };
