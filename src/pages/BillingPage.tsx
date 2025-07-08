@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,6 +30,7 @@ import {
   Clock,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
+import { getSubscriptionPlans } from "@/services/subscriptionService";
 
 export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -38,68 +39,11 @@ export default function BillingPage() {
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
   const [couponCode, setCouponCode] = useState("");
   const [isDiscountApplied, setIsDiscountApplied] = useState(false)
-  const [discountedPrice, setDiscountedPrice] = useState<string | null>(null);
-  const [originalPrice, setOriginalPrice] = useState<string | null>(null);
-
-  // Mock pricing plans data
-  const pricingPlans = [
-    {
-      id: "trial",
-      name: "Free Trial",
-      price: "IDR 0",
-      period: "/ 14 days",
-      icon: Users,
-      popular: false,
-      features: [
-        { text: "5 MAU (Monthly Active Users)" },
-        { text: "100 AI Responses" },
-        { text: "Basic Support" },
-        { text: "Email Integration" },
-      ],
-    },
-    {
-      id: "pro",
-      name: "Pro Plan",
-      price: "IDR 1,499,000",
-      period: "/ month",
-      icon: Shield,
-      popular: false,
-      features: [
-        { text: "5 MAU (Monthly Active Users)" },
-        { text: "100 AI Responses" },
-        { text: "Basic Support" },
-        { text: "Email Integration" },
-      ],
-    },
-    {
-      id: "business",
-      name: "Business Plan",
-      price: "IDR 3,609,050",
-      period: "/ month",
-      icon: Bot,
-      popular: true,
-     features: [
-        { text: "5 MAU (Monthly Active Users)" },
-        { text: "100 AI Responses" },
-        { text: "Basic Support" },
-        { text: "Email Integration" },
-      ],
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: "IDR 8,500,000",
-      period: "/ month",
-      icon: Users,
-      popular: false,
-      features: [
-        { text: "5 MAU (Monthly Active Users)" },
-        { text: "100 AI Responses" },
-        { text: "Basic Support" },
-        { text: "Email Integration" },
-      ],
-    },
-  ];
+  const [, setDiscountedPrice] = useState<string | null>(null);
+  const [, setOriginalPrice] = useState<string | null>(null);
+  const [pricingPlans, setPricingPlans] = useState<any[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const handleUpgrade = (planId: string) => {
     const plan = pricingPlans.find((p) => p.id === planId);
@@ -139,7 +83,6 @@ export default function BillingPage() {
       alert("Invalid coupon code");
     }
   };
-
 
   // Mock data for dashboard cards
   const dashboardData = {
@@ -214,6 +157,20 @@ export default function BillingPage() {
     { id: "halfyearly", label: "Half-Yearly", discount: "10% Discount" },
     { id: "yearly", label: "Yearly", discount: "20% Discount" },
   ];
+
+  useEffect(() => {
+    setLoadingPlans(true);
+    getSubscriptionPlans()
+      .then((data) => {
+        setPricingPlans(data);
+        setLoadingPlans(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setFetchError("Failed to fetch plans");
+        setLoadingPlans(false);
+      });
+  }, []);
 
   return (
   <MainLayout>
@@ -380,95 +337,143 @@ export default function BillingPage() {
 
         {/* Pricing Plans */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {pricingPlans.map((plan) => {
-            const IconComponent = plan.icon;
-            return (
-              <Card
-                key={plan.id}
-                className={`relative transition-all duration-300 hover:shadow-md ${
-                  plan.popular
-                    ? "border-primary shadow-md scale-[1.02]"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 text-xs">
-                      Current Plan
-                    </Badge>
-                  </div>
-                )}
+          {loadingPlans ? (
+            <div className="col-span-4 text-center py-10">Loading plans...</div>
+          ) : fetchError ? (
+            <div className="col-span-4 text-center text-red-500 py-10">{fetchError}</div>
+          ) : pricingPlans.length === 0 ? (
+            <div className="col-span-4 text-center py-10">No plans available</div>
+          ) : (
+            pricingPlans.map((plan: any) => {
+              // Pick an icon based on plan name or fallback
+              let IconComponent = Users;
+              if (plan.name?.toLowerCase().includes("pro")) IconComponent = Shield;
+              if (plan.name?.toLowerCase().includes("business")) IconComponent = Bot;
+              if (plan.name?.toLowerCase().includes("enterprise")) IconComponent = Users;
+              if (plan.name?.toLowerCase().includes("unlimited")) IconComponent = TrendingUp;
+              return (
+                <Card
+                  key={plan.id}
+                  className={`relative transition-all duration-300 hover:shadow-md h-full flex flex-col ${
+                    plan.is_popular
+                      ? "border-primary shadow-md scale-[1.02]"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  {plan.is_popular && (
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 text-xs">
+                        Current Plan
+                      </Badge>
+                    </div>
+                  )}
 
-                <CardHeader className="text-center pb-3 sm:pb-4">
-                  <div className="flex justify-center mb-2">
-                    <div
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
-                        plan.popular ? "bg-primary/10" : "bg-muted"
+                  <CardHeader className="text-center pb-3 sm:pb-4">
+                    <div className="flex justify-center mb-2">
+                      <div
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
+                          plan.is_popular ? "bg-primary/10" : "bg-muted"
+                        }`}
+                      >
+                        <IconComponent
+                          className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                            plan.is_popular ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <CardTitle className="text-base sm:text-lg font-bold text-foreground">
+                      {plan.name}
+                    </CardTitle>
+
+                    <div className="mt-2">
+                      {/* Show price for selected period or default to monthly */}
+                      <div className="text-xl sm:text-2xl font-bold text-foreground">
+                        {(() => {
+                          const billing = plan.billing?.find((b: any) => {
+                            if (selectedPeriod === "monthly") return b.billing_period === 1;
+                            if (selectedPeriod === "3months") return b.billing_period === 3;
+                            if (selectedPeriod === "halfyearly") return b.billing_period === 6;
+                            if (selectedPeriod === "yearly") return b.billing_period === 12;
+                            return b.billing_period === 1;
+                          });
+                          if (billing) {
+                            return `IDR ${billing.calculated_amount.toLocaleString()}`;
+                          }
+                          return `IDR ${plan.base_price?.toLocaleString?.() ?? "-"}`;
+                        })()}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        {(() => {
+                          const billing = plan.billing?.find((b: any) => {
+                            if (selectedPeriod === "monthly") return b.billing_period === 1;
+                            if (selectedPeriod === "3months") return b.billing_period === 3;
+                            if (selectedPeriod === "halfyearly") return b.billing_period === 6;
+                            if (selectedPeriod === "yearly") return b.billing_period === 12;
+                            return b.billing_period === 1;
+                          });
+                          if (billing) {
+                            if (billing.billing_period === 1) return "/ month";
+                            if (billing.billing_period === 3) return "/ 3 months";
+                            if (billing.billing_period === 6) return "/ 6 months";
+                            if (billing.billing_period === 12) return "/ year";
+                          }
+                          return "/ month";
+                        })()}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {plan.description}
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <div className="text-xs sm:text-sm font-medium text-foreground">
+                        {plan.name} Features
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4 flex-1">
+                    <div className="space-y-1 sm:space-y-2">
+                      {plan.features?.map((feature: { id: string; name: string }, index: number) => (
+                        <div key={feature.id || index} className="flex items-center gap-2">
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                          </div>
+                          <span className="text-xs sm:text-sm text-foreground">
+                            {feature.name}
+                          </span>
+                        </div>
+                      ))}
+                      {/* Show limits if available */}
+                      {plan.limits && (
+                        <div className="flex flex-col gap-1 mt-2">
+                          <span className="text-xs text-muted-foreground">Limits:</span>
+                          <span className="text-xs">MAU: {plan.limits.mau === -1 ? 'Unlimited' : plan.limits.mau}</span>
+                          <span className="text-xs">Human Agents: {plan.limits.human_agent === -1 ? 'Unlimited' : plan.limits.human_agent}</span>
+                          <span className="text-xs">AI Responses: {plan.limits.ai_response === -1 ? 'Unlimited' : plan.limits.ai_response}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
+                    <Button
+                      onClick={() => handleUpgrade(plan.id)}
+                      className={`w-full h-8 sm:h-9 text-xs sm:text-sm ${
+                        plan.is_popular
+                          ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                          : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       }`}
                     >
-                      <IconComponent
-                        className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                          plan.popular
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <CardTitle className="text-base sm:text-lg font-bold text-foreground">
-                    {plan.name}
-                  </CardTitle>
-
-                  <div className="mt-2">
-                    <div className="text-xl sm:text-2xl font-bold text-foreground">
-                      {plan.price}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      {plan.period}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Quarterly Package
-                    </div>
-                  </div>
-
-                  <div className="mt-2">
-                    <div className="text-xs sm:text-sm font-medium text-foreground">
-                      {plan.name} Features
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4">
-                  <div className="space-y-1 sm:space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
-                        </div>
-                        <span className="text-xs sm:text-sm text-foreground">
-                          {feature.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
-                  <Button
-                    onClick={() => handleUpgrade(plan.id)}
-                    className={`w-full h-8 sm:h-9 text-xs sm:text-sm ${
-                      plan.popular
-                        ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                        : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                    }`}
-                  >
-                    {plan.id === "trial" ? "Start Free Trial" : "Upgrade Now"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
+                      Upgrade Now
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {/* Transaction History */}
@@ -563,7 +568,6 @@ export default function BillingPage() {
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold">Complete Your Payment</DialogTitle>
             <Button variant="ghost" size="sm" onClick={() => setIsPaymentDialogOpen(false)} className="h-6 w-6 p-0">
-              {/* <X className="h-4 w-4" /> */}
             </Button>
           </div>
         </DialogHeader>
@@ -573,20 +577,30 @@ export default function BillingPage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-primary">{selectedPlanData.name}</h3>
               <div className="space-y-1">
-                {isDiscountApplied && originalPrice ? (
+                {isDiscountApplied && selectedPlanData.base_price !== undefined ? (
                   <>
                     <div className="text-lg font-medium text-muted-foreground line-through">
-                      {originalPrice}
+                      {`IDR ${selectedPlanData.base_price.toLocaleString()}`}
                     </div>
                     <div className="text-2xl font-bold text-foreground transition-opacity duration-300 opacity-100">
-                      {discountedPrice}
+                      IDR 0
                     </div>
                   </>
                 ) : (
-                  <div className="text-2xl font-bold text-foreground">{selectedPlanData.price}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {selectedPlanData.base_price !== undefined ? `IDR ${selectedPlanData.base_price.toLocaleString()}` : "-"}
+                  </div>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground">IDR / mo - Monthly Package</div>
+              <div className="text-sm text-muted-foreground">
+                {(() => {
+                  if (selectedPeriod === "monthly") return "/ month";
+                  if (selectedPeriod === "3months") return "/ 3 months";
+                  if (selectedPeriod === "halfyearly") return "/ 6 months";
+                  if (selectedPeriod === "yearly") return "/ year";
+                  return "/ month";
+                })()} - {selectedPlanData.name} Package
+              </div>
             </div>
 
             {/* Coupon Code Section */}
