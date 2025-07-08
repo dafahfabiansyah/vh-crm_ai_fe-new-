@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   ArrowLeft,
   Plus,
   Search,
@@ -22,54 +28,18 @@ import {
   Package,
 } from "lucide-react";
 import { Link } from "react-router";
-
-interface Product {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  price: number;
-  weight: number;
-  stock: number;
-  colors: string[];
-  material: string;
-  image: string;
-  category: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ProductFormData {
-  name: string;
-  description: string;
-  price: string;
-  weight: string;
-  stock: string;
-  colors: string;
-  material: string;
-  image: string;
-  category: string;
-}
-
-interface CategoryAttribute {
-  attribute_name: string;
-  is_required: boolean;
-  display_order: number;
-}
-
-interface CategoryFormData {
-  name: string;
-  description: string;
-  attributes: CategoryAttribute[];
-}
+import {
+  categoryService,
+  productService,
+  type CategoryAttribute,
+} from "@/services/productService";
+import type {
+  Category,
+  CategoryFormData,
+  Product,
+  ProductFormData,
+} from "@/types";
+// import { cn } from "@/lib/utils";
 
 const initialProducts: Product[] = [];
 
@@ -81,6 +51,7 @@ const ProductPage = () => {
   );
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,38 +131,13 @@ const ProductPage = () => {
     }));
   };
 
-  const generateProductCode = (category: string) => {
-    const prefix = category.substring(0, 2).toUpperCase();
-    const existingCodes = products
-      .filter((p) => p.code.startsWith(prefix))
-      .map((p) => parseInt(p.code.split("-")[1]));
-    const nextNumber = Math.max(...existingCodes, 0) + 1;
-    return `${prefix}-${nextNumber.toString().padStart(3, "0")}`;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (
-      !formData.name ||
-      !formData.price ||
-      !formData.weight ||
-      !formData.stock ||
-      !formData.category
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        code: generateProductCode(formData.category),
+      // Prepare product data for API
+      const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
@@ -205,8 +151,28 @@ const ProductPage = () => {
         image:
           formData.image || "https://via.placeholder.com/300x300?text=No+Image",
         category: formData.category,
-        createdAt: new Date().toISOString().split("T")[0],
-        updatedAt: new Date().toISOString().split("T")[0],
+      };
+
+      // API call to create product using service
+      const response = await productService.createProduct(productData);
+
+      console.log("Created product response:", response);
+
+      // Create local product object
+      const newProduct: Product = {
+        id: response.id,
+        code: response.code,
+        name: response.name,
+        description: response.description,
+        price: response.price,
+        weight: response.weight,
+        stock: response.stock,
+        colors: response.colors,
+        material: response.material,
+        image: response.image,
+        category: response.category,
+        createdAt: response.created_at,
+        updatedAt: response.updated_at,
       };
 
       setProducts((prev) => [...prev, newProduct]);
@@ -224,9 +190,9 @@ const ProductPage = () => {
         image: "",
         category: "",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating product:", error);
-      alert("Failed to create product");
+      alert(`Failed to create product: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -240,36 +206,37 @@ const ProductPage = () => {
       return;
     }
 
+    console.log("Form data before submit:", categoryFormData);
+
     setIsLoading(true);
 
     try {
-      // API call to create category
-      const response = await fetch("/v1/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: categoryFormData.name,
-          description: categoryFormData.description,
-          attributes: categoryFormData.attributes,
-        }),
+      // API call to create category using service
+      const response = await categoryService.createCategory({
+        name: categoryFormData.name,
+        description: categoryFormData.description,
+        attributes: categoryFormData.attributes,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create category");
-      }
-
-      const apiCategory = await response.json();
+      console.log("Created category response:", response);
 
       // Create local category object
       const newCategory: Category = {
-        id: apiCategory.id || Date.now().toString(),
+        id: response.id,
         name: categoryFormData.name,
         description: categoryFormData.description,
-        createdAt: new Date().toISOString().split("T")[0],
-        updatedAt: new Date().toISOString().split("T")[0],
+        created_at: response.created_at || new Date().toISOString(),
+        updated_at: response.updated_at || new Date().toISOString(),
       };
+
+      // Store the attributes for this category
+      if (categoryFormData.attributes.length > 0) {
+        setCategoriesWithAttributes(prev => {
+          const newMap = new Map(prev);
+          newMap.set(response.id, categoryFormData.attributes);
+          return newMap;
+        });
+      }
 
       setCategories((prev) => [...prev, newCategory]);
       setIsCategoryModalOpen(false);
@@ -280,14 +247,131 @@ const ProductPage = () => {
         description: "",
         attributes: [],
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating category:", error);
-      alert("Failed to create category");
+      alert(`Failed to create category: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Delete category function
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this category? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // API call to delete category using service
+      await categoryService.deleteCategory(categoryId);
+
+      console.log(`Category ${categoryId} deleted successfully`);
+
+      // Remove from local state
+      setCategories((prev) =>
+        prev.filter((category) => category.id !== categoryId)
+      );
+
+      // Remove attributes from map
+      setCategoriesWithAttributes(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(categoryId);
+        return newMap;
+      });
+
+      // Show success message
+      alert("Category deleted successfully");
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      alert(`Failed to delete category: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch categories on component mount
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const categoriesData = await categoryService.getCategories();
+      console.log("Categories fetched:", categoriesData);
+
+      // Transform API response to local Category interface
+      const transformedCategories: Category[] = categoriesData.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description,
+        created_at: cat.created_at,
+        updated_at: cat.updated_at,
+      }));
+
+      // Store category attributes in Map for quick lookup
+      const attributesMap = new Map<string, CategoryAttribute[]>();
+      categoriesData.forEach((cat) => {
+        if (cat.attributes && cat.attributes.length > 0) {
+          attributesMap.set(cat.id, cat.attributes);
+        }
+      });
+
+      setCategories(transformedCategories);
+      setCategoriesWithAttributes(attributesMap);
+    } catch (error: any) {
+      console.error("Error fetching categories:", error);
+      // Don't show alert for fetch errors, just log them
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch products on component mount
+  const fetchProducts = async () => {
+    try {
+      const productsData = await productService.getProducts();
+      console.log("Products fetched:", productsData);
+
+      // Transform API response to local Product interface
+      const transformedProducts: Product[] = productsData.map((prod) => ({
+        id: prod.id,
+        code: prod.code,
+        name: prod.name,
+        description: prod.description,
+        price: prod.price,
+        weight: prod.weight,
+        stock: prod.stock,
+        colors: prod.colors,
+        material: prod.material,
+        image: prod.image,
+        category: prod.category,
+        createdAt: prod.created_at,
+        updatedAt: prod.updated_at,
+      }));
+
+      setProducts(transformedProducts);
+    } catch (error: any) {
+      console.error("Error fetching products:", error);
+      // Don't show alert for fetch errors, just log them
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, []);
+
+  const totalProducts = products.length;
+  const totalCategories = categories.length;
+  const totalValue = products.reduce(
+    (sum, product) => sum + product.price * product.stock,
+    0
+  );
+
+  // Filter functions
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -299,13 +383,6 @@ const ProductPage = () => {
     (category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalProducts = products.length;
-  const totalCategories = categories.length;
-  const totalValue = products.reduce(
-    (sum, product) => sum + product.price * product.stock,
-    0
   );
 
   return (
@@ -441,10 +518,10 @@ const ProductPage = () => {
             {/* Categories Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Categories ({filteredCategories.length})</CardTitle>
+                <CardTitle>Categories ({categories.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                {filteredCategories.length === 0 ? (
+                {categories.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">No categories found</p>
@@ -453,60 +530,114 @@ const ProductPage = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4">Name</th>
-                          <th className="text-left py-3 px-4">Description</th>
-                          <th className="text-left py-3 px-4">Products</th>
-                          <th className="text-left py-3 px-4">Created</th>
-                          <th className="text-left py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredCategories.map((category) => (
-                          <tr
-                            key={category.id}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="py-3 px-4">
-                              <div className="font-medium">{category.name}</div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="text-sm text-gray-600">
-                                {category.description || "-"}
+                  <div className="space-y-2">
+                    {/* Header */}
+                    <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-700">
+                      <div>Name & Description</div>
+                      <div>Created</div>
+                      <div>Updated</div>
+                      <div>Actions</div>
+                    </div>
+                    
+                    {/* Categories Accordion */}
+                    <Accordion type="single" collapsible className="w-full">
+                      {filteredCategories.map((category) => {
+                        const attributes = categoriesWithAttributes.get(category.id) || [];
+                        
+                        return (
+                          <AccordionItem key={category.id} value={category.id} className="border rounded-lg">
+                            <AccordionTrigger className="hover:no-underline px-4">
+                              <div className="flex items-center justify-between w-full pr-4">
+                                <div className="grid grid-cols-4 gap-4 flex-1 text-left">
+                                  <div>
+                                    <div className="font-medium">{category.name}</div>
+                                    <div className="text-sm text-gray-600">
+                                      {category.description || "-"}
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {new Date(category.created_at).toLocaleDateString("id-ID", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                    })}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {new Date(category.updated_at).toLocaleDateString("id-ID", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                    })}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteCategory(category.id);
+                                      }}
+                                      disabled={isLoading}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge variant="outline">
-                                {
-                                  products.filter(
-                                    (p) => p.category === category.name
-                                  ).length
-                                }{" "}
-                                items
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-sm text-gray-500">
-                                {category.createdAt}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="px-4 pb-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <h4 className="font-medium text-sm">Category Attributes</h4>
+                                  <Badge variant="outline" className="text-xs">
+                                    {attributes.length} attribute{attributes.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                </div>
+                                {attributes.length === 0 ? (
+                                  <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg">
+                                    No attributes defined for this category
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {attributes
+                                      .sort((a, b) => a.display_order - b.display_order)
+                                      .map((attribute, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <div>
+                                              <div className="font-medium text-sm">
+                                                {attribute.attribute_name}
+                                              </div>
+                                              <div className="text-xs text-gray-500">
+                                                Display Order: {attribute.display_order}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            {attribute.is_required && (
+                                              <Badge variant="destructive" className="text-xs">
+                                                Required
+                                              </Badge>
+                                            )}
+                                            {!attribute.is_required && (
+                                              <Badge variant="secondary" className="text-xs">
+                                                Optional
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                  </div>
+                                )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
                   </div>
                 )}
               </CardContent>
@@ -590,10 +721,10 @@ const ProductPage = () => {
             {/* Products Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Products ({filteredProducts.length})</CardTitle>
+                <CardTitle>Products ({products.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                {filteredProducts.length === 0 ? (
+                {products.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">No products found</p>
@@ -742,7 +873,9 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="categoryDescription" className=" py-2">Description</Label>
+                <Label htmlFor="categoryDescription" className=" py-2">
+                  Description
+                </Label>
                 <Textarea
                   id="categoryDescription"
                   placeholder="Enter category description"
@@ -785,7 +918,10 @@ const ProductPage = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className=" py-2" htmlFor={`attribute-name-${index}`}>
+                        <Label
+                          className=" py-2"
+                          htmlFor={`attribute-name-${index}`}
+                        >
                           Attribute Name
                         </Label>
                         <Input
