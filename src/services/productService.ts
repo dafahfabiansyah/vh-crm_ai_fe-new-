@@ -11,9 +11,12 @@ export interface CategoryResponse {
 }
 
 export interface CategoryAttribute {
+  id: string;
   attribute_name: string;
   is_required: boolean;
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateCategoryRequest {
@@ -110,6 +113,17 @@ export const categoryService = {
       console.error('Error updating category:', error);
       console.error('Error response:', error.response?.data);
       throw new Error(error.response?.data?.message || error.message || 'Failed to update category');
+    }
+  },
+
+  // Fetch category by ID (with attributes)
+  async getCategoryById(categoryId: string): Promise<CategoryResponse> {
+    try {
+      const response = await axiosInstance.get<CategoryResponse>(`/v1/categories/${categoryId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching category by ID:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch category by ID');
     }
   }
 };
