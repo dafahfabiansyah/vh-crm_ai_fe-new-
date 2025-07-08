@@ -146,8 +146,6 @@ export interface Lead {
   timeline: TimelineEvent[]
 }
 
-
-
 export interface PipelineStage {
   id: string
   name: string
@@ -212,6 +210,7 @@ export interface Category {
 }
 
 export interface ProductFormData {
+  code: string;
   name: string;
   description: string;
   price: string;

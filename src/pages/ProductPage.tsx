@@ -41,16 +41,35 @@ import type {
 } from "@/types";
 // import { cn } from "@/lib/utils";
 
-const initialProducts: Product[] = [];
-
-const initialCategories: Category[] = [];
+// Tambahkan type Product sesuai response baru
+type ProductAPI = {
+  id: string;
+  id_category: string;
+  category_name: string;
+  sku: string;
+  name: string;
+  description: string;
+  stock: string;
+  price: number;
+  status: boolean;
+  attributes: null | Array<{
+    id: string;
+    id_category_attribute: string;
+    attribute_name: string;
+    value: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
+};
 
 const ProductPage = () => {
   const [activeTab, setActiveTab] = useState<"products" | "categories">(
     "categories"
   );
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -67,6 +86,7 @@ const ProductPage = () => {
     material: "",
     image: "",
     category: "",
+    code: "",
   });
 
   const [categoryFormData, setCategoryFormData] = useState<CategoryFormData>({
@@ -74,6 +94,10 @@ const ProductPage = () => {
     description: "",
     attributes: [],
   });
+
+  const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
   const handleInputChange =
     (field: keyof ProductFormData) =>
@@ -103,9 +127,12 @@ const ProductPage = () => {
       attributes: [
         ...prev.attributes,
         {
+          id: Math.random().toString(36).substring(2, 15),
           attribute_name: "",
           is_required: false,
           display_order: prev.attributes.length + 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ],
     }));
@@ -131,30 +158,57 @@ const ProductPage = () => {
     }));
   };
 
+  const handleCategoryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const catId = e.target.value;
+    setFormData((prev) => ({ ...prev, category: catId }));
+    setSelectedCategoryId(catId);
+    setCategoryAttributes([]);
+    setAttributeValues({});
+    if (catId) {
+      try {
+        const detail = await categoryService.getCategoryById(catId);
+        if (detail.attributes && Array.isArray(detail.attributes)) {
+          setCategoryAttributes(detail.attributes);
+          // Inisialisasi attributeValues kosong
+          const attrInit: Record<string, string> = {};
+          detail.attributes.forEach(attr => {
+            attrInit[attr.attribute_name] = "";
+          });
+          setAttributeValues(attrInit);
+        }
+      } catch (err) {
+        setCategoryAttributes([]);
+        setAttributeValues({});
+      }
+    }
+  };
+
+  const handleAttributeValueChange = (attributeName: string, value: string) => {
+    setAttributeValues((prev) => ({ ...prev, [attributeName]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      // Prepare product data for API
+      // Siapkan attributes array
+      const attributesArr = categoryAttributes.map(attr => ({
+        id_category_attribute: attr.id,
+        value: attributeValues[attr.attribute_name] || ""
+      }));
+      // Siapkan request body
       const productData = {
+        id_category: selectedCategoryId,
+        sku: formData.code || "", // SKU dari form
         name: formData.name,
         description: formData.description,
+        stock: formData.stock,
         price: parseFloat(formData.price),
-        weight: parseFloat(formData.weight),
-        stock: parseInt(formData.stock),
-        colors: formData.colors
-          .split(",")
-          .map((c) => c.trim())
-          .filter((c) => c),
-        material: formData.material,
-        image:
-          formData.image || "https://via.placeholder.com/300x300?text=No+Image",
-        category: formData.category,
+        status: true,
+        attributes: attributesArr
       };
-
-      // API call to create product using service
-      const response = await productService.createProduct(productData);
+      // API call
+      const response = await productService.createProduct(productData as any);
 
       console.log("Created product response:", response);
 
@@ -189,7 +243,11 @@ const ProductPage = () => {
         material: "",
         image: "",
         category: "",
+        code: "",
       });
+      setCategoryAttributes([]);
+      setAttributeValues({});
+      setSelectedCategoryId("");
     } catch (error: any) {
       console.error("Error creating product:", error);
       alert(`Failed to create product: ${error.message}`);
@@ -332,30 +390,17 @@ const ProductPage = () => {
   // Fetch products on component mount
   const fetchProducts = async () => {
     try {
-      const productsData = await productService.getProducts();
-      console.log("Products fetched:", productsData);
-
-      // Transform API response to local Product interface
-      const transformedProducts: Product[] = productsData.map((prod) => {
-        console.log("Transforming product:", prod);
-        return {
-          id: prod.id,
-          code: prod.code,
-          name: prod.name,
-          description: prod.description,
-          price: prod.price,
-          weight: prod.weight,
-          stock: prod.stock,
-          colors: Array.isArray(prod.colors) ? prod.colors : [],
-          material: prod.material || "",
-          image: prod.image,
-          category: prod.category,
-          createdAt: prod.created_at,
-          updatedAt: prod.updated_at,
-        };
-      });
-
-      setProducts(transformedProducts);
+      // Ambil response.items
+      const response = await productService.getProducts();
+      let productsData: ProductAPI[] = [];
+      if (Array.isArray(response)) {
+        // fallback lama
+        productsData = response as any;
+      } else if (response ) {
+        productsData = response;
+      }
+      // Transform ke state
+      setProducts(productsData as any);
     } catch (error: any) {
       console.error("Error fetching products:", error);
       // Don't show alert for fetch errors, just log them
@@ -740,98 +785,54 @@ const ProductPage = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-3 px-4">Image</th>
-                          <th className="text-left py-3 px-4">Code</th>
+                          <th className="text-left py-3 px-4">SKU</th>
                           <th className="text-left py-3 px-4">Name</th>
+                          <th className="text-left py-3 px-4">Description</th>
                           <th className="text-left py-3 px-4">Category</th>
                           <th className="text-left py-3 px-4">Price</th>
                           <th className="text-left py-3 px-4">Stock</th>
-                          <th className="text-left py-3 px-4">Weight</th>
-                          <th className="text-left py-3 px-4">Colors</th>
-                          <th className="text-left py-3 px-4">Material</th>
+                          <th className="text-left py-3 px-4">Status</th>
+                          <th className="text-left py-3 px-4">Attributes</th>
                           <th className="text-left py-3 px-4">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredProducts.map((product) => (
+                        {filteredProducts.map((product: any) => (
                           <tr
                             key={product.id}
                             className="border-b hover:bg-gray-50"
                           >
                             <td className="py-3 px-4">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded-lg"
-                                onError={(e) => {
-                                  e.currentTarget.src =
-                                    "https://via.placeholder.com/48x48?text=No+Image";
-                                }}
-                              />
+                              <Badge variant="outline">{product.sku}</Badge>
                             </td>
+                            <td className="py-3 px-4">{product.name}</td>
+                            <td className="py-3 px-4">{product.description}</td>
                             <td className="py-3 px-4">
-                              <Badge variant="outline">{product.code}</Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div>
-                                <p className="font-medium">{product.name}</p>
-                                <p className="text-sm text-gray-500 truncate max-w-xs">
-                                  {product.description}
-                                </p>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge variant="secondary">
-                                {product.category}
-                              </Badge>
+                              <Badge variant="secondary">{product.category_name}</Badge>
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-medium">
-                                Rp {product.price.toLocaleString()}
+                                Rp {Number(product.price).toLocaleString()}
                               </span>
                             </td>
+                            <td className="py-3 px-4">{product.stock}</td>
                             <td className="py-3 px-4">
-                              <Badge
-                                variant={
-                                  product.stock > 0 ? "default" : "destructive"
-                                }
-                              >
-                                {product.stock} pcs
+                              <Badge variant={product.status ? "default" : "destructive"}>
+                                {product.status ? "Active" : "Inactive"}
                               </Badge>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm">{product.weight}g</span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex flex-wrap gap-1">
-                                {product.colors && Array.isArray(product.colors) ? (
-                                  <>
-                                    {product.colors
-                                      .slice(0, 2)
-                                      .map((color, index) => (
-                                        <Badge
-                                          key={index}
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          {color}
-                                        </Badge>
-                                      ))}
-                                    {product.colors.length > 2 && (
-                                      <Badge variant="outline" className="text-xs">
-                                        +{product.colors.length - 2}
-                                      </Badge>
-                                    )}
-                                  </>
-                                ) : (
-                                  <span className="text-sm text-gray-500">No colors</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-sm">
-                                {product.material || "N/A"}
-                              </span>
+                              {Array.isArray(product.attributes) && product.attributes.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {product.attributes.map((attr: any) => (
+                                    <Badge key={attr.id} variant="outline" className="text-xs">
+                                      {attr.attribute_name}: {attr.value}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-500">-</span>
+                              )}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -1008,6 +1009,19 @@ const ProductPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <Label className="py-2" htmlFor="code">
+                  SKU / Product Code <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="code"
+                  placeholder="Enter product code (SKU)"
+                  value={formData.code}
+                  onChange={handleInputChange("code")}
+                  required
+                />
+              </div>
+
+              <div>
                 <Label className="py-2" htmlFor="name">
                   Name <span className="text-red-500">*</span>
                 </Label>
@@ -1031,25 +1045,45 @@ const ProductPage = () => {
                 />
               </div>
 
-               <div>
+              <div>
                 <Label className="py-2" htmlFor="category">
                   Category <span className="text-red-500">*</span>
                 </Label>
                 <select
                   id="category"
                   value={formData.category}
-                  onChange={handleInputChange("category")}
+                  onChange={handleCategoryChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Select a category</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
+                    <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
               </div>
+
+              {/* Render attribute fields dinamis */}
+              {categoryAttributes.length > 0 && (
+                <div className="space-y-4">
+                  {categoryAttributes
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((attr) => (
+                      <div key={attr.attribute_name}>
+                        <Label className="py-2" htmlFor={`attr-${attr.attribute_name}`}>{attr.attribute_name}{attr.is_required && <span className="text-red-500">*</span>}</Label>
+                        <Input
+                          id={`attr-${attr.attribute_name}`}
+                          placeholder={`Enter ${attr.attribute_name}`}
+                          value={attributeValues[attr.attribute_name] || ""}
+                          onChange={e => handleAttributeValueChange(attr.attribute_name, e.target.value)}
+                          required={attr.is_required}
+                        />
+                      </div>
+                    ))}
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -1104,39 +1138,6 @@ const ProductPage = () => {
                     required
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label className="py-2" htmlFor="colors">Colors</Label>
-                <Input
-                  id="colors"
-                  placeholder="Enter colors separated by commas (e.g., Red, Blue, Green)"
-                  value={formData.colors}
-                  onChange={handleInputChange("colors")}
-                />
-              </div>
-
-              <div>
-                <Label className="py-2" htmlFor="material">Material</Label>
-                <Input
-                  id="material"
-                  placeholder="Enter material (e.g., Cotton, Polyester, Linen)"
-                  value={formData.material}
-                  onChange={handleInputChange("material")}
-                />
-              </div>
-
-             
-
-              <div>
-                <Label className="py-2" htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  type="url"
-                  placeholder="Enter image URL"
-                  value={formData.image}
-                  onChange={handleInputChange("image")}
-                />
               </div>
 
               <div className="flex gap-3 pt-4">
