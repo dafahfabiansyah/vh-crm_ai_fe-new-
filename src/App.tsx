@@ -33,6 +33,7 @@ export default function App() {
 
   // Initialize auth from cookies when app loads
   useEffect(() => {
+    console.log('🚀 App initializing - syncing with cookies...');
     dispatch(syncWithCookies());
   }, [dispatch]);
 
@@ -132,6 +133,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/products"
           element={

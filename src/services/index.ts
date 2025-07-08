@@ -6,4 +6,5 @@ export { AgentMappingService, type CreateAgentMappingRequest, type AgentMappingR
 export { AgentsService, type CreateAgentRequest, type AgentSettings, type UpdateAgentRequest, type UpdateAgentSettingsRequest } from './agentsService';
 export { KnowledgeService, type KnowledgeContent, type CreateKnowledgeRequest, type KnowledgeResponse, type ExistingKnowledge } from './knowledgeService';
 export { ChatService, type ChatRequest, type ChatResponse } from './chatService';
+export { PipelineService, type CreatePipelineRequest, type CreatePipelineResponse, type PipelineListResponse } from './pipelineService';
 export { default as axiosInstance } from './axios';

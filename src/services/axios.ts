@@ -2,6 +2,7 @@ import axios from 'axios';
 import { shouldAutoLogout, debugWarn } from '@/config/debug';
 import { store } from '../store';
 import { logout } from '../store/authSlice';
+import { AuthService } from './authService';
 
 // Base axios instance configuration
 const axiosInstance = axios.create({
@@ -18,7 +19,12 @@ axiosInstance.interceptors.request.use(
     const state = store.getState();
     let token = state.auth.token;
     
-    // If no token in Redux, try to get from localStorage user_data
+    // If no token in Redux, try to get from AuthService (cookies)
+    if (!token) {
+      token = AuthService.getStoredToken();
+    }
+    
+    // If still no token, try legacy localStorage
     if (!token) {
       try {
         const userData = localStorage.getItem('user_data');
@@ -29,12 +35,14 @@ axiosInstance.interceptors.request.use(
       } catch (error) {
         console.log('Error parsing user_data from localStorage:', error);
       }
-    }    // If token is an object, extract access_token
+    }
+    
+    // If token is an object, extract access_token
     if (token && typeof token === 'object') {
       token = (token as { access_token?: string }).access_token || null;
     }
     
-    console.log('🔑 Token from Redux/localStorage:', token ? 'Token exists' : 'No token');
+    console.log('🔑 Token from Redux/Cookies/localStorage:', token ? 'Token exists' : 'No token');
     console.log('🔑 Auth state:', { 
       isAuthenticated: state.auth.isAuthenticated,
       hasToken: !!token 

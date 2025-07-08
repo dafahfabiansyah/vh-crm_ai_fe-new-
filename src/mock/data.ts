@@ -1,6 +1,7 @@
 import type {
   AgentRole,
   AIAgent,
+  // AIAgent,
   ChatInfo,
   ChatSession,
   Message,
@@ -46,7 +47,7 @@ export const navigationItems: NavigationItem[] = [
         id: "create-pipeline",
         label: "Create Pipeline",
         icon: SquarePlus,
-        href: "/pipeline/create",
+        href: "pipeline/create",
       },
     ],
   },
@@ -394,8 +395,6 @@ export const mockAIAgents: AIAgent[] = [
   {
     id: "1",
     name: "DISTCCTV AI",
-    role_id: "1",
-    is_active: true,
     role: {
       id: "1",
       name: "Customer Support",
@@ -410,7 +409,6 @@ export const mockAIAgents: AIAgent[] = [
     id: "2",
     name: "Sales Assistant AI",
     role_id: "2",
-    is_active: true,
     role: {
       id: "2",
       name: "Sales Assistant",
@@ -425,7 +423,6 @@ export const mockAIAgents: AIAgent[] = [
     id: "3",
     name: "Technical Support AI",
     role_id: "3",
-    is_active: true,
     role: {
       id: "3",
       name: "Technical Support",
@@ -440,7 +437,6 @@ export const mockAIAgents: AIAgent[] = [
     id: "4",
     name: "Marketing Assistant AI",
     role_id: "4",
-    is_active: true,
     role: {
       id: "4",
       name: "Marketing Assistant",
