@@ -1,3 +1,5 @@
+import type { CategoryAttribute } from "@/services/productService";
+
 // API Request types
 export interface RegisterRequest {
   email: string;
@@ -182,4 +184,47 @@ export interface AIAgentData {
 
 export interface AIAgentDetailPageProps {
   agentId?: string;
+}
+
+// product page interface
+export interface Product {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  stock: number;
+  colors: string[];
+  material: string;
+  image: string;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductFormData {
+  name: string;
+  description: string;
+  price: string;
+  weight: string;
+  stock: string;
+  colors: string;
+  material: string;
+  image: string;
+  category: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description: string;
+  attributes: CategoryAttribute[];
 }

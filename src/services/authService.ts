@@ -6,7 +6,7 @@ import type {
   User,
 } from "../types/interface";
 import Cookies from 'js-cookie';
-import CryptoJS from 'crypto-js';
+import * as CryptoJS from 'crypto-js';
 
 // Cookie configuration
 const COOKIE_OPTIONS = {

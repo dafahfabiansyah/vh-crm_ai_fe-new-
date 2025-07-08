@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Check,
@@ -23,19 +30,115 @@ import {
   Clock,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
-import { pricingPlans } from "@/mock/data";
-
-
 
 export default function BillingPage() {
-  const [, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("3months");
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [isDiscountApplied, setIsDiscountApplied] = useState(false)
+  const [discountedPrice, setDiscountedPrice] = useState<string | null>(null);
+  const [originalPrice, setOriginalPrice] = useState<string | null>(null);
+
+  // Mock pricing plans data
+  const pricingPlans = [
+    {
+      id: "trial",
+      name: "Free Trial",
+      price: "IDR 0",
+      period: "/ 14 days",
+      icon: Users,
+      popular: false,
+      features: [
+        { text: "5 MAU (Monthly Active Users)" },
+        { text: "100 AI Responses" },
+        { text: "Basic Support" },
+        { text: "Email Integration" },
+      ],
+    },
+    {
+      id: "pro",
+      name: "Pro Plan",
+      price: "IDR 1,499,000",
+      period: "/ month",
+      icon: Shield,
+      popular: false,
+      features: [
+        { text: "5 MAU (Monthly Active Users)" },
+        { text: "100 AI Responses" },
+        { text: "Basic Support" },
+        { text: "Email Integration" },
+      ],
+    },
+    {
+      id: "business",
+      name: "Business Plan",
+      price: "IDR 3,609,050",
+      period: "/ month",
+      icon: Bot,
+      popular: true,
+     features: [
+        { text: "5 MAU (Monthly Active Users)" },
+        { text: "100 AI Responses" },
+        { text: "Basic Support" },
+        { text: "Email Integration" },
+      ],
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      price: "IDR 8,500,000",
+      period: "/ month",
+      icon: Users,
+      popular: false,
+      features: [
+        { text: "5 MAU (Monthly Active Users)" },
+        { text: "100 AI Responses" },
+        { text: "Basic Support" },
+        { text: "Email Integration" },
+      ],
+    },
+  ];
 
   const handleUpgrade = (planId: string) => {
-    setSelectedPlan(planId);
-    console.log(`Upgrading to plan: ${planId}`);
+    const plan = pricingPlans.find((p) => p.id === planId);
+    if (plan) {
+      setSelectedPlan(planId);
+      setSelectedPlanData(plan);
+      setIsPaymentDialogOpen(true);
+      setIsDiscountApplied(false);
+      setDiscountedPrice(null);
+      setOriginalPrice(null);
+    }
   };
 
+  const handlePayment = () => {
+    console.log(`Processing payment for plan: ${selectedPlan}`);
+    console.log(`Coupon code: ${couponCode}`);
+    // Here you would typically integrate with your payment processor
+    setIsPaymentDialogOpen(false);
+    setCouponCode("");
+  };
+
+  const handleApplyCoupon = () => {
+    // Simulasi apply coupon 100% (gratis)
+    if (selectedPlanData && couponCode.trim() !== "") {
+      // Ambil harga asli (angka saja)
+      const priceStr = selectedPlanData.price.replace(/[^\d]/g, "");
+      const priceNum = parseInt(priceStr, 10);
+      if (!isNaN(priceNum)) {
+        setOriginalPrice(selectedPlanData.price);
+        setDiscountedPrice("IDR 0");
+        setIsDiscountApplied(true);
+        alert("Coupon applied successfully! Harga menjadi gratis.");
+      } else {
+        alert("Invalid plan price");
+      }
+    } else {
+      alert("Invalid coupon code");
+    }
+  };
 
 
   // Mock data for dashboard cards
@@ -43,22 +146,22 @@ export default function BillingPage() {
     packageDetails: {
       plan: "BUSINESS Plan",
       renewal: "Renewalt Automatically on 19 July 2025",
-      status: "active"
+      status: "active",
     },
     monthlyUsers: {
       current: 1420,
       limit: 10000,
-      additional: 0
+      additional: 0,
     },
     aiResponses: {
       used: 8168,
       limit: 25000,
-      resetDate: "Reset Setup Tanggal 1"
+      resetDate: "Reset Setup Tanggal 1",
     },
     additionalResponses: {
       count: -3,
-      permanent: true
-    }
+      permanent: true,
+    },
   };
 
   // Mock transaction data
@@ -69,7 +172,7 @@ export default function BillingPage() {
       description: "Business Plan - Monthly Subscription",
       amount: "IDR 3,609,050",
       status: "paid",
-      type: "subscription"
+      type: "subscription",
     },
     {
       id: 2,
@@ -77,7 +180,7 @@ export default function BillingPage() {
       description: "Additional AI Responses - Top Up",
       amount: "IDR 500,000",
       status: "paid",
-      type: "topup"
+      type: "topup",
     },
     {
       id: 3,
@@ -85,7 +188,7 @@ export default function BillingPage() {
       description: "Business Plan - Monthly Subscription",
       amount: "IDR 3,609,050",
       status: "paid",
-      type: "subscription"
+      type: "subscription",
     },
     {
       id: 4,
@@ -93,7 +196,7 @@ export default function BillingPage() {
       description: "Additional MAU - Top Up",
       amount: "IDR 750,000",
       status: "paid",
-      type: "topup"
+      type: "topup",
     },
     {
       id: 5,
@@ -101,19 +204,20 @@ export default function BillingPage() {
       description: "Business Plan - Monthly Subscription",
       amount: "IDR 3,609,050",
       status: "pending",
-      type: "subscription"
-    }
+      type: "subscription",
+    },
   ];
 
   const periods = [
     { id: "monthly", label: "Monthly", discount: null },
     { id: "3months", label: "3 Months", discount: "5% Discount" },
     { id: "halfyearly", label: "Half-Yearly", discount: "10% Discount" },
-    { id: "yearly", label: "Yearly", discount: "20% Discount" }
+    { id: "yearly", label: "Yearly", discount: "20% Discount" },
   ];
 
   return (
-    <MainLayout>
+  <MainLayout>
+      <div className="min-h-screen bg-background">
       <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Dashboard Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -135,10 +239,12 @@ export default function BillingPage() {
             <CardContent className="pt-0">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-cyan-100 mb-3">
                 <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="truncate">{dashboardData.packageDetails.renewal}</span>
+                <span className="truncate">
+                  {dashboardData.packageDetails.renewal}
+                </span>
               </div>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
               >
@@ -170,8 +276,8 @@ export default function BillingPage() {
                 Additional MAU: {dashboardData.monthlyUsers.additional}
               </div>
               <div className="flex gap-2 mb-2">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs"
                 >
@@ -196,7 +302,8 @@ export default function BillingPage() {
                   <h2 className="text-lg sm:text-xl font-bold mt-1">
                     {dashboardData.aiResponses.used.toLocaleString()} Used
                     <span className="text-xs sm:text-sm font-normal text-blue-200 ml-1 sm:ml-2 block sm:inline">
-                      /{dashboardData.aiResponses.limit.toLocaleString()} AI Responses Limit
+                      /{dashboardData.aiResponses.limit.toLocaleString()} AI
+                      Responses Limit
                     </span>
                   </h2>
                 </div>
@@ -227,8 +334,8 @@ export default function BillingPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30 mb-3 w-full sm:w-auto text-xs"
               >
@@ -253,9 +360,13 @@ export default function BillingPage() {
                 onClick={() => setSelectedPeriod(period.id)}
                 className="flex flex-col items-center gap-1 h-auto py-2 px-2 sm:px-4 min-w-0 flex-1"
               >
-                <span className="text-xs sm:text-sm font-medium truncate">{period.label}</span>
+                <span className="text-xs sm:text-sm font-medium truncate">
+                  {period.label}
+                </span>
                 {period.discount && (
-                  <span className="text-xs text-primary truncate">{period.discount}</span>
+                  <span className="text-xs text-primary truncate">
+                    {period.discount}
+                  </span>
                 )}
               </Button>
             ))}
@@ -361,10 +472,18 @@ export default function BillingPage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-semibold">Transaction History</CardTitle>
-                  <CardDescription className="text-sm">Riwayat pembayaran dan transaksi Anda</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-semibold">
+                    Transaction History
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Riwayat pembayaran dan transaksi Anda
+                  </CardDescription>
                 </div>
-                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   Export
                 </Button>
@@ -378,36 +497,49 @@ export default function BillingPage() {
                     className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
                   >
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        transaction.type === 'subscription' 
-                          ? 'bg-blue-100 text-blue-600' 
-                          : 'bg-green-100 text-green-600'
-                      }`}>
-                        {transaction.type === 'subscription' ? (
+                      <div
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          transaction.type === "subscription"
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-green-100 text-green-600"
+                        }`}
+                      >
+                        {transaction.type === "subscription" ? (
                           <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                         ) : (
                           <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.description}</h4>
+                        <h4 className="font-medium text-foreground text-sm sm:text-base truncate">
+                          {transaction.description}
+                        </h4>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                          {new Date(transaction.date).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
+                          {new Date(transaction.date).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }
+                          )}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-0">
                       <div className="text-left sm:text-right">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">{transaction.amount}</div>
-                        <Badge 
-                          variant={transaction.status === 'paid' ? 'default' : 'secondary'}
+                        <div className="font-semibold text-foreground text-sm sm:text-base">
+                          {transaction.amount}
+                        </div>
+                        <Badge
+                          variant={
+                            transaction.status === "paid"
+                              ? "default"
+                              : "secondary"
+                          }
                           className="text-xs mt-1"
                         >
-                          {transaction.status === 'paid' ? 'Paid' : 'Pending'}
+                          {transaction.status === "paid" ? "Paid" : "Pending"}
                         </Badge>
                       </div>
                     </div>
@@ -418,6 +550,69 @@ export default function BillingPage() {
           </Card>
         </div>
       </div>
-    </MainLayout>
+
+      {/* Payment Dialog */}
+       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg font-semibold">Complete Your Payment</DialogTitle>
+            <Button variant="ghost" size="sm" onClick={() => setIsPaymentDialogOpen(false)} className="h-6 w-6 p-0">
+              {/* <X className="h-4 w-4" /> */}
+            </Button>
+          </div>
+        </DialogHeader>
+        {selectedPlanData && (
+          <div className="space-y-6">
+            {/* Plan Details */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-primary">{selectedPlanData.name}</h3>
+              <div className="space-y-1">
+                {isDiscountApplied && originalPrice ? (
+                  <>
+                    <div className="text-lg font-medium text-muted-foreground line-through">
+                      {originalPrice}
+                    </div>
+                    <div className="text-2xl font-bold text-foreground transition-opacity duration-300 opacity-100">
+                      {discountedPrice}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-2xl font-bold text-foreground">{selectedPlanData.price}</div>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">IDR / mo - Monthly Package</div>
+            </div>
+
+            {/* Coupon Code Section */}
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Masukkan kode kupon"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1"
+                />
+                <Button variant="outline" onClick={handleApplyCoupon} className="px-6 bg-transparent">
+                  APPLY
+                </Button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handlePayment} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                Pay Now
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </div>
+  </MainLayout>
   );
 }

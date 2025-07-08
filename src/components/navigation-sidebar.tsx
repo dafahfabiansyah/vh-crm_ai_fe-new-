@@ -65,7 +65,7 @@ export default function NavigationSidebar({
           id: "create-pipeline",
           label: "Create Pipeline",
           icon: item.children?.[0]?.icon || GitBranch,
-          href: "/create-pipeline",
+          href: "/pipeline/create",
         },
         // Add pipelines from API
         ...pipelines.map(pipeline => ({
@@ -121,7 +121,7 @@ export default function NavigationSidebar({
           onOpenChange={() => shouldShowExpanded && toggleExpanded(item.id)}
         >
           <CollapsibleTrigger asChild>
-            <Button
+          <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
