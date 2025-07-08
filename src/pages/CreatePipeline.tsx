@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Plus, GitBranch } from "lucide-react"
 import {Link} from "react-router"
 import MainLayout from "@/main-layout"
+import { useCreatePipeline } from "@/hooks/usePipeline"
 
 interface PipelineFormData {
   name: string
@@ -20,11 +21,11 @@ interface PipelineFormData {
 
 export default function CreatePipelinePage() {
   const navigate = useNavigate()
+  const { createPipeline, isLoading, error } = useCreatePipeline()
   const [formData, setFormData] = useState<PipelineFormData>({
     name: "",
     description: "",
   })
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleInputChange =
     (field: keyof PipelineFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -35,7 +36,7 @@ export default function CreatePipelinePage() {
     }
 
   const handleCancel = () => {
-    
+    navigate("/dashboard")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,20 +46,17 @@ export default function CreatePipelinePage() {
       return
     }
 
-    setIsLoading(true)
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Create pipeline via hook
+      await createPipeline({
+        name: formData.name.trim(),
+        description: formData.description.trim() || formData.name.trim()
+      })
 
-      console.log("Creating pipeline:", formData)
-
-      // Redirect to pipelines list or the new pipeline
-      navigate("/pipeline")
+      // Hook will handle redirect automatically
     } catch (error) {
+      // Error is handled by the hook
       console.error("Error creating pipeline:", error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -100,6 +98,13 @@ export default function CreatePipelinePage() {
 
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             {/* Pipeline Name Field */}
             <div className="space-y-2">
               <Label htmlFor="pipelineName" className="text-sm font-medium text-foreground">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { useAppSelector } from '@/hooks/redux';
+import { AuthService } from '@/services/authService';
 import Loading from '@/pages/Loading';
 import { isDebugMode, debugLog } from '@/config/debug';
 
@@ -45,11 +46,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // PRODUCTION MODE: Normal protection logic
   // Jika belum diinisialisasi atau sedang loading, tampilkan loading
   if (!isInitialized || isLoading) {
+    console.log('🔄 ProtectedRoute: Loading or not initialized');
     return <Loading />;
   }
 
-  // Jika tidak authenticated, redirect ke login dengan state untuk remember intended path
-  if (!isAuthenticated) {
+  // Double check dengan AuthService - jika cookie tidak ada, paksa logout
+  const hasValidAuth = AuthService.isAuthenticated();
+  
+  console.log('🔐 ProtectedRoute Auth Check:', {
+    reduxAuthenticated: isAuthenticated,
+    cookieAuthenticated: hasValidAuth,
+    currentPath: location.pathname
+  });
+  
+  // Jika tidak authenticated di Redux ATAU cookie hilang, redirect ke login
+  if (!isAuthenticated || !hasValidAuth) {
+    console.warn('⚠️ ProtectedRoute: Redirecting to login', {
+      reduxAuth: isAuthenticated,
+      cookieAuth: hasValidAuth
+    });
     return (
       <Navigate 
         to={redirectTo} 
