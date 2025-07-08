@@ -40,7 +40,7 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
       setError(null);
 
       const data = await KnowledgeService.getExistingKnowledge(agentId);
-      setKnowledgeList(data);
+      setKnowledgeList(data || []); // Ensure it's always an array
     } catch (err: any) {
       console.error('Error loading knowledge list:', err);
       setError(err.message || 'Failed to load knowledge sources');
@@ -139,15 +139,15 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
     );
   }
 
-  if (knowledgeList.length === 0) {
+  if (!knowledgeList || knowledgeList.length === 0) {
     return (
       <div className="text-center py-12">
         <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          No Knowledge Sources Found
+          Belum ada knowledge yang dibuat
         </h3>
         <p className="text-muted-foreground mb-4">
-          Start by adding knowledge sources in the tabs above to train your AI agent.
+          Kembali ke tab Knowledge Source lalu tambahkan knowledge
         </p>
         <Button onClick={handleRefresh} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -162,7 +162,7 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-foreground">
-            Knowledge Sources ({knowledgeList.length})
+            Knowledge Sources ({knowledgeList?.length || 0})
           </h3>
           <p className="text-sm text-muted-foreground">
             Manage your AI agent's knowledge base
