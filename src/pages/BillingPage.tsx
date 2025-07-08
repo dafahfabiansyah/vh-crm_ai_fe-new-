@@ -222,7 +222,7 @@ export default function BillingPage() {
         {/* Dashboard Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Package Details Card */}
-          <Card className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-white border-0">
+          <Card className="bg-gradient-to-br from-primary to-emerald-700  text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
@@ -254,7 +254,7 @@ export default function BillingPage() {
           </Card>
 
           {/* Monthly Active Users Card */}
-          <Card className="bg-gradient-to-br from-purple-400 to-purple-600 text-white border-0">
+          <Card className="bg-gradient-to-br from-primary to-emerald-700  text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
@@ -292,7 +292,7 @@ export default function BillingPage() {
           </Card>
 
           {/* AI Responses Card */}
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white border-0">
+          <Card className="bg-gradient-to-br from-primary to-emerald-700  text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
@@ -319,7 +319,7 @@ export default function BillingPage() {
           </Card>
 
           {/* Additional AI Responses Card */}
-          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-0">
+          <Card className="bg-gradient-to-br from-primary to-emerald-700 text-white border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
@@ -364,7 +364,12 @@ export default function BillingPage() {
                   {period.label}
                 </span>
                 {period.discount && (
-                  <span className="text-xs text-primary truncate">
+                  <span
+                    className={
+                      "text-xs truncate " +
+                      (selectedPeriod === period.id ? "text-white" : "text-primary")
+                    }
+                  >
                     {period.discount}
                   </span>
                 )}
