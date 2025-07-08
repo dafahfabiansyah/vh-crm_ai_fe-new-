@@ -336,21 +336,24 @@ const ProductPage = () => {
       console.log("Products fetched:", productsData);
 
       // Transform API response to local Product interface
-      const transformedProducts: Product[] = productsData.map((prod) => ({
-        id: prod.id,
-        code: prod.code,
-        name: prod.name,
-        description: prod.description,
-        price: prod.price,
-        weight: prod.weight,
-        stock: prod.stock,
-        colors: prod.colors,
-        material: prod.material,
-        image: prod.image,
-        category: prod.category,
-        createdAt: prod.created_at,
-        updatedAt: prod.updated_at,
-      }));
+      const transformedProducts: Product[] = productsData.map((prod) => {
+        console.log("Transforming product:", prod);
+        return {
+          id: prod.id,
+          code: prod.code,
+          name: prod.name,
+          description: prod.description,
+          price: prod.price,
+          weight: prod.weight,
+          stock: prod.stock,
+          colors: Array.isArray(prod.colors) ? prod.colors : [],
+          material: prod.material || "",
+          image: prod.image,
+          category: prod.category,
+          createdAt: prod.created_at,
+          updatedAt: prod.updated_at,
+        };
+      });
 
       setProducts(transformedProducts);
     } catch (error: any) {
@@ -801,27 +804,33 @@ const ProductPage = () => {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex flex-wrap gap-1">
-                                {product.colors
-                                  .slice(0, 2)
-                                  .map((color, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {color}
-                                    </Badge>
-                                  ))}
-                                {product.colors.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{product.colors.length - 2}
-                                  </Badge>
+                                {product.colors && Array.isArray(product.colors) ? (
+                                  <>
+                                    {product.colors
+                                      .slice(0, 2)
+                                      .map((color, index) => (
+                                        <Badge
+                                          key={index}
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
+                                          {color}
+                                        </Badge>
+                                      ))}
+                                    {product.colors.length > 2 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{product.colors.length - 2}
+                                      </Badge>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-sm text-gray-500">No colors</span>
                                 )}
                               </div>
                             </td>
                             <td className="py-3 px-4">
                               <span className="text-sm">
-                                {product.material}
+                                {product.material || "N/A"}
                               </span>
                             </td>
                             <td className="py-3 px-4">
@@ -999,7 +1008,7 @@ const ProductPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">
+                <Label className="py-2" htmlFor="name">
                   Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -1012,7 +1021,7 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label className="py-2" htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   placeholder="Enter Description"
@@ -1022,9 +1031,29 @@ const ProductPage = () => {
                 />
               </div>
 
+               <div>
+                <Label className="py-2" htmlFor="category">
+                  Category <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  id="category"
+                  value={formData.category}
+                  onChange={handleInputChange("category")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="price">
+                  <Label className="py-2" htmlFor="price">
                     Price <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
@@ -1044,7 +1073,7 @@ const ProductPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="weight">
+                  <Label className="py-2" htmlFor="weight">
                     Weight (grams) <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
@@ -1063,7 +1092,7 @@ const ProductPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="stock">
+                  <Label className="py-2" htmlFor="stock">
                     Stock <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -1078,7 +1107,7 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="colors">Colors</Label>
+                <Label className="py-2" htmlFor="colors">Colors</Label>
                 <Input
                   id="colors"
                   placeholder="Enter colors separated by commas (e.g., Red, Blue, Green)"
@@ -1088,7 +1117,7 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="material">Material</Label>
+                <Label className="py-2" htmlFor="material">Material</Label>
                 <Input
                   id="material"
                   placeholder="Enter material (e.g., Cotton, Polyester, Linen)"
@@ -1097,28 +1126,10 @@ const ProductPage = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="category">
-                  Category <span className="text-red-500">*</span>
-                </Label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={handleInputChange("category")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+             
 
               <div>
-                <Label htmlFor="image">Image URL</Label>
+                <Label className="py-2" htmlFor="image">Image URL</Label>
                 <Input
                   id="image"
                   type="url"
