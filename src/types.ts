@@ -1,13 +1,16 @@
 // Export API types
 export * from './types/interface';
 
+// Import Contact type for use in other interfaces
+import type { Contact } from './services/contactsService';
+
 // register type 
 export interface RegisterFormData {
   username: string;
   email: string;
   password: string;
-  businessName?: string; 
-  phoneNumber?: string; 
+  businessName?: string;
+  phoneNumber?: string;
   confirmPassword: string;
   acceptTerms: boolean;
 }
@@ -61,6 +64,17 @@ export interface Message {
   isSystem: boolean
 }
 
+// Chat logs types for dynamic chat conversation
+export interface ChatLogMessage {
+  id: string
+  id_contact: string
+  message: string
+  type: string
+  media: string
+  from_me: boolean
+  sent_at: string
+}
+
 export interface ChatInfo {
   customerName: string
   customerId: string
@@ -82,24 +96,17 @@ export interface ChatInfo {
 
 // chat information types
 export interface ChatInformationProps {
-    chatInfo: ChatInfo
+  chatInfo: ChatInfo
 }
 // chat information types end
 
-// chat history list types
-export interface ChatHistoryListProps {
-  chatSessions: ChatSession[]
-  selectedChatId: string | null
-  onSelectChat: (chatId: string) => void
-  searchQuery: string
-  onSearchChange: (query: string) => void
-}
+// chat history list types - moved to component file
 // chat history list types end
 
 // chat conversation types
 export interface ChatConversationProps {
-  messages: Message[]
-  selectedChat?: ChatSession | null
+  selectedContactId: string | null
+  selectedContact?: Contact | null
   onToggleMobileMenu?: () => void
   showBackButton?: boolean
   onToggleInfo?: () => void

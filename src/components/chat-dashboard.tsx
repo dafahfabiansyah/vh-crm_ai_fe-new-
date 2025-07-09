@@ -4,7 +4,8 @@ import ChatHistoryList from "./chat-history-list"
 import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { mockChatSessions, mockMessages, mockChatInfo } from "@/mock/data"
+import { mockChatInfo } from "@/mock/data"
+import type { Contact } from "@/services/contactsService"
 
 // Default welcome content
 function WelcomeContent() {
@@ -24,7 +25,7 @@ function WelcomeContent() {
             Pilih percakapan dari daftar di sebelah kiri untuk mulai melihat detail chat dan informasi pelanggan.
           </p>
         </div>
-        
+
         <div className="space-y-4">
           <div className="p-4 bg-card border border-border rounded-lg">
             <h3 className="font-medium text-foreground mb-2">💬 Chat Management</h3>
@@ -32,14 +33,14 @@ function WelcomeContent() {
               Kelola semua percakapan pelanggan dalam satu dashboard terpusat
             </p>
           </div>
-          
+
           <div className="p-4 bg-card border border-border rounded-lg">
             <h3 className="font-medium text-foreground mb-2">🤖 AI Assistant</h3>
             <p className="text-sm text-muted-foreground">
               Bantuan AI tersedia untuk respon otomatis dan analisis percakapan
             </p>
           </div>
-          
+
           <div className="p-4 bg-card border border-border rounded-lg">
             <h3 className="font-medium text-foreground mb-2">📊 Real-time Updates</h3>
             <p className="text-sm text-muted-foreground">
@@ -53,44 +54,49 @@ function WelcomeContent() {
 }
 
 export default function ChatDashboard() {
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showInfo, setShowInfo] = useState(false)
 
-  const selectedChat = selectedChatId ? mockChatSessions.find((chat) => chat.id === selectedChatId) : null
+  const handleSelectContact = (contact: Contact) => {
+    setSelectedContactId(contact.id)
+    setSelectedContact(contact)
+  }
 
   return (
-    <div className="flex h-screen bg-background relative">
+    <div className="flex h-[calc(100vh-4rem)] bg-background relative overflow-hidden">
       {/* Desktop Layout */}
-      <div className="hidden lg:flex w-full">
-        {/* Left Sidebar - Chat History */}
-        <div className="w-80 border-r border-border bg-card">
+      <div className="hidden lg:flex w-full h-full">
+        {/* Left Sidebar - Chat History - Fixed height, scrollable content */}
+        <div className="w-80 border-r border-border bg-card h-full flex flex-col overflow-hidden">
           <ChatHistoryList
-            chatSessions={mockChatSessions}
-            selectedChatId={selectedChatId}
-            onSelectChat={setSelectedChatId}
+            selectedContactId={selectedContactId}
+            onSelectContact={handleSelectContact}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
         </div>
 
-        {/* Center Content */}
-        {selectedChatId ? (
-          <div className="flex-1 flex flex-col">
-            <ChatConversation 
-              messages={mockMessages} 
-              selectedChat={selectedChat}
-              onToggleInfo={() => {}} // No-op for desktop since info is always visible
+        {/* Center Content - Flexible height */}
+        {selectedContactId && selectedContact ? (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <ChatConversation
+              selectedContactId={selectedContactId}
+              selectedContact={selectedContact}
+              onToggleInfo={() => { }} // No-op for desktop since info is always visible
               showInfo={false} // Don't show active state on desktop
             />
           </div>
         ) : (
-          <WelcomeContent />
+          <div className="flex-1 h-full overflow-auto">
+            <WelcomeContent />
+          </div>
         )}
 
-        {/* Right Sidebar - Chat Information - Always visible on desktop when chat is selected */}
-        {selectedChatId && (
-          <div className="w-80 border-l border-border bg-card">
+        {/* Right Sidebar - Chat Information - Fixed height, scrollable content */}
+        {selectedContactId && (
+          <div className="w-80 border-l border-border bg-card h-full flex flex-col overflow-hidden">
             <ChatInformation chatInfo={mockChatInfo} />
           </div>
         )}
@@ -98,13 +104,12 @@ export default function ChatDashboard() {
 
       {/* Mobile Layout */}
       <div className="lg:hidden w-full">
-        {!selectedChatId ? (
+        {!selectedContactId ? (
           /* Mobile Chat List - Full Screen */
           <div className="w-full h-full">
             <ChatHistoryList
-              chatSessions={mockChatSessions}
-              selectedChatId={selectedChatId}
-              onSelectChat={setSelectedChatId}
+              selectedContactId={selectedContactId}
+              onSelectContact={handleSelectContact}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
@@ -112,10 +117,13 @@ export default function ChatDashboard() {
         ) : (
           /* Mobile Chat Conversation - Full Screen */
           <div className="w-full h-full">
-            <ChatConversation 
-              messages={mockMessages} 
-              selectedChat={selectedChat}
-              onToggleMobileMenu={() => setSelectedChatId(null)} // Back to chat list
+            <ChatConversation
+              selectedContactId={selectedContactId}
+              selectedContact={selectedContact}
+              onToggleMobileMenu={() => {
+                setSelectedContactId(null)
+                setSelectedContact(null)
+              }} // Back to chat list
               showBackButton={true}
               onToggleInfo={() => setShowInfo(!showInfo)}
               showInfo={showInfo}

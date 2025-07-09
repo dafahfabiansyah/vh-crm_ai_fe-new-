@@ -5,42 +5,48 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Filter, Plus, MoreHorizontal, Circle, CheckCircle2, CheckCheck } from "lucide-react"
+import { Search, Filter, Plus, MoreHorizontal, Circle, CheckCircle2, CheckCheck, Loader2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import type { ChatHistoryListProps } from "@/types"
+import { useContacts } from "@/hooks"
+import type { Contact } from "@/services"
+
+interface ChatHistoryListProps {
+  selectedContactId: string | null
+  onSelectContact: (contact: Contact) => void
+  searchQuery: string
+  onSearchChange: (query: string) => void
+}
 
 export default function ChatHistoryList({
-  chatSessions,
-  selectedChatId,
-  onSelectChat,
+  selectedContactId,
+  onSelectContact,
   searchQuery,
   onSearchChange,
 }: ChatHistoryListProps) {
-  const [assignedCount] = useState(1515)
-  const [unassignedCount] = useState(201)
-  const [ResolveCount] = useState(201)
+  const { contacts, loading, error, assignedCount, unassignedCount, resolvedCount } = useContacts()
   const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
 
-  const filteredSessions = chatSessions.filter((session) => {
+  const filteredContacts = contacts.filter((contact: Contact) => {
     // Filter berdasarkan search query
-    const matchesSearch = 
-      session.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-    
+    const matchesSearch =
+      contact.push_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.last_message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.contact_identifier.toLowerCase().includes(searchQuery.toLowerCase())
+
     // Filter berdasarkan tab yang aktif
     const matchesTab = (() => {
       switch (activeTab) {
         case 'assigned':
-          return session.agent !== 'Unassigned' && session.status !== 'resolved'
+          return contact.lead_status === 'assigned'
         case 'unassigned':
-          return session.agent === 'Unassigned' || session.status === 'pending'
+          return contact.lead_status === 'unassigned'
         case 'resolved':
-          return session.status === 'resolved'
+          return contact.lead_status === 'resolved'
         default:
           return true
       }
     })()
-    
+
     return matchesSearch && matchesTab
   })
 
@@ -48,12 +54,37 @@ export default function ChatHistoryList({
     switch (status) {
       case "resolved":
         return "bg-green-100 text-green-800 border-green-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "active":
+      case "assigned":
         return "bg-blue-100 text-blue-800 border-blue-200"
+      case "unassigned":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const formatTimestamp = (timestamp: string) => {
+    // Convert UTC timestamp to UTC+7 (WIB - Western Indonesia Time)
+    const date = new Date(timestamp)
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000)
+    const wibTime = new Date(utcTime + (7 * 3600000)) // UTC+7
+
+    const now = new Date()
+    const nowUtc = now.getTime() + (now.getTimezoneOffset() * 60000)
+    const nowWib = new Date(nowUtc + (7 * 3600000))
+
+    const diffInMinutes = Math.floor((nowWib.getTime() - wibTime.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) {
+      return 'Just now'
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} Menit yang lalu`
+    } else if (diffInMinutes < 1440) { // Less than 24 hours
+      const diffInHours = Math.floor(diffInMinutes / 60)
+      return `${diffInHours} Jam yang lalu`
+    } else {
+      const diffInDays = Math.floor(diffInMinutes / 1440)
+      return `${diffInDays} Hari yang lalu`
     }
   }
 
@@ -105,49 +136,43 @@ export default function ChatHistoryList({
           <div className="flex gap-1 sm:gap-2 flex-nowrap">
             <button
               onClick={() => setActiveTab('assigned')}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
-                activeTab === 'assigned' 
-                  ? 'bg-primary/10 text-primary border border-primary/20' 
-                  : 'hover:bg-accent/50 text-muted-foreground'
-              }`}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'assigned'
+                ? 'bg-primary/10 text-primary border border-primary/20'
+                : 'hover:bg-accent/50 text-muted-foreground'
+                }`}
             >
               <span>Assigned</span>
-              <Badge variant="secondary" className={`text-xs ${
-                activeTab === 'assigned' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
-              }`}>
+              <Badge variant="secondary" className={`text-xs ${activeTab === 'assigned' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+                }`}>
                 {assignedCount}
               </Badge>
             </button>
-            
+
             <button
               onClick={() => setActiveTab('unassigned')}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
-                activeTab === 'unassigned' 
-                  ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                  : 'hover:bg-accent/50 text-muted-foreground'
-              }`}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'unassigned'
+                ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                : 'hover:bg-accent/50 text-muted-foreground'
+                }`}
             >
               <span>Unassigned</span>
-              <Badge variant="secondary" className={`text-xs ${
-                activeTab === 'unassigned' ? 'bg-destructive/10 text-destructive' : 'bg-destructive text-primary-foreground'
-              }`}>
+              <Badge variant="secondary" className={`text-xs ${activeTab === 'unassigned' ? 'bg-destructive/10 text-destructive' : 'bg-destructive text-primary-foreground'
+                }`}>
                 {unassignedCount}
               </Badge>
             </button>
-            
+
             <button
               onClick={() => setActiveTab('resolved')}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${
-                activeTab === 'resolved' 
-                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
-                  : 'hover:bg-accent/50 text-muted-foreground'
-              }`}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'resolved'
+                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : 'hover:bg-accent/50 text-muted-foreground'
+                }`}
             >
               <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-              <Badge variant="secondary" className={`text-xs ${
-                activeTab === 'resolved' ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
-              }`}>
-                {ResolveCount}
+              <Badge variant="secondary" className={`text-xs ${activeTab === 'resolved' ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
+                }`}>
+                {resolvedCount}
               </Badge>
             </button>
           </div>
@@ -165,8 +190,18 @@ export default function ChatHistoryList({
             </span> conversations ({filteredSessions.length})
           </p>
         </div> */}
-        
-        {filteredSessions.length === 0 ? (
+
+        {loading ? (
+          <div className="p-8 text-center">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading contacts...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <p className="text-destructive mb-2">Error loading contacts</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        ) : filteredContacts.length === 0 ? (
           <div className="p-8 text-center capitalize">
             <p className="text-muted-foreground">tidak ada percakapan</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -174,56 +209,62 @@ export default function ChatHistoryList({
             </p>
           </div>
         ) : (
-          filteredSessions.map((session) => (
-          <div
-            key={session.id}
-            onClick={() => onSelectChat(session.id)}
-            className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${
-              selectedChatId === session.id ? "bg-accent border-l-4 border-l-primary" : ""
-            }`}
-          >
-            <div className="flex items-start gap-2 sm:gap-3">
-              <div className="relative">
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">
-                    {session.customerName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                {session.isOnline && (
-                  <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 h-2 w-2 sm:h-3 sm:w-3 bg-green-500 border-2 border-background rounded-full" />
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-medium text-foreground truncate text-sm sm:text-base">{session.customerName}</h3>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{session.timestamp}</span>
+          filteredContacts.map((contact: Contact) => (
+            <div
+              key={contact.id}
+              onClick={() => onSelectContact(contact)}
+              className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${selectedContactId === contact.id ? "bg-accent border-l-4 border-l-primary" : ""
+                }`}
+            >
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="relative">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">
+                      {contact.push_name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {contact.unread_messages > 0 && (
+                    <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 h-2 w-2 sm:h-3 sm:w-3 bg-green-500 border-2 border-background rounded-full" />
+                  )}
                 </div>
 
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mb-2">{session.lastMessage}</p>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    {session.status === "resolved" ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Circle className="h-3 w-3 text-muted-foreground" />
-                    )}
-                    <span className="text-xs text-muted-foreground truncate">{session.agent}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-medium text-foreground truncate text-sm sm:text-base">{contact.push_name}</h3>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{formatTimestamp(contact.last_message_at)}</span>
                   </div>
 
-                  <Badge variant="outline" className={`text-xs ${getStatusColor(session.status)}`}>
-                    {session.status}
-                  </Badge>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate mb-2">{contact.last_message}</p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      {contact.lead_status === "resolved" ? (
+                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      ) : contact.lead_status === "assigned" ? (
+                        <Circle className="h-3 w-3 text-blue-500" />
+                      ) : (
+                        <Circle className="h-3 w-3 text-muted-foreground" />
+                      )}
+                      <span className="text-xs text-muted-foreground truncate">{contact.contact_identifier}</span>
+                      {contact.unread_messages > 0 && (
+                        <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
+                          {contact.unread_messages}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <Badge variant="outline" className={`text-xs ${getStatusColor(contact.lead_status)}`}>
+                      {contact.lead_status}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))
+          ))
         )}
       </div>
     </div>
