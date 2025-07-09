@@ -154,6 +154,8 @@ export interface PipelineStage {
   value: number
   leads: Lead[]
   color: string
+  description?: string
+  stage_order?: number
 }
 
 // AI Agent interface
