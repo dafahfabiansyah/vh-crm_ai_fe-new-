@@ -231,24 +231,61 @@ const PipelinePage = () => {
 
         // Fetch stages dari backend
         const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+        // Fetch leads dari backend
+        const leads = await PipelineService.getLeads({ id_pipeline: pipelineId });
+        // Kelompokkan leads berdasarkan id_stage, mapping ke interface Lead
+        const leadsByStage: Record<string, any[]> = {};
+        const unassignedLeads: any[] = [];
+        leads.forEach((lead: any) => {
+          // Mapping ke interface Lead
+          const mappedLead = {
+            id: lead.id,
+            name: lead.name,
+            phone: "",
+            value: lead.potential_value || 0,
+            source: lead.moved_by || "unknown",
+            daysAgo: 0,
+            status: lead.status || "unknown",
+            email: "",
+            company: "",
+            location: "",
+            notes: lead.notes || "",
+            createdAt: lead.created_at,
+            lastActivity: lead.updated_at,
+            timeline: [],
+          };
+          if (!lead.id_stage) {
+            unassignedLeads.push(mappedLead);
+            return;
+          }
+          if (!leadsByStage[lead.id_stage]) leadsByStage[lead.id_stage] = [];
+          leadsByStage[lead.id_stage].push(mappedLead);
+        });
         // Mapping ke struktur PipelineStage
-        const mappedStages = stages.map((stage: any, idx: number) => ({
-          id: stage.id,
-          name: stage.name,
-          description: stage.description,
-          color: [
-            "bg-blue-100 text-blue-800",
-            "bg-yellow-100 text-yellow-800",
-            "bg-orange-100 text-orange-800",
-            "bg-green-100 text-green-800",
-            "bg-purple-100 text-purple-800",
-            "bg-red-100 text-red-800",
-          ][idx % 6],
-          leads: [], // Belum ada leads dari API
-          count: 0,
-          value: 0,
-          stage_order: stage.stage_order ?? idx,
-        }));
+        const mappedStages = stages.map((stage: any, idx: number) => {
+          let stageLeads = leadsByStage[stage.id] || [];
+          // Masukkan unassigned ke stage pertama
+          if (idx === 0) {
+            stageLeads = [...unassignedLeads, ...stageLeads];
+          }
+          return {
+            id: stage.id,
+            name: stage.name,
+            description: stage.description,
+            color: [
+              "bg-blue-100 text-blue-800",
+              "bg-yellow-100 text-yellow-800",
+              "bg-orange-100 text-orange-800",
+              "bg-green-100 text-green-800",
+              "bg-purple-100 text-purple-800",
+              "bg-red-100 text-red-800",
+            ][idx % 6],
+            leads: stageLeads,
+            count: stageLeads.length,
+            value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
+            stage_order: stage.stage_order ?? idx,
+          };
+        });
         setPipelineData(mappedStages);
       } catch (error: any) {
         console.error("Error fetching pipeline:", error);

@@ -233,6 +233,29 @@ export class PipelineService {
       }
     }
   }
+
+  /**
+   * Get all leads (optionally by filter)
+   */
+  static async getLeads(params?: Record<string, any>): Promise<any[]> {
+    try {
+      let url = '/v1/leads';
+      if (params) {
+        const query = new URLSearchParams(params).toString();
+        if (query) url += `?${query}`;
+      }
+      const response = await axiosInstance.get(url);
+      return response.data.items || [];
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch leads. Please try again.');
+      }
+    }
+  }
 }
 
 export default PipelineService;
