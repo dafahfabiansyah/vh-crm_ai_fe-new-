@@ -1043,40 +1043,6 @@ export default function ConnectedPlatformsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        {/* Pipelines */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">
-                            Pipelines
-                          </Label>
-                          <Select
-                            value={selectedPlatform.pipeline}
-                            onValueChange={(value) =>
-                              updateSelectedPlatform({ pipeline: value })
-                            }
-                            disabled={pipelinesLoading}
-                          >
-                            <SelectTrigger className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <GitBranch className="h-4 w-4 text-gray-600" />
-                                <SelectValue
-                                  placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
-                                />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {pipelines.map((pipeline) => (
-                                <SelectItem key={pipeline.id} value={pipeline.id}>
-                                  <div className="flex items-center gap-2">{pipeline.name}</div>
-                                </SelectItem>
-                              ))}
-                              {pipelines.length === 0 && !pipelinesLoading && (
-                                <SelectItem value="no-pipelines" disabled>
-                                  No pipelines available
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
                         {/* Human Agent */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">
@@ -1239,6 +1205,39 @@ export default function ConnectedPlatformsPage() {
                           Configure conversation flows and automation rules
                           here.
                         </p>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="pipeline" className="space-y-4 sm:space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-foreground">
+                          Pipelines
+                        </Label>
+                        <Select
+                          value={selectedPlatform.pipeline}
+                          onValueChange={(value) => updateSelectedPlatform({ pipeline: value })}
+                          disabled={pipelinesLoading}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <div className="flex items-center gap-2">
+                              <GitBranch className="h-4 w-4 text-gray-600" />
+                              <SelectValue
+                                placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
+                              />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pipelines.map((pipeline) => (
+                              <SelectItem key={pipeline.id} value={pipeline.id}>
+                                <div className="flex items-center gap-2">{pipeline.name}</div>
+                              </SelectItem>
+                            ))}
+                            {pipelines.length === 0 && !pipelinesLoading && (
+                              <SelectItem value="no-pipelines" disabled>
+                                No pipelines available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </TabsContent>
                   </Tabs>
