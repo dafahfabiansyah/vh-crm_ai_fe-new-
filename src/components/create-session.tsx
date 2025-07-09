@@ -39,7 +39,7 @@ const CreateSessionComponent = ({ onSessionCreated }: { onSessionCreated: (data:
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode className="h-5 w-5" />
-          Create WhatsApp Session
+          Create WhatsApp Platform Name
         </CardTitle>
         <CardDescription>
           Enter a session name to create a new WhatsApp connection
@@ -55,7 +55,7 @@ const CreateSessionComponent = ({ onSessionCreated }: { onSessionCreated: (data:
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="sessionName">Session Name</Label>
+            <Label htmlFor="sessionName">Platforms Inbox Name</Label>
             <Input
               id="sessionName"
               placeholder="Buat session name (e.g., Tumbuhin WhatsApp)"

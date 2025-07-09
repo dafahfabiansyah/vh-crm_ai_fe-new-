@@ -80,7 +80,7 @@ export interface DecodeTokenResponse {
 }
 
 // WhatsApp Platform interface based on API response
-export interface WhatsAppPlatform {
+export interface PlatformInbox {
   id: string;
   name: string;
   type: "whatsapp";
@@ -97,6 +97,7 @@ export interface WhatsAppPlatform {
   // Additional fields for platform configuration
   aiAgent?: string;
   teams?: string[];
+  pipeline?: string;
   humanAgent?: string;
   distributionMethod?: string;
   csatEnabled?: boolean;
