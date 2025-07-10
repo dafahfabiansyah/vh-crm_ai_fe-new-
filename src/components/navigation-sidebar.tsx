@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { NavigationItem } from "@/types";
 import { navigationItems, bottomNavigationItems } from "@/mock/data";
 import { usePipelineList } from "@/hooks/usePipeline";
+import { AuthService } from "../services/authService";
 
 interface NavigationSidebarProps {
   isMobileOpen?: boolean;
@@ -29,6 +30,8 @@ export default function NavigationSidebar({
   const [isHovered, setIsHovered] = useState(false);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Ambil role user sekali saja saat komponen mount
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Pipeline list hook
   const { pipelines, fetchPipelines } = usePipelineList();
@@ -54,6 +57,11 @@ export default function NavigationSidebar({
     fetchPipelines().catch(error => {
       console.error('Failed to fetch pipelines:', error);
     });
+  }, []);
+
+  // Ambil role user sekali saja saat komponen mount
+  useEffect(() => {
+    setUserRole(AuthService.getRoleFromToken());
   }, []);
 
   // Create enhanced navigation items with dynamic pipeline list
@@ -129,6 +137,8 @@ export default function NavigationSidebar({
                 itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
               )}
               style={paddingLeft}
+              disabled={userRole?.toLowerCase() === "manager"}
+              title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
             >
               <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
               <div
@@ -157,7 +167,7 @@ export default function NavigationSidebar({
 
     if (item.href) {
       return (
-        <Link key={item.id} to={item.href} onClick={() => setIsMobileOpen(false)}>
+        <Link key={item.id} to={item.href} onClick={userRole?.toLowerCase() === "manager" ? (e) => e.preventDefault() : () => setIsMobileOpen(false)}>
           <Button
             variant="ghost"
             className={cn(
@@ -166,6 +176,8 @@ export default function NavigationSidebar({
               itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
             )}
             style={paddingLeft}
+            disabled={userRole?.toLowerCase() === "manager"}
+            title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
           >
             <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
             <div
@@ -196,6 +208,8 @@ export default function NavigationSidebar({
             itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
           )}
           style={paddingLeft}
+          disabled={userRole?.toLowerCase() === "manager"}
+          title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
         >
           <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
           <div

@@ -48,7 +48,7 @@ import type { AIAgent, PlatformInbox } from "@/types";
 import { Toast } from "@/components/ui/toast";
 import {
   distributionMethods,
-  mockHumanAgents,
+  // mockHumanAgents,
   platformIcons,
 } from "@/mock/data";
 import { useNavigate } from "react-router";
@@ -66,7 +66,8 @@ export default function ConnectedPlatformsPage() {
   const [loading, setLoading] = useState(false);
 
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
-  const [humanAgents] = useState(mockHumanAgents);
+  // const [humanAgents] = useState(mockHumanAgents);
+  const [humanAgents] = useState([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
   const [, setAgentsError] = useState<string | null>(null);
   const [humanAgentsLoading] = useState(false);
@@ -245,7 +246,7 @@ export default function ConnectedPlatformsPage() {
     setIsSaving(true);
     try {
       // Lakukan mapping AI Agent ke Platform
-      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id, currentPlatform.id);
+      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
 
       setToast({
         show: true,
@@ -357,7 +358,7 @@ export default function ConnectedPlatformsPage() {
     toast,
     setToast,
     aiAgents,
-    humanAgents,
+    // humanAgents,
     agentsLoading,
     humanAgentsLoading,
     updateSelectedPlatform,
@@ -556,10 +557,11 @@ export default function ConnectedPlatformsPage() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
+                      {/* <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
                       <SelectItem value="Support Team">Support Team</SelectItem>
                       <SelectItem value="Sales Team">Sales Team</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
+                      <SelectItem value="Operations">Operations</SelectItem> */}
+                      <SelectItem value="Operations">Belum ada team</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -589,16 +591,19 @@ export default function ConnectedPlatformsPage() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      {humanAgents.map((agent) => (
+                      {/* {humanAgents.map((agent) => (
                         <SelectItem key={agent.id} value={agent.name}>
                           {agent.name}
                         </SelectItem>
-                      ))}
-                      {humanAgents.length === 0 && !humanAgentsLoading && (
+                      ))} */}
+                      {/* {humanAgents.length === 0 && !humanAgentsLoading && (
                         <SelectItem value="no-human-agents" disabled>
                           No human agents available
                         </SelectItem>
-                      )}
+                      )} */}
+                      <SelectItem value="no-human-agents" disabled>
+                          No human agents available
+                        </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1068,20 +1073,23 @@ export default function ConnectedPlatformsPage() {
                               </div>
                             </SelectTrigger>
                             <SelectContent>
-                              {humanAgents.map((agent) => (
+                              {/* {humanAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
                                     {agent.name}
                                   </div>
                                 </SelectItem>
-                              ))}
-                              {humanAgents.length === 0 &&
+                              ))} */}
+                              {/* {humanAgents.length === 0 &&
                                 !humanAgentsLoading && (
                                   <SelectItem value="no-human-agents" disabled>
                                     No human agents available (Count:{" "}
                                     {humanAgents.length})
                                   </SelectItem>
-                                )}
+                                )} */}
+                                <SelectItem value="no-human-agents" disabled>
+                                    Belum ada human agent
+                                  </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1127,7 +1135,7 @@ export default function ConnectedPlatformsPage() {
                               </div>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
+                              {/* <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
                               <SelectItem value="Support Team">
                                 Support Team
                               </SelectItem>
@@ -1136,7 +1144,8 @@ export default function ConnectedPlatformsPage() {
                               </SelectItem>
                               <SelectItem value="Operations">
                                 Operations
-                              </SelectItem>
+                              </SelectItem> */}
+                              <SelectItem value="Belum ada team">Belum ada team</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

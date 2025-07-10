@@ -25,7 +25,7 @@ import {
   Plus,
   TrendingUp,
   Calendar,
-  CreditCard,
+ 
   FileText,
   Clock,
 } from "lucide-react";
@@ -89,69 +89,69 @@ export default function BillingPage() {
   // Mock data for dashboard cards
   const dashboardData = {
     packageDetails: {
-      plan: "BUSINESS Plan",
-      renewal: "Renewalt Automatically on 19 July 2025",
+      plan: "-",
+      renewal: "-",
       status: "active",
     },
     monthlyUsers: {
-      current: 1420,
-      limit: 10000,
+      current: 0,
+      limit: 0,
       additional: 0,
     },
     aiResponses: {
-      used: 8168,
-      limit: 25000,
+      used: 0,
+      limit: 0,
       resetDate: "Reset Setup Tanggal 1",
     },
     additionalResponses: {
-      count: -3,
+      count: 0,
       permanent: true,
     },
   };
 
   // Mock transaction data
-  const transactions = [
-    {
-      id: 1,
-      date: "2025-07-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "paid",
-      type: "subscription",
-    },
-    {
-      id: 2,
-      date: "2025-06-15",
-      description: "Additional AI Responses - Top Up",
-      amount: "IDR 500,000",
-      status: "paid",
-      type: "topup",
-    },
-    {
-      id: 3,
-      date: "2025-06-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "paid",
-      type: "subscription",
-    },
-    {
-      id: 4,
-      date: "2025-05-20",
-      description: "Additional MAU - Top Up",
-      amount: "IDR 750,000",
-      status: "paid",
-      type: "topup",
-    },
-    {
-      id: 5,
-      date: "2025-05-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "pending",
-      type: "subscription",
-    },
-  ];
+  // const transactions = [
+  //   {
+  //     id: 1,
+  //     date: "2025-07-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "paid",
+  //     type: "subscription",
+  //   },
+  //   {
+  //     id: 2,
+  //     date: "2025-06-15",
+  //     description: "Additional AI Responses - Top Up",
+  //     amount: "IDR 500,000",
+  //     status: "paid",
+  //     type: "topup",
+  //   },
+  //   {
+  //     id: 3,
+  //     date: "2025-06-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "paid",
+  //     type: "subscription",
+  //   },
+  //   {
+  //     id: 4,
+  //     date: "2025-05-20",
+  //     description: "Additional MAU - Top Up",
+  //     amount: "IDR 750,000",
+  //     status: "paid",
+  //     type: "topup",
+  //   },
+  //   {
+  //     id: 5,
+  //     date: "2025-05-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "pending",
+  //     type: "subscription",
+  //   },
+  // ];
 
   const periods = [
     { id: "monthly", label: "Monthly", discount: null },
@@ -503,7 +503,10 @@ export default function BillingPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3 sm:space-y-4">
-                {transactions.map((transaction) => (
+                <div className="text-center text-muted-foreground">
+                  Belum ada transaksi
+                </div>
+                {/* {transactions.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
@@ -556,7 +559,7 @@ export default function BillingPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                ))} */}
               </div>
             </CardContent>
           </Card>
