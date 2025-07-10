@@ -4,12 +4,12 @@ import type { AuthState, RegisterRequest, LoginRequest, ApiError } from '../type
 
 // Initial state - Initialize from cookies
 const initialState: AuthState = {
-  user: AuthService.getStoredUser(),
-  token: AuthService.getStoredToken(),
+  user: null,
+  token: null,
   isLoading: false,
   error: null,
-  isAuthenticated: AuthService.isAuthenticated(),
-  isInitialized: false,
+  isAuthenticated: false,
+  isInitialized: false, // Will be set to true after syncWithCookies
 };
 
 // Async thunks
@@ -74,10 +74,22 @@ const authSlice = createSlice({
       const token = AuthService.getStoredToken();
       const isAuthenticated = AuthService.isAuthenticated();
       
+      console.log('🔄 Syncing with cookies:', { user: !!user, token: !!token, isAuthenticated });
+      
       state.user = user;
       state.token = token;
       state.isAuthenticated = isAuthenticated;
       state.isInitialized = true;
+      
+      // If cookies are missing but Redux thinks user is authenticated, force logout
+      if (!isAuthenticated && (state.user || state.token)) {
+        console.warn('⚠️ Cookie data missing, forcing logout');
+        AuthService.logout();
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        // state.error = 'Session expired';
+      }
     },
   },
   extraReducers: (builder) => {

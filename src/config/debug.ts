@@ -7,10 +7,10 @@
 
 export const DEBUG_CONFIG = {
   // Mode debugging untuk route protection
-  DISABLE_AUTH_PROTECTION: true,
+  DISABLE_AUTH_PROTECTION: false, // Set to false to enable auth protection
   
   // Mode debugging untuk axios interceptor
-  DISABLE_AUTO_LOGOUT: true,
+  DISABLE_AUTO_LOGOUT: false, // Set to false to enable auto logout
   
   // Log level debugging
   VERBOSE_LOGGING: true,

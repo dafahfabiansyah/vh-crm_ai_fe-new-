@@ -15,86 +15,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Edit, Trash2, RefreshCw } from "lucide-react";
 import CreateHumanAgentModal from "@/components/create-human-agent-modal";
 import EditHumanAgentModal from "@/components/edit-human-agent-modal";
+import { HumanAgentsService } from "@/services/humanAgentsService";
+import React from "react";
 
-// Mock data untuk human agents
-const mockHumanAgents = [
-  {
-    id: "1",
-    name: "Admin System",
-    user_email: "admin@company.com",
-    role: "superadmin",
-    department: "IT",
-    is_active: true,
-    created_at: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    user_email: "sarah.j@company.com",
-    role: "human-agent",
-    department: "Customer Service",
-    is_active: true,
-    created_at: "2024-02-20T14:45:00Z",
-  },
-  {
-    id: "3",
-    name: "Michael Chen",
-    user_email: "michael.c@company.com",
-    role: "manager",
-    department: "Sales",
-    is_active: true,
-    created_at: "2024-01-10T09:15:00Z",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    user_email: "emily.d@company.com",
-    role: "human-agent",
-    department: "Support",
-    is_active: false,
-    created_at: "2024-03-05T16:20:00Z",
-  },
-  {
-    id: "5",
-    name: "David Wilson",
-    user_email: "david.w@company.com",
-    role: "human-agent",
-    department: "Customer Service",
-    is_active: true,
-    created_at: "2024-02-28T11:00:00Z",
-  },
-  {
-    id: "6",
-    name: "Lisa Thompson",
-    user_email: "lisa.t@company.com",
-    role: "manager",
-    department: "Marketing",
-    is_active: true,
-    created_at: "2024-01-25T13:30:00Z",
-  },
-];
-
+// Hapus mock data untuk human agents
 export default function HumanAgentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
-  const [humanAgents, setHumanAgents] = useState(mockHumanAgents);
+  const [humanAgents, setHumanAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all-roles"); // Mock refresh function
+  const [roleFilter, setRoleFilter] = useState("all-roles");
+  const [, setError] = useState<string | null>(null);
+
+  // Fetch agents from API
   const fetchHumanAgents = async () => {
     setLoading(true);
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setLoading(false);
-    console.log("Refreshed human agents (mock data)");
+    setError(null);
+    try {
+      const agents = await HumanAgentsService.getHumanAgents();
+      setHumanAgents(agents);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch agents");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Fetch on mount
+  React.useEffect(() => {
+    fetchHumanAgents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mock delete function
   const handleDeleteAgent = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this agent?")) {
-      setHumanAgents((prev) => prev.filter((agent) => agent.id !== id));
-      console.log("Agent deleted successfully (mock)");
+      setLoading(true);
+      setError(null);
+      try {
+        await HumanAgentsService.deleteHumanAgent(id);
+        await fetchHumanAgents();
+        // Optional: tampilkan notifikasi sukses
+        // alert("Agent deleted successfully!");
+      } catch (err: any) {
+        setError(err.message || "Failed to delete agent");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

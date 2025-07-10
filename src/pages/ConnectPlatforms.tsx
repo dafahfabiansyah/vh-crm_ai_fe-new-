@@ -41,37 +41,44 @@ import {
   Globe,
   X,
   ArrowLeft,
+  GitBranch,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
-import type { AIAgent, WhatsAppPlatform } from "@/types";
+import type { AIAgent, PlatformInbox } from "@/types";
 import { Toast } from "@/components/ui/toast";
 import {
   distributionMethods,
-  mockAIAgents,
   mockHumanAgents,
-  mockWhatsAppPlatform,
   platformIcons,
 } from "@/mock/data";
 import { useNavigate } from "react-router";
+import { platformsInboxService } from "@/services/platfrormsInboxService";
+import { AgentsService } from "@/services/agentsService";
+import PipelineService from "@/services/pipelineService";
+import type { PipelineListResponse } from "@/services/pipelineService";
 
 export default function ConnectedPlatformsPage() {
   const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] =
-    useState<WhatsAppPlatform | null>(null);
+    useState<PlatformInbox | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [whatsappPlatforms, setWhatsappPlatforms] = useState<
-    WhatsAppPlatform[]
-  >([mockWhatsAppPlatform]);
+  const [PlatformInboxs, setPlatformInboxs] = useState<PlatformInbox[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [aiAgents] = useState<AIAgent[]>(mockAIAgents);
+  const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   const [humanAgents] = useState(mockHumanAgents);
-  const [agentsLoading] = useState(false);
+  const [agentsLoading, setAgentsLoading] = useState(false);
+  const [, setAgentsError] = useState<string | null>(null);
   const [humanAgentsLoading] = useState(false);
+
+  const [pipelines, setPipelines] = useState<PipelineListResponse[]>([]);
+  const [pipelinesLoading , setPipelinesLoading] = useState(false);
+  const [, setPipelinesError] = useState<string | null>(null);
 
   // Mobile detail view state
   const [showMobileDetail, setShowMobileDetail] = useState(false);
-  const [mobileSelectedPlatform, setMobileSelectedPlatform] = useState<WhatsAppPlatform | null>(null);
+  const [mobileSelectedPlatform, setMobileSelectedPlatform] =
+    useState<PlatformInbox | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if screen is mobile
@@ -79,8 +86,8 @@ export default function ConnectedPlatformsPage() {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024; // lg breakpoint
       setIsMobile(mobile);
-      
-      // If switching from mobile to desktop while in mobile detail view, 
+
+      // If switching from mobile to desktop while in mobile detail view,
       // transfer the selected platform to desktop view
       if (!mobile && showMobileDetail && mobileSelectedPlatform) {
         setSelectedPlatform(mobileSelectedPlatform);
@@ -90,10 +97,66 @@ export default function ConnectedPlatformsPage() {
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, [showMobileDetail, mobileSelectedPlatform]);
+
+  // Fetch platforms from API
+  useEffect(() => {
+    setLoading(true);
+    platformsInboxService
+      .getPlatformInbox()
+      .then((data) => {
+        // Map API response to PlatformInbox[]
+        const mapped = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.platform_name,
+          type: "whatsapp",
+          phone: item.platform_identifier,
+          description: item.source_type,
+          isActive: item.is_connected,
+          deviceId: item.id,
+          deviceName: item.platform_name,
+          status: item.is_connected ? "Connected" : "Disconnected",
+          sessionId: item.id_pipeline || "",
+          timestamp: item.updated_at,
+          isConnected: item.is_connected,
+          isLoggedIn: item.is_connected,
+        }));
+        setPlatformInboxs(mapped);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch platforms from API:", err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Fetch AI agents from API
+  useEffect(() => {
+    setAgentsLoading(true);
+    setAgentsError(null);
+    AgentsService.getAgents()
+      .then((data) => setAiAgents(data))
+      .catch((err) => {
+        setAgentsError(err.message || "Failed to fetch AI agents");
+        setAiAgents([]);
+      })
+      .finally(() => setAgentsLoading(false));
+  }, []);
+
+  // Fetch pipelines from API
+  useEffect(() => {
+    setPipelinesLoading(true);
+    setPipelinesError(null);
+    PipelineService.getPipelines()
+      .then((data) => setPipelines(data))
+      .catch((err) => {
+        setPipelinesError(err.message || "Failed to fetch pipelines");
+        setPipelines([]);
+      })
+      .finally(() => setPipelinesLoading(false));
+  }, []);
 
   // Toast notification state
   const [toast, setToast] = useState<{
@@ -109,7 +172,7 @@ export default function ConnectedPlatformsPage() {
   // Add Platform Modal state
   const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
 
-  const filteredPlatforms = whatsappPlatforms.filter((platform) =>
+  const filteredPlatforms = PlatformInboxs.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -129,7 +192,9 @@ export default function ConnectedPlatformsPage() {
   };
 
   const handleSave = async () => {
-    const currentPlatform = showMobileDetail ? mobileSelectedPlatform : selectedPlatform;
+    const currentPlatform = showMobileDetail
+      ? mobileSelectedPlatform
+      : selectedPlatform;
     if (!currentPlatform) return;
 
     // Validate required fields
@@ -179,51 +244,65 @@ export default function ConnectedPlatformsPage() {
 
     setIsSaving(true);
     try {
-      // Simulate API call with mock data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Lakukan mapping AI Agent ke Platform
+      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id, currentPlatform.id);
 
       setToast({
         show: true,
         type: "success",
         title: "Mapping Saved Successfully",
-        description: `WhatsApp platform ${currentPlatform.name} has been configured successfully.`,
+        description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name} .`,
       });
 
-      // Update the platform in the list
-      setWhatsappPlatforms((prev) =>
+      // Update the platform in the list (simulasi saja, update sesuai kebutuhan)
+      setPlatformInboxs((prev) =>
         prev.map((p) => (p.id === currentPlatform.id ? currentPlatform : p))
       );
-    } catch (error) {
-      console.error("Error saving platform configuration:", error);
+    } catch (error: any) {
       setToast({
         show: true,
         type: "error",
-        title: "Save Failed",
-        description: "Failed to save platform configuration. Please try again.",
+        title: "Mapping Failed",
+        description: error.message || "Failed to map AI Agent to platform.",
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedPlatform) return;
-
-    setWhatsappPlatforms((prev) =>
-      prev.filter((p) => p.id !== selectedPlatform.id)
-    );
-    const remainingPlatforms = whatsappPlatforms.filter(
-      (p) => p.id !== selectedPlatform.id
-    );
-    if (remainingPlatforms.length > 0) {
-      setSelectedPlatform(remainingPlatforms[0]);
-    } else {
-      setSelectedPlatform(null);
+    try {
+      await platformsInboxService.deletePlatformInbox(selectedPlatform.id);
+      setPlatformInboxs((prev) =>
+        prev.filter((p) => p.id !== selectedPlatform.id)
+      );
+      const remainingPlatforms = PlatformInboxs.filter(
+        (p) => p.id !== selectedPlatform.id
+      );
+      if (remainingPlatforms.length > 0) {
+        setSelectedPlatform(remainingPlatforms[0]);
+      } else {
+        setSelectedPlatform(null);
+      }
+      setToast({
+        show: true,
+        type: "success",
+        title: "Platform Deleted",
+        description: `Platform ${selectedPlatform.name} berhasil dihapus.`,
+      });
+    } catch (err: any) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Delete Failed",
+        description: err.message || "Gagal menghapus platform.",
+      });
     }
   };
 
   // Handle platform click - different behavior for mobile vs desktop
-  const handlePlatformClick = (platform: WhatsAppPlatform) => {
+  const handlePlatformClick = (platform: PlatformInbox) => {
     if (isMobile) {
       // On mobile, navigate to detail view
       setMobileSelectedPlatform(platform);
@@ -240,7 +319,7 @@ export default function ConnectedPlatformsPage() {
     setMobileSelectedPlatform(null);
   };
 
-  const updateSelectedPlatform = (updates: Partial<WhatsAppPlatform>) => {
+  const updateSelectedPlatform = (updates: Partial<PlatformInbox>) => {
     if (showMobileDetail && mobileSelectedPlatform) {
       // Update mobile selected platform
       const updatedPlatform = { ...mobileSelectedPlatform, ...updates };
@@ -248,15 +327,17 @@ export default function ConnectedPlatformsPage() {
     } else if (selectedPlatform) {
       // Update desktop selected platform
       setSelectedPlatform((prev) =>
-        prev ? ({ ...prev, ...updates } as WhatsAppPlatform) : null
+        prev ? ({ ...prev, ...updates } as PlatformInbox) : null
       );
     }
   };
 
   const removeTeam = (teamToRemove: string) => {
-    const currentPlatform = showMobileDetail ? mobileSelectedPlatform : selectedPlatform;
+    const currentPlatform = showMobileDetail
+      ? mobileSelectedPlatform
+      : selectedPlatform;
     if (!currentPlatform || !currentPlatform.teams) return;
-    
+
     updateSelectedPlatform({
       teams: currentPlatform.teams.filter((team) => team !== teamToRemove),
     });
@@ -267,22 +348,22 @@ export default function ConnectedPlatformsPage() {
     : MessageSquare;
 
   // Mobile Platform Detail Component
-  const MobilePlatformDetail = ({ 
-    platform, 
-    onBack, 
-    onSave, 
-    onDelete, 
-    isSaving, 
-    toast, 
+  const MobilePlatformDetail = ({
+    platform,
+    onBack,
+    onSave,
+    onDelete,
+    isSaving,
+    toast,
     setToast,
     aiAgents,
     humanAgents,
     agentsLoading,
     humanAgentsLoading,
     updateSelectedPlatform,
-    removeTeam
+    removeTeam,
   }: {
-    platform: WhatsAppPlatform;
+    platform: PlatformInbox;
     onBack: () => void;
     onSave: () => void;
     onDelete: () => void;
@@ -293,11 +374,11 @@ export default function ConnectedPlatformsPage() {
     humanAgents: any[];
     agentsLoading: boolean;
     humanAgentsLoading: boolean;
-    updateSelectedPlatform: (updates: Partial<WhatsAppPlatform>) => void;
+    updateSelectedPlatform: (updates: Partial<PlatformInbox>) => void;
     removeTeam: (team: string) => void;
   }) => {
     const MobilePlatformIcon = platformIcons[platform.type] || MessageSquare;
-    
+
     return (
       <div className="flex flex-col h-full bg-background">
         {/* Mobile Header */}
@@ -374,8 +455,12 @@ export default function ConnectedPlatformsPage() {
         <div className="flex-1 overflow-y-auto p-4">
           <Tabs defaultValue="basic" className="space-y-4">
             <TabsList className="w-full">
-              <TabsTrigger value="basic" className="text-sm flex-1">Basic</TabsTrigger>
-              <TabsTrigger value="flow" className="text-sm flex-1">Flow</TabsTrigger>
+              <TabsTrigger value="basic" className="text-sm flex-1">
+                Basic
+              </TabsTrigger>
+              <TabsTrigger value="flow" className="text-sm flex-1">
+                Flow
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="basic" className="space-y-4">
               <div className="space-y-4">
@@ -391,7 +476,7 @@ export default function ConnectedPlatformsPage() {
                     placeholder="No phone number available"
                   />
                 </div>
-                
+
                 {/* AI Agent */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-foreground">
@@ -588,7 +673,7 @@ export default function ConnectedPlatformsPage() {
       {/* Mobile Detail View */}
       {showMobileDetail && mobileSelectedPlatform && (
         <div className="lg:hidden">
-          <MobilePlatformDetail 
+          <MobilePlatformDetail
             platform={mobileSelectedPlatform}
             onBack={handleBackToList}
             onSave={handleSave}
@@ -607,7 +692,11 @@ export default function ConnectedPlatformsPage() {
       )}
 
       {/* Desktop/Mobile List View */}
-      <div className={`${showMobileDetail ? 'hidden lg:flex' : 'flex'} flex-col lg:flex-row h-full bg-background`}>
+      <div
+        className={`${
+          showMobileDetail ? "hidden lg:flex" : "flex"
+        } flex-col lg:flex-row h-full bg-background`}
+      >
         {/* Left Sidebar - Platforms List */}
         <div className="w-full lg:w-96 border-b lg:border-b-0 lg:border-r border-border bg-card">
           <div className="p-3 sm:p-4 border-b border-border">
@@ -629,7 +718,9 @@ export default function ConnectedPlatformsPage() {
                   disabled={loading}
                 >
                   <RefreshCw
-                    className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}`}
+                    className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                      loading ? "animate-spin" : ""
+                    }`}
                   />
                 </Button>
                 <Button
@@ -676,13 +767,13 @@ export default function ConnectedPlatformsPage() {
                       Klik tombol + untuk menambahkan platform baru
                     </p>
                     {/* Debug Info */}
-                    <div className="text-left bg-gray-50 p-3 rounded text-xs font-mono mb-4">
-                      <div>Platforms count: {whatsappPlatforms.length}</div>
+                    {/* <div className="text-left bg-gray-50 p-3 rounded text-xs font-mono mb-4">
+                      <div>Platforms count: {PlatformInboxs.length}</div>
                       <div>Selected: {selectedPlatform?.name || "None"}</div>
                       <div>Loading: {loading ? "true" : "false"}</div>
-                    </div>
+                    </div> */}
                     {/* Debug Button */}
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {/* <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -700,7 +791,7 @@ export default function ConnectedPlatformsPage() {
                       >
                         Reload Page
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -777,7 +868,9 @@ export default function ConnectedPlatformsPage() {
                             className="text-xs bg-gray-50 text-gray-700 border-gray-200 flex-shrink-0"
                           >
                             <Users className="h-3 w-3 mr-1" />
-                            <span className="truncate max-w-16 sm:max-w-none">{platform.teams?.[0] || "No Team"}</span>
+                            <span className="truncate max-w-16 sm:max-w-none">
+                              {platform.teams?.[0] || "No Team"}
+                            </span>
                           </Badge>
                           {platform.aiAgent && (
                             <Badge
@@ -785,7 +878,9 @@ export default function ConnectedPlatformsPage() {
                               className="text-xs bg-blue-50 text-blue-700 border-blue-200 flex-shrink-0"
                             >
                               <Bot className="h-3 w-3 mr-1" />
-                              <span className="truncate max-w-16 sm:max-w-none">{platform.aiAgent.split(" ")[0]} AI</span>
+                              <span className="truncate max-w-16 sm:max-w-none">
+                                {platform.aiAgent.split(" ")[0]} AI
+                              </span>
                             </Badge>
                           )}
                         </div>
@@ -825,7 +920,9 @@ export default function ConnectedPlatformsPage() {
                       {selectedPlatform.phone && (
                         <p className="text-muted-foreground flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="truncate">{selectedPlatform.phone}</span>
+                          <span className="truncate">
+                            {selectedPlatform.phone}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -867,11 +964,30 @@ export default function ConnectedPlatformsPage() {
               <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                 <div className="w-full">
                   <Tabs defaultValue="basic" className="space-y-4 sm:space-y-6">
-                    <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:grid-cols-none">
-                      <TabsTrigger value="basic" className="text-sm">Basic</TabsTrigger>
-                      <TabsTrigger value="flow" className="text-sm">Flow</TabsTrigger>
+                    <TabsList className="w-full flex flex-row  rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                      <TabsTrigger
+                        value="basic"
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-l-lg "
+                      >
+                        Basic
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="flow"
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg "
+                      >
+                        Flow
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="pipeline"
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg "
+                      >
+                        Pipeline
+                      </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="basic" className="space-y-4 sm:space-y-6">
+                    <TabsContent
+                      value="basic"
+                      className="space-y-4 sm:space-y-6"
+                    >
                       {/* Responsive Grid Layout */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                         {/* WhatsApp Number Field */}
@@ -927,59 +1043,6 @@ export default function ConnectedPlatformsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        {/* Teams */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">
-                            Teams
-                          </Label>
-                          <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
-                            {selectedPlatform.teams?.map((team) => (
-                              <Badge
-                                key={team}
-                                variant="secondary"
-                                className="flex items-center gap-1 text-xs"
-                              >
-                                <Users className="h-3 w-3" />
-                                <span className="truncate max-w-20 sm:max-w-none">{team}</span>
-                                <button
-                                  onClick={() => removeTeam(team)}
-                                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            ))}
-                          </div>
-                          <Select
-                            onValueChange={(value) => {
-                              const currentTeams = selectedPlatform.teams || [];
-                              if (!currentTeams.includes(value)) {
-                                updateSelectedPlatform({
-                                  teams: [...currentTeams, value],
-                                });
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-gray-600" />
-                                <SelectValue placeholder="Add team..." />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
-                              <SelectItem value="Support Team">
-                                Support Team
-                              </SelectItem>
-                              <SelectItem value="Sales Team">
-                                Sales Team
-                              </SelectItem>
-                              <SelectItem value="Operations">
-                                Operations
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
                         {/* Human Agent */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">
@@ -1022,6 +1085,62 @@ export default function ConnectedPlatformsPage() {
                             </SelectContent>
                           </Select>
                         </div>
+                        {/* Teams */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground">
+                            Teams
+                          </Label>
+                          <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
+                            {selectedPlatform.teams?.map((team) => (
+                              <Badge
+                                key={team}
+                                variant="secondary"
+                                className="flex items-center gap-1 text-xs"
+                              >
+                                <Users className="h-3 w-3" />
+                                <span className="truncate max-w-20 sm:max-w-none">
+                                  {team}
+                                </span>
+                                <button
+                                  onClick={() => removeTeam(team)}
+                                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                          <Select
+                            onValueChange={(value) => {
+                              const currentTeams = selectedPlatform.teams || [];
+                              if (!currentTeams.includes(value)) {
+                                updateSelectedPlatform({
+                                  teams: [...currentTeams, value],
+                                });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-gray-600" />
+                                <SelectValue placeholder="Add team..." />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
+                              <SelectItem value="Support Team">
+                                Support Team
+                              </SelectItem>
+                              <SelectItem value="Sales Team">
+                                Sales Team
+                              </SelectItem>
+                              <SelectItem value="Operations">
+                                Operations
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         {/* Chat Distribution Method */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">
@@ -1073,7 +1192,10 @@ export default function ConnectedPlatformsPage() {
                         </div>
                       </div>
                     </TabsContent>
-                    <TabsContent value="flow" className="space-y-4 sm:space-y-6">
+                    <TabsContent
+                      value="flow"
+                      className="space-y-4 sm:space-y-6"
+                    >
                       <div className="text-center py-8 sm:py-12">
                         <Settings className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
@@ -1083,6 +1205,39 @@ export default function ConnectedPlatformsPage() {
                           Configure conversation flows and automation rules
                           here.
                         </p>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="pipeline" className="space-y-4 sm:space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-foreground">
+                          Pipelines
+                        </Label>
+                        <Select
+                          value={selectedPlatform.pipeline}
+                          onValueChange={(value) => updateSelectedPlatform({ pipeline: value })}
+                          disabled={pipelinesLoading}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <div className="flex items-center gap-2">
+                              <GitBranch className="h-4 w-4 text-gray-600" />
+                              <SelectValue
+                                placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
+                              />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pipelines.map((pipeline) => (
+                              <SelectItem key={pipeline.id} value={pipeline.id}>
+                                <div className="flex items-center gap-2">{pipeline.name}</div>
+                              </SelectItem>
+                            ))}
+                            {pipelines.length === 0 && !pipelinesLoading && (
+                              <SelectItem value="no-pipelines" disabled>
+                                No pipelines available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -1159,7 +1314,9 @@ export default function ConnectedPlatformsPage() {
                   <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
                 </div>
                 <div className="text-left flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">Instagram</h3>
+                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
+                    Instagram
+                  </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     Connect your Instagram business account
                   </p>
@@ -1178,7 +1335,9 @@ export default function ConnectedPlatformsPage() {
                   <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
                 <div className="text-left flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">Web Chat</h3>
+                  <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
+                    Web Chat
+                  </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     Add live chat widget to your website
                   </p>

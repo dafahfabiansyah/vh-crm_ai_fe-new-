@@ -1,3 +1,5 @@
+import type { CategoryAttribute } from "@/services/productService";
+
 // API Request types
 export interface RegisterRequest {
   email: string;
@@ -78,7 +80,7 @@ export interface DecodeTokenResponse {
 }
 
 // WhatsApp Platform interface based on API response
-export interface WhatsAppPlatform {
+export interface PlatformInbox {
   id: string;
   name: string;
   type: "whatsapp";
@@ -95,6 +97,7 @@ export interface WhatsAppPlatform {
   // Additional fields for platform configuration
   aiAgent?: string;
   teams?: string[];
+  pipeline?: string;
   humanAgent?: string;
   distributionMethod?: string;
   csatEnabled?: boolean;
@@ -144,8 +147,6 @@ export interface Lead {
   timeline: TimelineEvent[]
 }
 
-
-
 export interface PipelineStage {
   id: string
   name: string
@@ -153,4 +154,79 @@ export interface PipelineStage {
   value: number
   leads: Lead[]
   color: string
+  description?: string
+  stage_order?: number
+}
+
+// AI Agent interface
+export interface AIAgentData {
+  // Basic agent info
+  id: string;
+  name: string;
+  description: string;
+  id_settings: string;
+  created_at: string;
+  updated_at: string;
+  // Settings data
+  behaviour: string;
+  welcomeMessage: string;
+  transferConditions: string;
+  model: string;
+  aiHistoryLimit: number;
+  aiContextLimit: number;
+  messageAwait: number;
+  aiMessageLimit: number;
+  // UI state
+  isActive: boolean;
+  stopAIAfterHandoff: boolean;
+  timezone: string;
+  selectedLabels: string[];
+}
+
+export interface AIAgentDetailPageProps {
+  agentId?: string;
+}
+
+// product page interface
+export interface Product {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  stock: number;
+  colors: string[];
+  material: string;
+  image: string;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductFormData {
+  code: string;
+  name: string;
+  description: string;
+  price: string;
+  weight: string;
+  stock: string;
+  colors: string;
+  material: string;
+  image: string;
+  category: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description: string;
+  attributes: CategoryAttribute[];
 }

@@ -10,9 +10,12 @@ export interface KnowledgeContent {
     title?: string;
   };
   product?: {
-    name: string;
-    category: string;
-    description: string;
+    // For new product knowledge, only product_id is required
+    product_id: string;
+    // For backward compatibility, allow name/category/description (optional)
+    name?: string;
+    category?: string;
+    description?: string;
   };
   file?: {
     filename: string;
@@ -135,17 +138,15 @@ export class KnowledgeService {
   /**
    * Create product knowledge
    */
-  static async createProductKnowledge(agentId: string, name: string, category: string, description: string): Promise<KnowledgeResponse> {
+  static async createProductKnowledge(agentId: string, name: string, description: string, product_id: string): Promise<KnowledgeResponse> {
     return this.createKnowledge(agentId, {
       name,
-      description: `Product Knowledge Base - ${name}`,
+      description,
       status: true,
       content: {
         type: 'Product',
         product: {
-          name,
-          category,
-          description,
+          product_id,
         },
       },
     });

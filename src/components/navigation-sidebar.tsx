@@ -8,10 +8,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight, ChevronDown, TreePine, X } from "lucide-react";
+import { ChevronRight, ChevronDown, TreePine, X, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavigationItem } from "@/types";
 import { navigationItems, bottomNavigationItems } from "@/mock/data";
+import { usePipelineList } from "@/hooks/usePipeline";
 
 interface NavigationSidebarProps {
   isMobileOpen?: boolean;
@@ -29,6 +30,9 @@ export default function NavigationSidebar({
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Pipeline list hook
+  const { pipelines, fetchPipelines } = usePipelineList();
+
   // Use external mobile state if provided, otherwise use internal state
   const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen;
   const setIsMobileOpen = externalSetMobileOpen || setInternalMobileOpen;
@@ -44,6 +48,41 @@ export default function NavigationSidebar({
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Fetch pipelines when component mounts
+  useEffect(() => {
+    fetchPipelines().catch(error => {
+      console.error('Failed to fetch pipelines:', error);
+    });
+  }, []);
+
+  // Create enhanced navigation items with dynamic pipeline list
+  const enhancedNavigationItems = navigationItems.map(item => {
+    if (item.id === "pipeline") {
+      // Add pipeline list to the pipeline item
+      const pipelineChildren = [
+        {
+          id: "create-pipeline",
+          label: "Create Pipeline",
+          icon: item.children?.[0]?.icon || GitBranch,
+          href: "/pipeline/create",
+        },
+        // Add pipelines from API
+        ...pipelines.map(pipeline => ({
+          id: `pipeline-${pipeline.id}`,
+          label: pipeline.name,
+          icon: GitBranch,
+          href: `/pipeline?id=${pipeline.id}`,
+        }))
+      ];
+
+      return {
+        ...item,
+        children: pipelineChildren
+      };
+    }
+    return item;
+  });
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems((prev) =>
@@ -82,7 +121,7 @@ export default function NavigationSidebar({
           onOpenChange={() => shouldShowExpanded && toggleExpanded(item.id)}
         >
           <CollapsibleTrigger asChild>
-            <Button
+          <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
@@ -226,7 +265,7 @@ export default function NavigationSidebar({
             {/* Main Navigation */}
             <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
               <nav className="space-y-1 px-2">
-                {navigationItems.map((item) => renderNavigationItem(item))}
+                {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
               </nav>
             </div>
 
@@ -252,7 +291,7 @@ export default function NavigationSidebar({
             {/* Main Navigation - collapsed (icons only) */}
             <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
               <nav className="space-y-1 px-2">
-                {navigationItems.map((item) => (
+                {enhancedNavigationItems.map((item) => (
                   <div key={item.id}>
                     {item.href ? (
                       <Link to={item.href}>
@@ -350,7 +389,7 @@ export default function NavigationSidebar({
           {/* Main Navigation */}
           <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
             <nav className="space-y-1 px-2">
-              {navigationItems.map((item) => renderNavigationItem(item))}
+              {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
             </nav>
           </div>
 

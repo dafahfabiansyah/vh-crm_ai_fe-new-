@@ -1,5 +1,5 @@
-import axiosInstance from './axios';
-import type { ApiSuccessResponse } from '../types/interface';
+import axiosInstance from "./axios";
+import type { ApiSuccessResponse } from "../types/interface";
 
 export interface HumanAgent {
   id: string;
@@ -32,44 +32,34 @@ export interface UpdateHumanAgentRequest {
 export class HumanAgentsService {
   /**
    * Get all human agents
-   */  static async getHumanAgents(): Promise<HumanAgent[]> {
+   */
+  static async getHumanAgents(): Promise<HumanAgent[]> {
     try {
-      const response = await axiosInstance.get('/tenant/human-agents');
-      
-      console.log('API Response:', response.data); // Debug log
-      
-      // Handle different response structures
-      let rawData;
-      if (response.data.data) {
-        rawData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        rawData = response.data;
-      } else {
-        rawData = [];
-      }
-        // Transform the data to match our interface
-      const transformedData: HumanAgent[] = Array.isArray(rawData) ? rawData.map((item: any) => ({
-        id: item.id || item.user_id || String(Date.now()),
-        name: item.name || item.username || 'Unknown',
-        user_email: item.user_email || item.email || '',
-        role: typeof item.role === 'object' ? (item.role?.name || 'agent') : (item.role || 'agent'),
-        department: typeof item.department === 'object' ? (item.department?.name || 'general') : (item.department || 'general'),
-        is_active: item.is_active !== undefined ? item.is_active : true,
-      })) : [];
-      
+      const response = await axiosInstance.get("/v1/agents?offset=0&limit=10");
+      // Response: { items: [...] }
+      const items = response.data.items || [];
+      const transformedData: HumanAgent[] = items.map((item: any) => ({
+        id: item.id,
+        name: item.name || "-", // fallback jika tidak ada
+        user_email: item.user_email || "-", // fallback jika tidak ada
+        role: item.role || item.agent_type || "agent", // fallback ke agent_type jika role tidak ada
+        department: item.department || "-",
+        is_active: item.is_active,
+        status: undefined, // tidak ada di response
+      }));
       return transformedData;
     } catch (error: any) {
-      console.error('Error fetching human agents:', error);
-      // Handle and format error response
+      console.error("Error fetching human agents:", error);
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch human agents',
+          message:
+            error.response.data.message || "Failed to fetch human agents",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -77,20 +67,43 @@ export class HumanAgentsService {
 
   /**
    * Create a new human agent
-   */  static async createHumanAgent(agentData: CreateHumanAgentRequest): Promise<HumanAgent> {
+   */
+  static async createHumanAgent(
+    agentData: {
+      name: string;
+      email: string;
+      password: string;
+      department?: string | null;
+      phone_number?: string;
+    }
+  ): Promise<any> {
     try {
-      const response = await axiosInstance.post<ApiSuccessResponse<HumanAgent>>('/tenant/human-agents', agentData);
-      return response.data.data || response.data;
+      const requestBody = {
+        name: agentData.name,
+        email: agentData.email,
+        password: agentData.password,
+        // department: agentData.department ?? null,
+        department: null,
+        phone_number: agentData.phone_number,
+        agent_type: "Human",
+        is_active: true,
+      };
+      const response = await axiosInstance.post(
+        "/v1/agents",
+        requestBody
+      );
+      return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to create human agent',
+          message:
+            error.response.data.message || "Failed to create human agent",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -98,20 +111,27 @@ export class HumanAgentsService {
   /**
    * Update a human agent
    */
-  static async updateHumanAgent(id: string, agentData: UpdateHumanAgentRequest): Promise<HumanAgent> {
+  static async updateHumanAgent(
+    id: string,
+    agentData: UpdateHumanAgentRequest
+  ): Promise<HumanAgent> {
     try {
-      const response = await axiosInstance.put<ApiSuccessResponse<HumanAgent>>(`/tenant/human-agents/${id}`, agentData);
+      const response = await axiosInstance.put<ApiSuccessResponse<HumanAgent>>(
+        `/tenant/human-agents/${id}`,
+        agentData
+      );
       return response.data.data || response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to update human agent',
+          message:
+            error.response.data.message || "Failed to update human agent",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -122,17 +142,18 @@ export class HumanAgentsService {
    */
   static async deleteHumanAgent(id: string): Promise<void> {
     try {
-      await axiosInstance.delete(`/tenant/human-agents/${id}`);
+      await axiosInstance.delete(`/v1/agents/${id}`);
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to delete human agent',
+          message:
+            error.response.data.message || "Failed to delete human agent",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -140,20 +161,22 @@ export class HumanAgentsService {
 
   /**
    * Get single human agent by ID
-   */  static async getHumanAgent(id: string): Promise<HumanAgent> {
+   */ static async getHumanAgent(id: string): Promise<HumanAgent> {
     try {
-      const response = await axiosInstance.get<ApiSuccessResponse<HumanAgent>>(`/tenant/human-agents/${id}`);
+      const response = await axiosInstance.get<ApiSuccessResponse<HumanAgent>>(
+        `/tenant/human-agents/${id}`
+      );
       return response.data.data || response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch human agent',
+          message: error.response.data.message || "Failed to fetch human agent",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }

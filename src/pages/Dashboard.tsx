@@ -1,5 +1,6 @@
 import MainLayout from "@/main-layout"
 import ChatDashboard from "@/components/chat-dashboard"
+import ManagerDialog from "@/components/manager-dialog";
 // import ErrorDemo from "@/components/ErrorDemo"
 
 export default function DashboardPage() {
@@ -7,6 +8,7 @@ export default function DashboardPage() {
     <MainLayout>
       <div className="space-y-6">
         <ChatDashboard />
+        <ManagerDialog />
         
         {/* Demo section untuk testing error boundary */}
         {/* <div className="p-6">
