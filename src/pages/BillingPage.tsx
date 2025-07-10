@@ -25,7 +25,7 @@ import {
   Plus,
   TrendingUp,
   Calendar,
-  CreditCard,
+ 
   FileText,
   Clock,
 } from "lucide-react";
@@ -110,48 +110,48 @@ export default function BillingPage() {
   };
 
   // Mock transaction data
-  const transactions = [
-    {
-      id: 1,
-      date: "2025-07-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "paid",
-      type: "subscription",
-    },
-    {
-      id: 2,
-      date: "2025-06-15",
-      description: "Additional AI Responses - Top Up",
-      amount: "IDR 500,000",
-      status: "paid",
-      type: "topup",
-    },
-    {
-      id: 3,
-      date: "2025-06-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "paid",
-      type: "subscription",
-    },
-    {
-      id: 4,
-      date: "2025-05-20",
-      description: "Additional MAU - Top Up",
-      amount: "IDR 750,000",
-      status: "paid",
-      type: "topup",
-    },
-    {
-      id: 5,
-      date: "2025-05-01",
-      description: "Business Plan - Monthly Subscription",
-      amount: "IDR 3,609,050",
-      status: "pending",
-      type: "subscription",
-    },
-  ];
+  // const transactions = [
+  //   {
+  //     id: 1,
+  //     date: "2025-07-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "paid",
+  //     type: "subscription",
+  //   },
+  //   {
+  //     id: 2,
+  //     date: "2025-06-15",
+  //     description: "Additional AI Responses - Top Up",
+  //     amount: "IDR 500,000",
+  //     status: "paid",
+  //     type: "topup",
+  //   },
+  //   {
+  //     id: 3,
+  //     date: "2025-06-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "paid",
+  //     type: "subscription",
+  //   },
+  //   {
+  //     id: 4,
+  //     date: "2025-05-20",
+  //     description: "Additional MAU - Top Up",
+  //     amount: "IDR 750,000",
+  //     status: "paid",
+  //     type: "topup",
+  //   },
+  //   {
+  //     id: 5,
+  //     date: "2025-05-01",
+  //     description: "Business Plan - Monthly Subscription",
+  //     amount: "IDR 3,609,050",
+  //     status: "pending",
+  //     type: "subscription",
+  //   },
+  // ];
 
   const periods = [
     { id: "monthly", label: "Monthly", discount: null },
