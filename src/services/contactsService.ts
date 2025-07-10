@@ -11,6 +11,7 @@ export interface Contact {
     created_at: string;
     updated_at: string;
     lead_status: 'assigned' | 'unassigned' | 'resolved';
+    assigned_agent_name: string;
     agent_name?: string;
     platform_name: string;
     source_type: 'WhatsApp' | 'Instagram' | 'Website';
