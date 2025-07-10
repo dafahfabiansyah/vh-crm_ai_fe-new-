@@ -37,6 +37,11 @@ import { PipelineStageColumn } from "@/components/pipeline-stage";
 import PipelineService, {
   type PipelineListResponse,
 } from "@/services/pipelineService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { HumanAgentsService, type HumanAgent } from "@/services/humanAgentsService";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -52,6 +57,14 @@ const PipelinePage = () => {
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isAddStageOpen, setIsAddStageOpen] = useState(false);
+  const [stageName, setStageName] = useState("");
+  const [stageDescription, setStageDescription] = useState("");
+  const [selectedAgent, setSelectedAgent] = useState<string>("");
+  const [agents, setAgents] = useState<HumanAgent[]>([]);
+  const [isSubmittingStage, setIsSubmittingStage] = useState(false);
+  const [addStageError, setAddStageError] = useState<string | null>(null);
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
@@ -113,22 +126,33 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback((stageId: string, newName: string) => {
+  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string) => {
     setPipelineData((prev) => {
       const newData = [...prev];
-
-      // Find and update the stage
       const stageIndex = newData.findIndex((stage) => stage.id === stageId);
       if (stageIndex >= 0) {
         newData[stageIndex] = {
           ...newData[stageIndex],
           name: newName,
+          description: newDescription ?? newData[stageIndex].description,
         };
       }
-
       return newData;
     });
-  }, []);
+    // Update ke backend
+    const stage = pipelineData.find((s) => s.id === stageId);
+    if (stage) {
+      try {
+        await PipelineService.updateStage(stageId, {
+          name: newName,
+          description:  stage.description ?? "",
+          stage_order: stage.stage_order ?? 0,
+        });
+      } catch (err) {
+        // TODO: tampilkan error jika perlu
+      }
+    }
+  }, [pipelineData]);
 
   const handleDeletePipeline = async () => {
     if (!pipelineId || !pipelineInfo) return;
@@ -154,6 +178,36 @@ const PipelinePage = () => {
     }
   };
 
+  const handleDeleteStage = async (stageId: string) => {
+    try {
+      await PipelineService.deleteStage(stageId);
+      // Refresh stages
+      if (pipelineId) {
+        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+        const mappedStages = stages.map((stage: any, idx: number) => ({
+          id: stage.id,
+          name: stage.name,
+          description: stage.description,
+          color: [
+            "bg-blue-100 text-blue-800",
+            "bg-yellow-100 text-yellow-800",
+            "bg-orange-100 text-orange-800",
+            "bg-green-100 text-green-800",
+            "bg-purple-100 text-purple-800",
+            "bg-red-100 text-red-800",
+          ][idx % 6],
+          leads: [],
+          count: 0,
+          value: 0,
+          stage_order: stage.stage_order ?? idx,
+        }));
+        setPipelineData(mappedStages);
+      }
+    } catch (err) {
+      alert("Gagal menghapus stage");
+    }
+  };
+
   const totalValue = pipelineData.reduce((sum, stage) => sum + stage.value, 0);
   const totalLeads = pipelineData.reduce((sum, stage) => sum + stage.count, 0);
 
@@ -175,44 +229,64 @@ const PipelinePage = () => {
         );
         setPipelineInfo(pipeline);
 
-        console.log("Pipeline loaded:", pipeline);
-
-        // TODO: Fetch pipeline stages and leads data
-        // For now, initialize with empty pipeline structure
-        setPipelineData([
-          {
-            id: "new-leads",
-            name: "New Leads",
-            color: "bg-blue-100 text-blue-800",
-            leads: [],
-            count: 0,
-            value: 0,
-          },
-          {
-            id: "qualified",
-            name: "Qualified",
-            color: "bg-yellow-100 text-yellow-800",
-            leads: [],
-            count: 0,
-            value: 0,
-          },
-          {
-            id: "proposal",
-            name: "Proposal",
-            color: "bg-orange-100 text-orange-800",
-            leads: [],
-            count: 0,
-            value: 0,
-          },
-          {
-            id: "closed-won",
-            name: "Closed Won",
-            color: "bg-green-100 text-green-800",
-            leads: [],
-            count: 0,
-            value: 0,
-          },
-        ]);
+        // Fetch stages dari backend
+        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+        // Fetch leads dari backend
+        const leads = await PipelineService.getLeads({ id_pipeline: pipelineId });
+        // Kelompokkan leads berdasarkan id_stage, mapping ke interface Lead
+        const leadsByStage: Record<string, any[]> = {};
+        const unassignedLeads: any[] = [];
+        leads.forEach((lead: any) => {
+          // Mapping ke interface Lead
+          const mappedLead = {
+            id: lead.id,
+            name: lead.name,
+            phone: "",
+            value: lead.potential_value || 0,
+            source: lead.moved_by || "unknown",
+            daysAgo: 0,
+            status: lead.status || "unknown",
+            email: "",
+            company: "",
+            location: "",
+            notes: lead.notes || "",
+            createdAt: lead.created_at,
+            lastActivity: lead.updated_at,
+            timeline: [],
+          };
+          if (!lead.id_stage) {
+            unassignedLeads.push(mappedLead);
+            return;
+          }
+          if (!leadsByStage[lead.id_stage]) leadsByStage[lead.id_stage] = [];
+          leadsByStage[lead.id_stage].push(mappedLead);
+        });
+        // Mapping ke struktur PipelineStage
+        const mappedStages = stages.map((stage: any, idx: number) => {
+          let stageLeads = leadsByStage[stage.id] || [];
+          // Masukkan unassigned ke stage pertama
+          if (idx === 0) {
+            stageLeads = [...unassignedLeads, ...stageLeads];
+          }
+          return {
+            id: stage.id,
+            name: stage.name,
+            description: stage.description,
+            color: [
+              "bg-blue-100 text-blue-800",
+              "bg-yellow-100 text-yellow-800",
+              "bg-orange-100 text-orange-800",
+              "bg-green-100 text-green-800",
+              "bg-purple-100 text-purple-800",
+              "bg-red-100 text-red-800",
+            ][idx % 6],
+            leads: stageLeads,
+            count: stageLeads.length,
+            value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
+            stage_order: stage.stage_order ?? idx,
+          };
+        });
+        setPipelineData(mappedStages);
       } catch (error: any) {
         console.error("Error fetching pipeline:", error);
         setError(error.message || "Failed to load pipeline");
@@ -223,6 +297,50 @@ const PipelinePage = () => {
 
     fetchPipelineData();
   }, [pipelineId]);
+
+  // Fetch agents for select
+  useEffect(() => {
+    if (!isAddStageOpen) return;
+    setAddStageError(null);
+    setIsSubmittingStage(false);
+    setAgents([]);
+    setSelectedAgent("");
+    HumanAgentsService.getHumanAgents()
+      .then(setAgents)
+      .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
+  }, [isAddStageOpen]);
+
+  const handleOpenAddStage = () => {
+    setStageName("");
+    setStageDescription("");
+    setSelectedAgent("");
+    setAddStageError(null);
+    setIsAddStageOpen(true);
+  };
+
+  const handleSubmitAddStage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stageName.trim() || !stageDescription.trim() || !selectedAgent || !pipelineId) {
+      setAddStageError("Semua field wajib diisi.");
+      return;
+    }
+    setIsSubmittingStage(true);
+    setAddStageError(null);
+    try {
+      await PipelineService.createStage({
+        name: stageName.trim(),
+        description: stageDescription.trim(),
+        id_agent: selectedAgent,
+        id_pipeline: pipelineId,
+      });
+      setIsAddStageOpen(false);
+      // TODO: refresh pipelineData jika sudah ada API-nya
+    } catch (err: any) {
+      setAddStageError(err.message || "Gagal menambah stage");
+    } finally {
+      setIsSubmittingStage(false);
+    }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -286,9 +404,9 @@ const PipelinePage = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Import Dari WhatsApp
                     </Button>
-                    <Button size="sm">
+                    <Button size="sm" onClick={handleOpenAddStage}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Tambah Lead Baru
+                      Tambah Stage Baru
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -355,29 +473,33 @@ const PipelinePage = () => {
               </div>
 
               {/* Pipeline Stages */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Pipeline Stages
-                  </h2>
-                  <Button variant="outline" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </div>
+              {pipelineData.length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Pipeline Stages
+                    </h2>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-                <div className="flex gap-6 overflow-x-auto pb-4">
-                  {pipelineData.map((stage) => (
-                    <PipelineStageColumn
-                      key={stage.id}
-                      stage={stage}
-                      onDropLead={handleDropLead}
-                      onUpdateLead={handleUpdateLead}
-                      onUpdateStage={handleUpdateStage}
-                      onLeadClick={handleLeadClick}
-                    />
-                  ))}
+                  <div className="flex gap-6 overflow-x-auto pb-4">
+                    {pipelineData.map((stage) => (
+                      <PipelineStageColumn
+                        
+                        key={stage.id}
+                        stage={stage}
+                        onDropLead={handleDropLead}
+                        onUpdateLead={handleUpdateLead}
+                        onUpdateStage={handleUpdateStage}
+                        onDeleteStage={handleDeleteStage}
+                        onLeadClick={handleLeadClick}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Lead Detail Drawer */}
               <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
@@ -542,6 +664,47 @@ const PipelinePage = () => {
                   </DrawerFooter>
                 </DrawerContent>
               </Drawer>
+
+              <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
+                <DialogContent>
+                  <form onSubmit={handleSubmitAddStage} className="space-y-4">
+                    <DialogHeader>
+                      <DialogTitle>Tambah Stage Baru</DialogTitle>
+                      <DialogDescription>Isi detail stage yang ingin ditambahkan ke pipeline ini.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-name">Nama Stage</Label>
+                      <Input id="stage-name" value={stageName} onChange={e => setStageName(e.target.value)} required disabled={isSubmittingStage} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-desc">Deskripsi</Label>
+                      <Input id="stage-desc" value={stageDescription} onChange={e => setStageDescription(e.target.value)} required disabled={isSubmittingStage} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-agent">Pilih Agent</Label>
+                      <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                        <SelectTrigger id="stage-agent">
+                          <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {agents.map(agent => (
+                            <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {addStageError && <div className="text-red-600 text-sm">{addStageError}</div>}
+                    <DialogFooter>
+                      <Button type="submit" disabled={isSubmittingStage}>
+                        {isSubmittingStage ? "Menyimpan..." : "Simpan"}
+                      </Button>
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline" disabled={isSubmittingStage}>Batal</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </div>

@@ -139,6 +139,123 @@ export class PipelineService {
       }
     }
   }
+
+  /**
+   * Create a new stage in a pipeline
+   */
+  static async createStage({
+    name,
+    description,
+    id_agent,
+    id_pipeline,
+  }: {
+    name: string;
+    description: string;
+    id_agent: string;
+    id_pipeline: string;
+  }): Promise<any> {
+    try {
+      const response = await axiosInstance.post('/v1/stages', {
+        name,
+        description,
+        id_agent,
+        id_pipeline,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to create stage. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Get all stages (optionally by pipeline)
+   */
+  static async getStages(params?: { id_pipeline?: string }): Promise<any[]> {
+    try {
+      let url = '/v1/stages';
+      if (params?.id_pipeline) {
+        url += `?id_pipeline=${params.id_pipeline}`;
+      }
+      const response = await axiosInstance.get(url);
+      return response.data.items || [];
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch stages. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Update a stage by ID
+   */
+  static async updateStage(id: string, data: { name: string; description: string; stage_order: number }): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/v1/stages/${id}`, {
+        name: data.name,
+        description: data.description,
+        stage_order: data.stage_order,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to update stage. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Delete a stage by ID
+   */
+  static async deleteStage(id: string): Promise<void> {
+    try {
+      await axiosInstance.delete(`/v1/stages/${id}`);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to delete stage. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Get all leads (optionally by filter)
+   */
+  static async getLeads(params?: Record<string, any>): Promise<any[]> {
+    try {
+      let url = '/v1/leads';
+      if (params) {
+        const query = new URLSearchParams(params).toString();
+        if (query) url += `?${query}`;
+      }
+      const response = await axiosInstance.get(url);
+      return response.data.items || [];
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch leads. Please try again.');
+      }
+    }
+  }
 }
 
 export default PipelineService;

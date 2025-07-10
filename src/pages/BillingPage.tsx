@@ -44,6 +44,7 @@ export default function BillingPage() {
   const [pricingPlans, setPricingPlans] = useState<any[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isProcessingDialogOpen, setIsProcessingDialogOpen] = useState(false);
 
   const handleUpgrade = (planId: string) => {
     const plan = pricingPlans.find((p) => p.id === planId);
@@ -63,6 +64,7 @@ export default function BillingPage() {
     // Here you would typically integrate with your payment processor
     setIsPaymentDialogOpen(false);
     setCouponCode("");
+    setIsProcessingDialogOpen(true);
   };
 
   const handleApplyCoupon = () => {
@@ -629,6 +631,23 @@ export default function BillingPage() {
             </div>
           </div>
         )}
+      </DialogContent>
+    </Dialog>
+
+    {/* Processing Dialog - Cannot be dismissed */}
+    <Dialog open={isProcessingDialogOpen} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold text-center">Processing Payment</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 text-center">
+          {/* <div className="flex justify-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div> */}
+          <p className="text-foreground">
+            Akun anda sedang kami siapkan dan akan kami kabari secepatnya, anda bisa menutup tab ini
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
     </div>

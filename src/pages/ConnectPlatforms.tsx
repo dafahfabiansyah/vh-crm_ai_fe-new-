@@ -244,27 +244,26 @@ export default function ConnectedPlatformsPage() {
 
     setIsSaving(true);
     try {
-      // Simulate API call with mock data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Lakukan mapping AI Agent ke Platform
+      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id, currentPlatform.id);
 
       setToast({
         show: true,
         type: "success",
         title: "Mapping Saved Successfully",
-        description: `WhatsApp platform ${currentPlatform.name} has been configured successfully.`,
+        description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name} .`,
       });
 
-      // Update the platform in the list
+      // Update the platform in the list (simulasi saja, update sesuai kebutuhan)
       setPlatformInboxs((prev) =>
         prev.map((p) => (p.id === currentPlatform.id ? currentPlatform : p))
       );
-    } catch (error) {
-      console.error("Error saving platform configuration:", error);
+    } catch (error: any) {
       setToast({
         show: true,
         type: "error",
-        title: "Save Failed",
-        description: "Failed to save platform configuration. Please try again.",
+        title: "Mapping Failed",
+        description: error.message || "Failed to map AI Agent to platform.",
       });
     } finally {
       setIsSaving(false);
@@ -978,6 +977,12 @@ export default function ConnectedPlatformsPage() {
                       >
                         Flow
                       </TabsTrigger>
+                      <TabsTrigger
+                        value="pipeline"
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg "
+                      >
+                        Pipeline
+                      </TabsTrigger>
                     </TabsList>
                     <TabsContent
                       value="basic"
@@ -1033,40 +1038,6 @@ export default function ConnectedPlatformsPage() {
                                 <SelectItem value="no-agents" disabled>
                                   No AI agents available (Count:{" "}
                                   {aiAgents.length})
-                                </SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {/* Pipelines */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-foreground">
-                            Pipelines
-                          </Label>
-                          <Select
-                            value={selectedPlatform.pipeline}
-                            onValueChange={(value) =>
-                              updateSelectedPlatform({ pipeline: value })
-                            }
-                            disabled={pipelinesLoading}
-                          >
-                            <SelectTrigger className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <GitBranch className="h-4 w-4 text-gray-600" />
-                                <SelectValue
-                                  placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
-                                />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {pipelines.map((pipeline) => (
-                                <SelectItem key={pipeline.id} value={pipeline.id}>
-                                  <div className="flex items-center gap-2">{pipeline.name}</div>
-                                </SelectItem>
-                              ))}
-                              {pipelines.length === 0 && !pipelinesLoading && (
-                                <SelectItem value="no-pipelines" disabled>
-                                  No pipelines available
                                 </SelectItem>
                               )}
                             </SelectContent>
@@ -1234,6 +1205,39 @@ export default function ConnectedPlatformsPage() {
                           Configure conversation flows and automation rules
                           here.
                         </p>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="pipeline" className="space-y-4 sm:space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-foreground">
+                          Pipelines
+                        </Label>
+                        <Select
+                          value={selectedPlatform.pipeline}
+                          onValueChange={(value) => updateSelectedPlatform({ pipeline: value })}
+                          disabled={pipelinesLoading}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <div className="flex items-center gap-2">
+                              <GitBranch className="h-4 w-4 text-gray-600" />
+                              <SelectValue
+                                placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
+                              />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pipelines.map((pipeline) => (
+                              <SelectItem key={pipeline.id} value={pipeline.id}>
+                                <div className="flex items-center gap-2">{pipeline.name}</div>
+                              </SelectItem>
+                            ))}
+                            {pipelines.length === 0 && !pipelinesLoading && (
+                              <SelectItem value="no-pipelines" disabled>
+                                No pipelines available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </TabsContent>
                   </Tabs>

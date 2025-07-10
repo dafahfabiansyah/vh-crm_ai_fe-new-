@@ -147,6 +147,9 @@ export class AuthService {
       // Store in cookies (encrypted)
       this.setUserData(apiResponse.user);
       this.setAuthToken(apiResponse.token);
+      
+      // Decode JWT and log role
+      this.getRoleFromToken(apiResponse.token);
 
       return transformedResponse;
     } catch (error: any) {
@@ -231,6 +234,34 @@ export class AuthService {
     
     console.log('✅ AuthService: Authentication valid');
     return true;
+  }
+
+  /**
+   * Decode JWT token and get role
+   */
+  static getRoleFromToken(token?: string): string | null {
+    try {
+      const jwt = token || this.getStoredToken();
+      if (!jwt) return null;
+      // JWT format: header.payload.signature
+      const payload = jwt.split('.')[1];
+      if (!payload) return null;
+      // Base64url decode
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const data = JSON.parse(jsonPayload);
+      const role = data.role || null;
+      console.log('🔑 Decoded JWT role:', role, data);
+      return role;
+    } catch (e) {
+      console.error('Failed to decode JWT:', e);
+      return null;
+    }
   }
 
   /**

@@ -22,7 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Search,
   Filter,
@@ -34,31 +40,25 @@ import {
   ChevronRight,
   Send,
   Phone,
-  Building,
-  CheckCircle,
   Loader2,
+  Trash,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
-import axiosInstance from "@/services/axios";
+
+import { platformsInboxService } from "@/services/platfrormsInboxService";
+import { contactService } from "@/services/contactService";
 
 interface Contact {
   id: string;
   id_platform: string;
   contact_identifier: string;
   push_name: string;
+  source_type: string;
   last_message: string;
   last_message_at: string;
   unread_messages: number;
   created_at: string;
   updated_at: string;
-}
-
-interface ContactsResponse {
-  page: number;
-  per_page: number;
-  page_count: number;
-  total_count: number;
-  items: Contact[];
 }
 
 export default function ContactsPage() {
@@ -79,14 +79,15 @@ export default function ContactsPage() {
     agentId: "",
     message: "Hello, this is an initial message.",
     title: "Customer inquiry",
-    notes: "Customer asked about product X"
+    notes: "Customer asked about product X",
   });
+  const [platforms, setPlatforms] = useState<any[]>([]);
+  const [platformsLoading, setPlatformsLoading] = useState(false);
+  const [platformsError, setPlatformsError] = useState<string | null>(null);
   const [addContactForm, setAddContactForm] = useState({
+    id_platform: "",
     phone: "",
     name: "",
-    businessName: "",
-    businessAccount: false,
-    verified: false
   });
 
   // API call to fetch contacts
@@ -94,23 +95,24 @@ export default function ContactsPage() {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Fetching contacts with params:', { page, per_page: perPage });
-      
-      // Try simple GET request first
-      const response = await axiosInstance.get<ContactsResponse>(`/v1/contacts?page=${page}&per_page=${perPage}`);
-      
-      console.log('API Response:', response.data);
-      
-      setContacts(response.data.items || []);
-      setTotalContacts(response.data.total_count || 0);
-      setTotalPages(response.data.page_count || 1);
-      setCurrentPage(response.data.page || page);
-      setItemsPerPage(response.data.per_page || perPage);
+
+      console.log("Fetching contacts with params:", {
+        page,
+        per_page: perPage,
+      });
+
+      const data = await contactService.fetchContacts(page, perPage);
+      setContacts(data.items || []);
+      setTotalContacts(data.total_count || 0);
+      setTotalPages(data.page_count || 1);
+      setCurrentPage(data.page || page);
+      setItemsPerPage(data.per_page || perPage);
     } catch (err: any) {
-      console.error('Error fetching contacts:', err);
-      console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.message || err.message || 'Failed to fetch contacts');
+      console.error("Error fetching contacts:", err);
+      console.error("Error response:", err.response?.data);
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch contacts"
+      );
       setContacts([]);
       setTotalContacts(0);
       setTotalPages(1);
@@ -124,8 +126,26 @@ export default function ContactsPage() {
     fetchContacts(currentPage, itemsPerPage);
   }, [currentPage, itemsPerPage]);
 
+  // Fetch platforms when add contact dialog opens
+  useEffect(() => {
+    if (isAddContactOpen) {
+      setPlatformsLoading(true);
+      setPlatformsError(null);
+      platformsInboxService
+        .getPlatformInbox()
+        .then((data) => {
+          setPlatforms(Array.isArray(data) ? data : data.items || []);
+        })
+        .catch((err: any) => {
+          setPlatformsError(err.message || "Gagal mengambil data platform");
+          setPlatforms([]);
+        })
+        .finally(() => setPlatformsLoading(false));
+    }
+  }, [isAddContactOpen]);
+
   const handleOpenWhatsAppModal = (contact: Contact) => {
-    setWhatsAppForm(prev => ({
+    setWhatsAppForm((prev) => ({
       ...prev,
       phone: contact.contact_identifier || "",
     }));
@@ -139,19 +159,47 @@ export default function ContactsPage() {
     setIsWhatsAppModalOpen(false);
   };
 
-  const handleAddContactSubmit = (e: React.FormEvent) => {
+  const handleAddContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle add contact form submission here
-    console.log("Add contact data:", addContactForm);
-    setIsAddContactOpen(false);
-    // Reset form
-    setAddContactForm({
-      phone: "",
-      name: "",
-      businessName: "",
-      businessAccount: false,
-      verified: false
-    });
+    // POST to /v1/contacts
+    try {
+      if (
+        !addContactForm.id_platform ||
+        !addContactForm.phone ||
+        !addContactForm.name
+      ) {
+        alert("Platform, nomor telepon, dan nama wajib diisi");
+        return;
+      }
+      const body = {
+        id_platform: addContactForm.id_platform,
+        contact_identifier: addContactForm.phone,
+        push_name: addContactForm.name,
+      };
+      await contactService.createContact(body);
+      setIsAddContactOpen(false);
+      setAddContactForm({
+        id_platform: "",
+        phone: "",
+        name: "",
+      });
+      fetchContacts(currentPage, itemsPerPage);
+    } catch (err: any) {
+      alert(
+        err.response?.data?.message || err.message || "Gagal menambah kontak"
+      );
+    }
+  };
+
+  // Handler untuk hapus kontak
+  const handleDeleteContact = async (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus kontak ini?')) return;
+    try {
+      await contactService.deleteContact(id);
+      fetchContacts(currentPage, itemsPerPage);
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Gagal menghapus kontak');
+    }
   };
 
   // Filter contacts based on search query
@@ -184,7 +232,9 @@ export default function ContactsPage() {
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Contacts</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">
+                Contacts
+              </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Total Contacts: {totalContacts.toLocaleString()}
               </p>
@@ -206,13 +256,24 @@ export default function ContactsPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>
-              <Dialog open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
+              <Dialog
+                open={isAddContactOpen}
+                onOpenChange={setIsAddContactOpen}
+              >
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 sm:flex-none"
+                  >
                     <Send className="h-4 w-4 mr-2" />
                     Tambah Kontak
                   </Button>
@@ -224,35 +285,107 @@ export default function ContactsPage() {
                       Tambah Kontak WhatsApp
                     </DialogTitle>
                   </DialogHeader>
-                <form onSubmit={handleAddContactSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactPhone" className="text-sm font-medium">
-                      Nomor Telepon *
-                    </Label>
-                    <Input
-                      id="contactPhone"
-                      value={addContactForm.phone}
-                      onChange={(e) => setAddContactForm(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="+628526000993731"
-                      className="font-mono text-sm"
-                      required
-                    />
-                  </div>
+                  <form onSubmit={handleAddContactSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="platform" className="text-sm font-medium">
+                        Platform *
+                      </Label>
+                      <Select
+                        value={addContactForm.id_platform}
+                        onValueChange={(value) =>
+                          setAddContactForm((prev) => ({
+                            ...prev,
+                            id_platform: value,
+                          }))
+                        }
+                        required
+                      >
+                        <SelectTrigger className="text-sm w-full">
+                          <SelectValue
+                            placeholder={
+                              platformsLoading
+                                ? "Memuat..."
+                                : "Pilih platform..."
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {platformsLoading && (
+                            <div className="px-3 py-2 text-muted-foreground text-sm">
+                              Memuat...
+                            </div>
+                          )}
+                          {platformsError && (
+                            <div className="px-3 py-2 text-red-500 text-sm">
+                              {platformsError}
+                            </div>
+                          )}
+                          {!platformsLoading &&
+                            !platformsError &&
+                            platforms.length === 0 && (
+                              <div className="px-3 py-2 text-muted-foreground text-sm">
+                                Tidak ada platform
+                              </div>
+                            )}
+                          {!platformsLoading &&
+                            !platformsError &&
+                            platforms.length > 0 &&
+                            platforms.map((p: any) => (
+                              <SelectItem
+                                key={p.id}
+                                value={p.id}
+                              >
+                                {p.platform_name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="contactName" className="text-sm font-medium">
-                      Nama
-                    </Label>
-                    <Input
-                      id="contactName"
-                      value={addContactForm.name}
-                      onChange={(e) => setAddContactForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Masukkan nama kontak"
-                      className="text-sm"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="contactPhone"
+                        className="text-sm font-medium"
+                      >
+                        Nomor Telepon *
+                      </Label>
+                      <Input
+                        id="contactPhone"
+                        value={addContactForm.phone}
+                        onChange={(e) =>
+                          setAddContactForm((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
+                        placeholder="621234567890"
+                        className="font-mono text-sm"
+                        required
+                      />
+                    </div>
 
-                  <div className="space-y-2">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="contactName"
+                        className="text-sm font-medium"
+                      >
+                        Nama
+                      </Label>
+                      <Input
+                        id="contactName"
+                        value={addContactForm.name}
+                        onChange={(e) =>
+                          setAddContactForm((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                        placeholder="Masukkan nama kontak"
+                        className="text-sm"
+                      />
+                    </div>
+
+                    {/* <div className="space-y-2">
                     <Label htmlFor="businessName" className="text-sm font-medium">
                       Business Name
                     </Label>
@@ -263,9 +396,9 @@ export default function ContactsPage() {
                       placeholder="Masukkan nama bisnis"
                       className="text-sm"
                     />
-                  </div>
+                  </div> */}
 
-                  <div className="space-y-3">
+                    {/* <div className="space-y-3">
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -295,25 +428,28 @@ export default function ContactsPage() {
                         </Label>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsAddContactOpen(false)}
-                      className="flex-1 sm:flex-none"
-                    >
-                      Batal
-                    </Button>
-                    <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Tambah Kontak
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsAddContactOpen(false)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        Batal
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        Tambah Kontak
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
 
               <Button
                 variant="outline"
@@ -325,12 +461,20 @@ export default function ContactsPage() {
                 Edit
               </Button>
 
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
 
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none sm:hidden lg:flex">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none sm:hidden lg:flex"
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Customize</span>
                 <span className="sm:hidden">Settings</span>
@@ -339,7 +483,7 @@ export default function ContactsPage() {
           </div>
         </div>
 
-                {/* Table - Desktop / Card Layout - Mobile */}
+        {/* Table - Desktop / Card Layout - Mobile */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -353,155 +497,176 @@ export default function ContactsPage() {
               <p className="font-medium">Failed to load contacts</p>
               <p className="text-sm text-muted-foreground mt-1">{error}</p>
             </div>
-            <Button onClick={() => fetchContacts(currentPage, itemsPerPage)} variant="outline">
+            <Button
+              onClick={() => fetchContacts(currentPage, itemsPerPage)}
+              variant="outline"
+            >
               Try Again
             </Button>
           </div>
         ) : (
-        <div className="border border-border rounded-lg bg-card overflow-hidden">
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table className="min-w-full">
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedContacts.length === filteredContacts.length}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="w-20">Action</TableHead>
-                  <TableHead className="min-w-32">Name</TableHead>
-                  <TableHead className="min-w-32">Phone</TableHead>
-                  <TableHead className="min-w-32">Platform</TableHead>
-                  <TableHead className="min-w-24">Last Message</TableHead>
-                  <TableHead className="min-w-24">Unread</TableHead>
-                  <TableHead className="min-w-40">Created</TableHead>
-                  <TableHead className="min-w-40">Updated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id} className="hover:bg-muted/30">
-                    <TableCell>
+          <div className="border border-border rounded-lg bg-card overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedContacts.includes(contact.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectContact(contact.id, checked as boolean)
+                        checked={
+                          selectedContacts.length === filteredContacts.length
                         }
+                        onCheckedChange={handleSelectAll}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7"
-                          onClick={() => handleOpenWhatsAppModal(contact)}
-                        >
-                          <MessageSquare className="h-3 w-3 text-blue-600" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7">
-                          <Edit className="h-3 w-3 text-orange-600" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium text-sm">
-                      {contact.push_name || "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm font-mono">
-                      {contact.contact_identifier || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {/* <Badge
-                        variant="outline"
-                        className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
-                      >
-                        {contact.id_platform}
-                      </Badge> */}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {contact.last_message || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {contact.unread_messages > 0 ? (
-                        <Badge variant="destructive" className="text-xs">
-                          {contact.unread_messages}
-                        </Badge>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">
-                      {new Date(contact.created_at).toLocaleDateString('id-ID', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">
-                      {new Date(contact.updated_at).toLocaleDateString('id-ID', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="w-20">Action</TableHead>
+                    <TableHead className="min-w-32">Name</TableHead>
+                    <TableHead className="min-w-32">Phone</TableHead>
+                    <TableHead className="min-w-32">Platform</TableHead>
+                    <TableHead className="min-w-24">Last Message</TableHead>
+                    <TableHead className="min-w-24">Unread</TableHead>
+                    <TableHead className="min-w-40">Created</TableHead>
+                    <TableHead className="min-w-40">Updated</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile Card Layout */}
-          <div className="md:hidden">
-            {/* Mobile Header */}
-            <div className="p-3 sm:p-4 border-b bg-muted/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedContacts.length === filteredContacts.length}
-                  onCheckedChange={handleSelectAll}
-                />
-                <span className="text-sm font-medium">Select All</span>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {selectedContacts.length} selected
-              </span>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.map((contact) => (
+                    <TableRow key={contact.id} className="hover:bg-muted/30">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedContacts.includes(contact.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectContact(contact.id, checked as boolean)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleOpenWhatsAppModal(contact)}
+                          >
+                            <MessageSquare className="h-3 w-3 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleDeleteContact(contact.id)}
+                          >
+                            <Trash className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">
+                        {contact.push_name || "-"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm font-mono">
+                        {contact.contact_identifier || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                        variant="outline"
+                        className="bg-primary text-secondary border-blue-200 text-xs"
+                      >
+                        Whatsapp
+                      </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {contact.last_message || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {contact.unread_messages > 0 ? (
+                          <Badge variant="destructive" className="text-xs">
+                            {contact.unread_messages}
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">
+                        {new Date(contact.created_at).toLocaleDateString(
+                          "id-ID",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">
+                        {new Date(contact.updated_at).toLocaleDateString(
+                          "id-ID",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
 
-            {/* Mobile Contact Cards */}
-            <div className="divide-y divide-border">
-              {filteredContacts.map((contact) => (
-                <div key={contact.id} className="p-3 sm:p-4 space-y-3">
-                  {/* Header Row */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
-                      <Checkbox
-                        checked={selectedContacts.includes(contact.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectContact(contact.id, checked as boolean)
-                        }
-                        className="mt-1 flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-medium text-sm truncate min-w-0 max-w-full">
-                            {contact.push_name || "No Name"}
-                          </h3>
-                          {contact.unread_messages > 0 && (
-                            <Badge variant="destructive" className="text-xs flex-shrink-0">
-                              {contact.unread_messages}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-mono break-all">
-                          {contact.contact_identifier || "No Phone"}
-                        </p>
-                        <div className="mt-2">
-                          {/* <Badge
+            {/* Mobile Card Layout */}
+            <div className="md:hidden">
+              {/* Mobile Header */}
+              <div className="p-3 sm:p-4 border-b bg-muted/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={
+                      selectedContacts.length === filteredContacts.length
+                    }
+                    onCheckedChange={handleSelectAll}
+                  />
+                  <span className="text-sm font-medium">Select All</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {selectedContacts.length} selected
+                </span>
+              </div>
+
+              {/* Mobile Contact Cards */}
+              <div className="divide-y divide-border">
+                {filteredContacts.map((contact) => (
+                  <div key={contact.id} className="p-3 sm:p-4 space-y-3">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                        <Checkbox
+                          checked={selectedContacts.includes(contact.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectContact(contact.id, checked as boolean)
+                          }
+                          className="mt-1 flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-medium text-sm truncate min-w-0 max-w-full">
+                              {contact.push_name || "No Name"}
+                            </h3>
+                            {contact.unread_messages > 0 && (
+                              <Badge
+                                variant="destructive"
+                                className="text-xs flex-shrink-0"
+                              >
+                                {contact.unread_messages}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm text-muted-foreground font-mono break-all">
+                            {contact.contact_identifier || "No Phone"}
+                          </p>
+                          <div className="mt-2">
+                            {/* <Badge
                             variant="outline"
                             className="bg-blue-50 text-blue-700 border-blue-200 text-xs max-w-full break-all"
                           >
@@ -509,64 +674,74 @@ export default function ContactsPage() {
                               {contact.id_platform}
                             </span>
                           </Badge> */}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-7 w-7 sm:h-8 sm:w-8"
-                        onClick={() => handleOpenWhatsAppModal(contact)}
-                      >
-                        <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8">
-                        <Edit className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
-                      </Button>
-                    </div>
-                  </div>
 
-                  {/* Additional Info */}
-                  <div className="pl-5 sm:pl-7 space-y-1 sm:space-y-2">
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2 text-xs text-muted-foreground">
-                      {/* <div className="flex justify-between xs:block">
+                      {/* Actions */}
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
+                          onClick={() => handleOpenWhatsAppModal(contact)}
+                        >
+                          <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
+                          onClick={() => handleDeleteContact(contact.id)}
+                        >
+                          <Trash className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="pl-5 sm:pl-7 space-y-1 sm:space-y-2">
+                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-1 sm:gap-2 text-xs text-muted-foreground">
+                        {/* <div className="flex justify-between xs:block">
                         <span className="font-medium">Platform:</span> 
                         <span className="xs:ml-1">{contact.id_platform}</span>
                       </div> */}
-                      <div className="flex justify-between xs:block">
-                        <span className="font-medium">Unread:</span> 
-                        <span className="xs:ml-1">{contact.unread_messages}</span>
+                        <div className="flex justify-between xs:block">
+                          <span className="font-medium">Unread:</span>
+                          <span className="xs:ml-1">
+                            {contact.unread_messages}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      <div className="flex justify-between xs:block">
-                        <span className="font-medium">Created:</span> 
-                        <span className="xs:ml-1">
-                          {new Date(contact.created_at).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    {contact.last_message && contact.last_message !== "" && (
                       <div className="text-xs text-muted-foreground">
-                        <span className="font-medium">Last Message:</span>
-                        <p className="mt-1 break-words text-ellipsis line-clamp-2">
-                          {contact.last_message}
-                        </p>
+                        <div className="flex justify-between xs:block">
+                          <span className="font-medium">Created:</span>
+                          <span className="xs:ml-1">
+                            {new Date(contact.created_at).toLocaleDateString(
+                              "id-ID",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </span>
+                        </div>
                       </div>
-                    )}
+                      {contact.last_message && contact.last_message !== "" && (
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-medium">Last Message:</span>
+                          <p className="mt-1 break-words text-ellipsis line-clamp-2">
+                            {contact.last_message}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Pagination */}
@@ -685,7 +860,12 @@ export default function ContactsPage() {
               <Input
                 id="phone"
                 value={whatsAppForm.phone}
-                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) =>
+                  setWhatsAppForm((prev) => ({
+                    ...prev,
+                    phone: e.target.value,
+                  }))
+                }
                 placeholder="+628526000993731"
                 className="font-mono text-sm"
               />
@@ -698,7 +878,9 @@ export default function ContactsPage() {
               </Label>
               <Select
                 value={whatsAppForm.deviceName}
-                onValueChange={(value) => setWhatsAppForm(prev => ({ ...prev, deviceName: value }))}
+                onValueChange={(value) =>
+                  setWhatsAppForm((prev) => ({ ...prev, deviceName: value }))
+                }
               >
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Pilih device..." />
@@ -706,20 +888,28 @@ export default function ContactsPage() {
                 <SelectContent>
                   <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
                     <div className="flex flex-col">
-                      <span className="text-sm">tenant_69b86cc342e043d4a8abcd7633f440dd_dev</span>
-                      <span className="text-xs text-muted-foreground">Primary Device</span>
+                      <span className="text-sm">
+                        tenant_69b86cc342e043d4a8abcd7633f440dd_dev
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Primary Device
+                      </span>
                     </div>
                   </SelectItem>
                   <SelectItem value="device_2">
                     <div className="flex flex-col">
                       <span className="text-sm">Device 2</span>
-                      <span className="text-xs text-muted-foreground">Secondary Device</span>
+                      <span className="text-xs text-muted-foreground">
+                        Secondary Device
+                      </span>
                     </div>
                   </SelectItem>
                   <SelectItem value="device_3">
                     <div className="flex flex-col">
                       <span className="text-sm">Device 3</span>
-                      <span className="text-xs text-muted-foreground">Backup Device</span>
+                      <span className="text-xs text-muted-foreground">
+                        Backup Device
+                      </span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -733,7 +923,12 @@ export default function ContactsPage() {
               <Input
                 id="agentId"
                 value={whatsAppForm.agentId}
-                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, agentId: e.target.value }))}
+                onChange={(e) =>
+                  setWhatsAppForm((prev) => ({
+                    ...prev,
+                    agentId: e.target.value,
+                  }))
+                }
                 placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
                 className="font-mono text-xs sm:text-sm"
               />
@@ -746,7 +941,12 @@ export default function ContactsPage() {
               <Textarea
                 id="message"
                 value={whatsAppForm.message}
-                onChange={(e) => setWhatsAppForm(prev => ({ ...prev, message: e.target.value }))}
+                onChange={(e) =>
+                  setWhatsAppForm((prev) => ({
+                    ...prev,
+                    message: e.target.value,
+                  }))
+                }
                 placeholder="Hello, this is an initial message."
                 rows={3}
                 className="text-sm resize-none"
@@ -758,9 +958,9 @@ export default function ContactsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsWhatsAppModalOpen(false)}
                 className="flex-1 sm:flex-none"
               >

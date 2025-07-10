@@ -1,6 +1,6 @@
 import type {
   AgentRole,
-  AIAgent,
+  // AIAgent,
   // AIAgent,
   ChatInfo,
   ChatSession,
@@ -9,7 +9,7 @@ import type {
   PipelineStage,
   Platform,
   PricingPlan,
-  WhatsAppPlatform,
+  // WhatsAppPlatform,
 } from "@/types";
 import {
   Bot,
@@ -391,63 +391,63 @@ export const mockAgentRoles: AgentRole[] = [
 ];
 
 // Mock data untuk AI Agents
-export const mockAIAgents: AIAgent[] = [
-  {
-    id: "1",
-    name: "DISTCCTV AI",
-    role: {
-      id: "1",
-      name: "Customer Support",
-      description: "Handles customer inquiries and support requests",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-    },
-    created_at: "2024-01-15T10:30:00Z",
-    updated_at: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    name: "Sales Assistant AI",
-    role_id: "2",
-    role: {
-      id: "2",
-      name: "Sales Assistant",
-      description: "Assists with sales inquiries and product information",
-      created_at: "2024-02-20T14:45:00Z",
-      updated_at: "2024-02-20T14:45:00Z",
-    },
-    created_at: "2024-02-20T14:45:00Z",
-    updated_at: "2024-02-20T14:45:00Z",
-  },
-  {
-    id: "3",
-    name: "Technical Support AI",
-    role_id: "3",
-    role: {
-      id: "3",
-      name: "Technical Support",
-      description: "Provides technical assistance and troubleshooting",
-      created_at: "2024-03-10T09:15:00Z",
-      updated_at: "2024-03-10T09:15:00Z",
-    },
-    created_at: "2024-03-10T09:15:00Z",
-    updated_at: "2024-03-10T09:15:00Z",
-  },
-  {
-    id: "4",
-    name: "Marketing Assistant AI",
-    role_id: "4",
-    role: {
-      id: "4",
-      name: "Marketing Assistant",
-      description: "Helps with marketing campaigns and customer engagement",
-      created_at: "2024-04-05T16:20:00Z",
-      updated_at: "2024-04-05T16:20:00Z",
-    },
-    created_at: "2024-04-05T16:20:00Z",
-    updated_at: "2024-04-05T16:20:00Z",
-  },
-];
+// export const mockAIAgents: AIAgent[] = [
+//   {
+//     id: "1",
+//     name: "DISTCCTV AI",
+//     role: {
+//       id: "1",
+//       name: "Customer Support",
+//       description: "Handles customer inquiries and support requests",
+//       created_at: "2024-01-15T10:30:00Z",
+//       updated_at: "2024-01-15T10:30:00Z",
+//     },
+//     created_at: "2024-01-15T10:30:00Z",
+//     updated_at: "2024-01-15T10:30:00Z",
+//   },
+//   {
+//     id: "2",
+//     name: "Sales Assistant AI",
+//     role_id: "2",
+//     role: {
+//       id: "2",
+//       name: "Sales Assistant",
+//       description: "Assists with sales inquiries and product information",
+//       created_at: "2024-02-20T14:45:00Z",
+//       updated_at: "2024-02-20T14:45:00Z",
+//     },
+//     created_at: "2024-02-20T14:45:00Z",
+//     updated_at: "2024-02-20T14:45:00Z",
+//   },
+//   {
+//     id: "3",
+//     name: "Technical Support AI",
+//     role_id: "3",
+//     role: {
+//       id: "3",
+//       name: "Technical Support",
+//       description: "Provides technical assistance and troubleshooting",
+//       created_at: "2024-03-10T09:15:00Z",
+//       updated_at: "2024-03-10T09:15:00Z",
+//     },
+//     created_at: "2024-03-10T09:15:00Z",
+//     updated_at: "2024-03-10T09:15:00Z",
+//   },
+//   {
+//     id: "4",
+//     name: "Marketing Assistant AI",
+//     role_id: "4",
+//     role: {
+//       id: "4",
+//       name: "Marketing Assistant",
+//       description: "Helps with marketing campaigns and customer engagement",
+//       created_at: "2024-04-05T16:20:00Z",
+//       updated_at: "2024-04-05T16:20:00Z",
+//     },
+//     created_at: "2024-04-05T16:20:00Z",
+//     updated_at: "2024-04-05T16:20:00Z",
+//   },
+// ];
 
 // Mock data untuk Human Agents
 export const mockHumanAgents = [
@@ -486,26 +486,26 @@ export const mockHumanAgents = [
 ];
 
 // Mock data untuk WhatsApp Platform
-export const mockWhatsAppPlatform: WhatsAppPlatform = {
-  id: "1082fe3c_device_1750494274779_67xmoijuo",
-  name: "WhatsApp Business DISTCCTV",
-  type: "whatsapp",
-  phone: "+628526000993731",
-  description: "WhatsApp Business - Connected",
-  isActive: true,
-  deviceId: "1082fe3c_device_1750494274779_67xmoijuo",
-  deviceName: "DISTCCTV Business",
-  status: "Connected",
-  sessionId: "session_mock_123",
-  timestamp: new Date().toISOString(),
-  isConnected: true,
-  isLoggedIn: true,
-  aiAgent: "DISTCCTV AI",
-  teams: ["DISTCCTV", "Support Team"],
-  humanAgent: "SPV DISTCCTV",
-  distributionMethod: "least-assigned",
-  csatEnabled: true,
-};
+// export const mockWhatsAppPlatform: WhatsAppPlatform = {
+//   id: "1082fe3c_device_1750494274779_67xmoijuo",
+//   name: "WhatsApp Business DISTCCTV",
+//   type: "whatsapp",
+//   phone: "+628526000993731",
+//   description: "WhatsApp Business - Connected",
+//   isActive: true,
+//   deviceId: "1082fe3c_device_1750494274779_67xmoijuo",
+//   deviceName: "DISTCCTV Business",
+//   status: "Connected",
+//   sessionId: "session_mock_123",
+//   timestamp: new Date().toISOString(),
+//   isConnected: true,
+//   isLoggedIn: true,
+//   aiAgent: "DISTCCTV AI",
+//   teams: ["DISTCCTV", "Support Team"],
+//   humanAgent: "SPV DISTCCTV",
+//   distributionMethod: "least-assigned",
+//   csatEnabled: true,
+// };
 
 export const platformIcons = {
   whatsapp: MessageSquare,
