@@ -7,4 +7,7 @@ export { AgentsService, type CreateAgentRequest, type AgentSettings, type Update
 export { KnowledgeService, type KnowledgeContent, type CreateKnowledgeRequest, type KnowledgeResponse, type ExistingKnowledge } from './knowledgeService';
 export { ChatService, type ChatRequest, type ChatResponse } from './chatService';
 export { PipelineService, type CreatePipelineRequest, type CreatePipelineResponse, type PipelineListResponse } from './pipelineService';
+export { ContactsService, type Contact, type ContactsResponse } from './contactsService';
+export { ChatLogsService, type ChatLog, type ChatLogsResponse } from './chatLogsService';
+export { websocketService, type WebSocketMessage, type ContactUpdateMessage, type ChatlogUpdateMessage } from './websocketService';
 export { default as axiosInstance } from './axios';

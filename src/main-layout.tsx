@@ -10,7 +10,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
-      <NavigationSidebar 
+      <NavigationSidebar
         isMobileOpen={isMobileMenuOpen}
         setIsMobileOpen={setIsMobileMenuOpen}
       />
@@ -18,7 +18,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Content Topbar - positioned adjacent to sidebar */}
-        <Topbar 
+        <Topbar
           onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
