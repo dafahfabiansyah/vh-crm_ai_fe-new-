@@ -245,7 +245,7 @@ export default function ConnectedPlatformsPage() {
     setIsSaving(true);
     try {
       // Lakukan mapping AI Agent ke Platform
-      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id, currentPlatform.id);
+      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
 
       setToast({
         show: true,

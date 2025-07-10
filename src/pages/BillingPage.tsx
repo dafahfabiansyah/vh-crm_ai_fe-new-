@@ -89,22 +89,22 @@ export default function BillingPage() {
   // Mock data for dashboard cards
   const dashboardData = {
     packageDetails: {
-      plan: "BUSINESS Plan",
-      renewal: "Renewalt Automatically on 19 July 2025",
+      plan: "-",
+      renewal: "-",
       status: "active",
     },
     monthlyUsers: {
-      current: 1420,
-      limit: 10000,
+      current: 0,
+      limit: 0,
       additional: 0,
     },
     aiResponses: {
-      used: 8168,
-      limit: 25000,
+      used: 0,
+      limit: 0,
       resetDate: "Reset Setup Tanggal 1",
     },
     additionalResponses: {
-      count: -3,
+      count: 0,
       permanent: true,
     },
   };
@@ -503,7 +503,10 @@ export default function BillingPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3 sm:space-y-4">
-                {transactions.map((transaction) => (
+                <div className="text-center text-muted-foreground">
+                  Belum ada transaksi
+                </div>
+                {/* {transactions.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
@@ -556,7 +559,7 @@ export default function BillingPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                ))} */}
               </div>
             </CardContent>
           </Card>
