@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import whatsappService from "@/services/whatsappService";
 import type { WhatsAppQRCodeProps, WhatsAppQRCodeData } from "@/types";
-import type { WhatsAppStatusResponse } from "@/services/whatsappService";
+import type { GetStatusResponse } from "@/services/whatsappService";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import {
   setConnectionData,
@@ -37,15 +37,15 @@ const WhatsAppQRCode = ({
 }: WhatsAppQRCodeProps) => {
   const dispatch = useAppDispatch();
   const connectionData = useAppSelector(selectWhatsAppConnectionData);
-  
-  const [qrData, setQrData] = useState<WhatsAppQRCodeData | null>(null);
+
+  const [qrData, ] = useState<WhatsAppQRCodeData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [deviceId, setDeviceId] = useState<string>(connectionData.deviceId || "");
-  const [status, setStatus] = useState<WhatsAppStatusResponse["data"] | null>(
-    null
+  const [deviceId, setDeviceId] = useState<string>(
+    connectionData.deviceId || ""
   );
+  const [status, setStatus] = useState<GetStatusResponse | null>(null);
 
   // Generate a unique device ID
   const generateDeviceId = () => {
@@ -75,34 +75,38 @@ const WhatsAppQRCode = ({
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };  // Check WhatsApp status
+  }; // Check WhatsApp status
   const checkStatus = useCallback(
     async (device_id: string) => {
       try {
-        const response = await whatsappService.getStatus(device_id);        if (response.success && response.data) {
-          setStatus(response.data);
+        const response = await whatsappService.getStatus(device_id);
+        if (response) {
+          setStatus(response);
 
           // Dispatch to Redux store - preserve existing deviceId if available
-          dispatch(setConnectionData({ 
-            statusData: {
-              ...response.data,
-              // Preserve the original deviceId if it exists in Redux
-              device_id: connectionData.deviceId || response.data.device_id
-            },
-            sessionId: qrData?.session_id 
-          }));
+          dispatch(
+            setConnectionData({
+              statusData: {
+                ...response,
+                // Preserve the original deviceId if it exists in Redux
+                device_id: connectionData.deviceId || response.device_id,
+              },
+              sessionId: qrData?.session_id,
+            })
+          );
 
           // Clear any existing errors
           dispatch(clearError());
 
           // If connected and logged in, notify parent
-          if (response.data.is_connected && response.data.is_logged_in) {
+          if (response.is_connected && response.is_logged_in) {
             onDeviceConnected?.(device_id);
           }
         }
       } catch (err: any) {
         console.error("❌ Status check error:", err);
-        const errorMessage = err.response?.data?.message || err.message || "Status check failed";
+        const errorMessage =
+          err.response?.data?.message || err.message || "Status check failed";
         dispatch(setWhatsAppError(errorMessage));
         // Don't show error for status checks, just log it
       }
@@ -129,32 +133,35 @@ const WhatsAppQRCode = ({
     setError(null);
     dispatch(clearError());
 
-    try {      // Generate or use existing device ID
+    try {
+      // Generate or use existing device ID
       const currentDeviceId = deviceId || generateDeviceId();
       setDeviceId(currentDeviceId);
-        // Update device ID in Redux FIRST
+      // Update device ID in Redux FIRST
       dispatch(setWhatsAppDeviceId(currentDeviceId));
-      
+
       // Also store in localStorage for persistence
       try {
-        const userData = localStorage.getItem('user_data');
+        const userData = localStorage.getItem("user_data");
         if (userData) {
           const parsedData = JSON.parse(userData);
           parsedData.whatsapp_device_id = currentDeviceId;
-          localStorage.setItem('user_data', JSON.stringify(parsedData));
+          localStorage.setItem("user_data", JSON.stringify(parsedData));
         } else {
           // Create new user_data if it doesn't exist
-          localStorage.setItem('user_data', JSON.stringify({ whatsapp_device_id: currentDeviceId }));
+          localStorage.setItem(
+            "user_data",
+            JSON.stringify({ whatsapp_device_id: currentDeviceId })
+          );
         }
-      } catch (error) {
-      }
+      } catch (error) {}
 
       const response = await whatsappService.getQRCode(currentDeviceId);
 
       if (response.success && response.data) {
-        setQrData(response.data);
+        // setQrData(response.data);
         setStatus(null); // Reset status when getting new QR
-        
+
         // Store session ID in Redux
         dispatch(setSessionId(response.data.session_id));
       } else {
@@ -176,7 +183,7 @@ const WhatsAppQRCode = ({
     } finally {
       setLoading(false);
     }
-  }, [deviceId, onError, dispatch]);// Manual fetch QR code on component mount (not automatic)
+  }, [deviceId, onError, dispatch]); // Manual fetch QR code on component mount (not automatic)
   useEffect(() => {
     // Don't auto-fetch, let user click to generate QR
   }, []);

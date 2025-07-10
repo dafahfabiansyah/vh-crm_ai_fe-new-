@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { WhatsAppStatusResponse } from '@/services/whatsappService';
+import type { GetStatusResponse } from '@/services/whatsappService';
 
 // WhatsApp connection state interface
 export interface WhatsAppConnectionData {
@@ -44,7 +44,7 @@ const whatsappSlice = createSlice({
     setConnectionData: (
       state,
       action: PayloadAction<{
-        statusData: WhatsAppStatusResponse['data'];
+        statusData: GetStatusResponse;
         sessionId?: string;
       }>
     ) => {

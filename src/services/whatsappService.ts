@@ -18,6 +18,31 @@ export interface CreateSessionResponse {
 export interface GetStatusResponse {
   session: string;
   status: string;
+  is_connected: boolean;
+  is_logged_in: boolean;
+  phone_number: string | null;
+  device_id: string | null;
+  device_name: string | null;
+  timestamp: string | null;
+}
+
+export interface GetQRCodeResponse {
+  success: boolean;
+  message: string;
+  data: {
+    qr_code: string;
+    expires_at: string;
+    session_id: string;
+    // tambahkan field lain jika perlu
+  };
+}
+
+export interface GetAllBusinessSessionsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    sessions: Array<any>; // Ganti any dengan tipe session jika sudah ada
+  };
 }
 
 export const whatsappService = {
@@ -72,6 +97,36 @@ export const whatsappService = {
       console.error('WhatsApp Get Status Error:', error);
       throw new Error(error.message || 'Failed to get status');
     }
+  },
+
+  getQRCode: async (deviceId: string): Promise<GetQRCodeResponse> => {
+    const token = AuthService.getStoredToken();
+    const response = await fetch(`${API_BASE_URL}/qrcode/${deviceId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  getAllBusinessSessions: async (): Promise<GetAllBusinessSessionsResponse> => {
+    const token = AuthService.getStoredToken();
+    const response = await fetch(`${API_BASE_URL}/sessions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   },
 };
 

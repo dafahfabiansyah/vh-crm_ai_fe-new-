@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { whatsappService, type WhatsAppSession } from '@/services';
+import { whatsappService } from '@/services';
 
 export const useWhatsAppSessions = () => {
-  const [selectedSession, setSelectedSession] = useState<WhatsAppSession | null>(null);
-  const [sessions, setSessions] = useState<WhatsAppSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [sessions, setSessions] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,8 +37,8 @@ export const useWhatsAppSessions = () => {
 
   const handleSave = () => {
     if (!selectedSession) return;
-    setSessions((prev) =>
-      prev.map((s) => (s.id === selectedSession.id ? selectedSession : s))
+    setSessions((prev: any[]) =>
+      prev.map((s: any) => (s.id === selectedSession.id ? selectedSession : s))
     );
     // Show success message
     console.log("Session saved:", selectedSession);
@@ -46,10 +46,10 @@ export const useWhatsAppSessions = () => {
 
   const handleDelete = () => {
     if (!selectedSession) return;
-    setSessions((prev) => prev.filter((s) => s.id !== selectedSession.id));
+    setSessions((prev: any[]) => prev.filter((s: any) => s.id !== selectedSession.id));
     if (sessions.length > 1) {
       setSelectedSession(
-        sessions.find((s) => s.id !== selectedSession.id) || sessions[0]
+        sessions.find((s: any) => s.id !== selectedSession.id) || sessions[0]
       );
     }
   };
