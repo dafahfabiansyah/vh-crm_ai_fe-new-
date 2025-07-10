@@ -1,5 +1,5 @@
 import { whatsappService } from "@/services";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { CheckCircle2, Loader2, QrCode, Smartphone } from "lucide-react";
 import { Badge } from "./ui/badge";
@@ -10,6 +10,23 @@ import { Button } from "./ui/button";
 const QRCodeDisplay = ({ sessionData }: { sessionData: any; onBack: () => void }) => {
   const [currentStatus, setCurrentStatus] = useState(sessionData.status);
   const [isChecking, setIsChecking] = useState(false);
+
+  // Polling otomatis setiap 5 detik
+  useEffect(() => {
+    if (currentStatus === "ready") return; // Stop polling jika sudah ready
+    const interval = setInterval(async () => {
+      try {
+        const statusResponse = await whatsappService.getStatus(sessionData.session);
+        setCurrentStatus(statusResponse.status);
+        if (statusResponse.status === "ready") {
+          alert("WhatsApp berhasil terhubung!");
+        }
+      } catch (error) {
+        // Optional: handle error silently
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentStatus, sessionData.session]);
 
   // Manual check status function
   const handleCheckStatus = async () => {

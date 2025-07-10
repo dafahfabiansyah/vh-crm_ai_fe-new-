@@ -192,6 +192,18 @@ export const productService = {
   }
 };
 
+/**
+ * Upload an image to /v1/s3/upload-image
+ * @param imageFile File atau Blob yang akan diupload
+ * @returns Response data dari server
+ */
+export async function uploadImageToS3(imageFile: File | Blob): Promise<any> {
+  const formData = new FormData();
+  formData.append('image', imageFile); // HARUS 'image' sesuai backend
+  const response = await axiosInstance.post('/v1/s3/upload-image', formData);
+  return response.data;
+}
+
 // Combined export for convenience
 export default {
   category: categoryService,

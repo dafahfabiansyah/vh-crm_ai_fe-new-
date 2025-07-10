@@ -32,6 +32,7 @@ import {
   categoryService,
   productService,
   type CategoryAttribute,
+  uploadImageToS3,
 } from "@/services/productService";
 import type {
   Category,
@@ -98,6 +99,10 @@ const ProductPage = () => {
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
   const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploadUrl, setImageUploadUrl] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string>("");
 
   const handleInputChange =
     (field: keyof ProductFormData) =>
@@ -187,6 +192,30 @@ const ProductPage = () => {
     setAttributeValues((prev) => ({ ...prev, [attributeName]: value }));
   };
 
+  // Handler untuk file input
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+      setImageUploadError("");
+    }
+  };
+
+  // Handler upload image
+  const handleUploadImage = async () => {
+    if (!imageFile) return;
+    setIsUploadingImage(true);
+    setImageUploadError("");
+    try {
+      const res = await uploadImageToS3(imageFile);
+      setImageUploadUrl(res.url);
+      setFormData((prev) => ({ ...prev, image: res.url }));
+    } catch (err: any) {
+      setImageUploadError(err?.message || "Failed to upload image");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -205,7 +234,8 @@ const ProductPage = () => {
         stock: formData.stock,
         price: parseFloat(formData.price),
         status: true,
-        attributes: attributesArr
+        attributes: attributesArr,
+        image: formData.image, // Pastikan image yang dikirim adalah url string
       };
       // API call
       const response = await productService.createProduct(productData as any);
@@ -248,6 +278,9 @@ const ProductPage = () => {
       setCategoryAttributes([]);
       setAttributeValues({});
       setSelectedCategoryId("");
+      setImageFile(null);
+      setImageUploadUrl("");
+      setImageUploadError("");
     } catch (error: any) {
       console.error("Error creating product:", error);
       alert(`Failed to create product: ${error.message}`);
@@ -1084,6 +1117,28 @@ const ProductPage = () => {
                     ))}
                 </div>
               )}
+
+              <div>
+                <Label className="py-2" htmlFor="image">Product Image</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                  />
+                  <Button type="button" onClick={handleUploadImage} disabled={!imageFile || isUploadingImage}>
+                    {isUploadingImage ? "Uploading..." : "Upload Image"}
+                  </Button>
+                </div>
+                {imageUploadError && <div className="text-red-500 text-sm mt-1">{imageUploadError}</div>}
+                {formData.image && (
+                  <div className="mt-2">
+                    <img src={formData.image} alt="Product Preview" className="max-h-32 rounded border" />
+                    <div className="text-xs text-gray-500 break-all">{formData.image}</div>
+                  </div>
+                )}
+              </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
