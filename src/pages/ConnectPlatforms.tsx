@@ -556,10 +556,11 @@ export default function ConnectedPlatformsPage() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
+                      {/* <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
                       <SelectItem value="Support Team">Support Team</SelectItem>
                       <SelectItem value="Sales Team">Sales Team</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
+                      <SelectItem value="Operations">Operations</SelectItem> */}
+                      <SelectItem value="Operations">Belum ada team</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
