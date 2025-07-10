@@ -11,6 +11,10 @@ export interface Contact {
     created_at: string;
     updated_at: string;
     lead_status: 'assigned' | 'unassigned' | 'resolved';
+    agent_name?: string;
+    platform_name: string;
+    source_type: 'WhatsApp' | 'Instagram' | 'Website';
+    platform_inbox_id: string;
 }
 
 export interface ContactsResponse {
@@ -43,6 +47,46 @@ export class ContactsService {
         } catch (error: any) {
             console.error('Error fetching contact:', error);
             throw new Error(error.response?.data?.message || 'Failed to fetch contact');
+        }
+    }
+
+    static async takeoverConversation(contactId: string): Promise<void> {
+        try {
+            await axiosInstance.post(`/v1/leads/conversation-control/${contactId}`, {
+                action: 'assign'
+            });
+        } catch (error: any) {
+            console.error('Error taking over conversation:', error);
+            throw new Error(error.response?.data?.message || 'Failed to takeover conversation');
+        }
+    }
+
+    static async resolveConversation(contactId: string): Promise<void> {
+        try {
+            await axiosInstance.post(`/v1/leads/conversation-control/${contactId}`, {
+                action: 'resolve'
+            });
+        } catch (error: any) {
+            console.error('Error resolving conversation:', error);
+            throw new Error(error.response?.data?.message || 'Failed to resolve conversation');
+        }
+    }
+
+    static async sendMessage(session: string, number: string, message: string): Promise<void> {
+        try {
+            const whatsappUrl = import.meta.env.VITE_API_WHATSAPP_URL;
+            if (!whatsappUrl) {
+                throw new Error('WhatsApp API URL not configured');
+            }
+
+            await axiosInstance.post(`${whatsappUrl}/send-message`, {
+                session,
+                number,
+                message
+            });
+        } catch (error: any) {
+            console.error('Error sending message:', error);
+            throw new Error(error.response?.data?.message || 'Failed to send message');
         }
     }
 }

@@ -11,7 +11,7 @@ export const useChatLogs = (contactId: string | null) => {
   // Handle real-time chatlog updates
   const handleChatlogUpdate = useCallback((message: ChatlogUpdateMessage) => {
     const messageData = message.data;
-    
+
     // Transform WebSocket message data to ChatLog format
     const newChatLog: ChatLog = {
       id: messageData.id,
@@ -22,11 +22,11 @@ export const useChatLogs = (contactId: string | null) => {
       from_me: messageData.from_me,
       sent_at: messageData.sent_at
     };
-    
+
     setChatLogs(prevChatLogs => {
       // Check if this chatlog already exists (avoid duplicates)
       const existingIndex = prevChatLogs.findIndex(log => log.id === newChatLog.id);
-      
+
       if (existingIndex >= 0) {
         // Update existing chatlog
         const updatedChatLogs = [...prevChatLogs];
@@ -62,7 +62,7 @@ export const useChatLogs = (contactId: string | null) => {
         setError(null);
         const response = await ChatLogsService.getChatLogsByContactId(contactId);
         setChatLogs(response.chatlogs);
-        
+
         // Subscribe to WebSocket updates for this contact
         subscribeToContact(contactId);
       } catch (err) {

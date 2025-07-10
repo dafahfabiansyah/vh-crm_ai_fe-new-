@@ -52,7 +52,7 @@ export function useContacts(page: number = 1, perPage: number = 100): UseContact
 
   // Handle real-time contact updates
   const handleContactUpdate = useCallback((message: ContactUpdateMessage) => {
-    const { contact_id, last_message, last_message_at, lead_status } = message.data;
+    const { contact_id, last_message, last_message_at, lead_status, agent_name } = message.data;
 
     setContacts(prevContacts => {
       // Check if contact exists in current array
@@ -68,12 +68,19 @@ export function useContacts(page: number = 1, perPage: number = 100): UseContact
       // Update existing contact
       const updatedContacts = prevContacts.map(contact => {
         if (contact.id === contact_id) {
-          return {
+          const updatedContact = {
             ...contact,
             last_message,
             last_message_at,
             lead_status
           };
+
+          // Update agent_name if provided
+          if (agent_name !== undefined) {
+            updatedContact.agent_name = agent_name;
+          }
+
+          return updatedContact;
         }
         return contact;
       });

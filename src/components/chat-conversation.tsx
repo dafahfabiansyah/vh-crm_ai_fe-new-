@@ -5,16 +5,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Loader2 } from 'lucide-react'
+import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
 import type { ChatLog } from "@/services"
+import { ContactsService } from "@/services/contactsService"
 
 
-export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo }: ChatConversationProps) {
+export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [isTakenOver, setIsTakenOver] = useState(false)
+
+  // Check if conversation is already assigned
+  const isAssigned = selectedContact?.lead_status === 'assigned'
+  const showMessageInput = isTakenOver || isAssigned
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Fetch chat logs for the selected contact
@@ -54,18 +61,63 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     scrollToBottom()
   }, [chatLogs])
 
-  const handleTakeOver = () => {
-    setIsTakenOver(true)
-    console.log("Chat taken over by agent")
+  const handleTakeOver = async () => {
+    if (!selectedContactId) return
+
+    setIsLoading(true)
+    try {
+      await ContactsService.takeoverConversation(selectedContactId)
+      setIsTakenOver(true)
+      console.log("Chat taken over by agent")
+      
+      // Switch to assigned tab when chat is taken over
+      if (onSwitchToAssignedTab) {
+        onSwitchToAssignedTab()
+      }
+    } catch (error: any) {
+      console.error("Failed to takeover conversation:", error)
+      alert(error.message || "Failed to takeover conversation")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Handle sending message
-      console.log("Sending message:", newMessage)
+  const handleResolve = async () => {
+    if (!selectedContactId) return
+
+    setIsLoading(true)
+    try {
+      await ContactsService.resolveConversation(selectedContactId)
+      // Reset takeover state, but assigned contacts will still show message input based on lead_status
+      setIsTakenOver(false)
+      console.log("Conversation resolved")
+    } catch (error: any) {
+      console.error("Failed to resolve conversation:", error)
+      alert(error.message || "Failed to resolve conversation")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedContact) return
+
+    setIsSending(true)
+    try {
+      await ContactsService.sendMessage(
+        selectedContact.platform_inbox_id,
+        selectedContact.contact_identifier,
+        newMessage
+      )
       setNewMessage("")
+      console.log("Message sent:", newMessage)
       // Scroll to bottom after sending message
       setTimeout(() => scrollToBottom(), 100)
+    } catch (error: any) {
+      console.error("Failed to send message:", error)
+      alert(error.message || "Failed to send message")
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -127,6 +179,24 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
             {/* Mobile Action Buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Resolve Button - Show when taken over or assigned */}
+              {showMessageInput && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResolve}
+                  disabled={isLoading}
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline ml-1">Resolve</span>
+                </Button>
+              )}
+
               {/* Mobile Menu Button - Only show when no back button */}
               {!showBackButton && (
                 <Button
@@ -188,6 +258,24 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Resolve Button - Show when taken over or assigned */}
+            {showMessageInput && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResolve}
+                disabled={isLoading}
+                className="text-green-600 border-green-200 hover:bg-green-50"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                <span className="ml-1">Resolve</span>
+              </Button>
+            )}
+
             {/* Mobile Menu Button - Only show when no back button */}
             {!showBackButton && (
               <Button
@@ -274,7 +362,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
         )}
 
         {/* System Messages */}
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground mb-4">
             SPV DISTCCTV self assigned to this conversation
           </div>
@@ -284,7 +372,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
           <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground mb-4">
             This conversation resolved by SPV DISTCCTV
           </div>
-        </div>
+        </div> */}
 
         {/* Invisible div to scroll to bottom */}
         <div ref={messagesEndRef} />
@@ -292,39 +380,64 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
       {/* Sticky Bottom - Takeover Chat Button or Message Input */}
       <div className="sticky bottom-0 z-10 p-3 sm:p-4 border-t border-border bg-card">
-        {!isTakenOver ? (
+        {!showMessageInput ? (
           <Button
             onClick={handleTakeOver}
+            disabled={isLoading}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            👥 Takeover Chat
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Taking over...
+              </>
+            ) : (
+              <>
+                👥 Takeover Chat
+              </>
+            )}
           </Button>
         ) : (
-          <div className="flex items-end gap-2">
+          <div className="flex items-start gap-2">
             <div className="flex-1 relative">
-              <Input
+              <textarea
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pr-20"
-                multiple
+                disabled={isSending}
+                className="w-full min-h-[40px] max-h-[120px] resize-none rounded-md border border-input bg-background px-3 py-2 pr-20 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 overflow-y-auto"
+                rows={1}
+                style={{
+                  height: 'auto',
+                  minHeight: '40px',
+                  maxHeight: '120px'
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                }}
               />
               <div className="absolute right-2 top-2 flex gap-1">
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isSending}>
                   <Paperclip className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isSending}>
                   <Smile className="h-4 w-4" />
                 </Button>
               </div>
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || isSending}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              <Send className="h-4 w-4" />
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
         )}

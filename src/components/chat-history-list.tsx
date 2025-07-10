@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Filter, Plus, MoreHorizontal, Circle, CheckCircle2, CheckCheck, Loader2 } from "lucide-react"
+import { Search, Filter, Plus, MoreHorizontal, CheckCircle2, CheckCheck, Loader2, User, Bot, MessageCircle, Instagram, Globe } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useContacts } from "@/hooks"
 import type { Contact } from "@/services"
@@ -15,6 +15,8 @@ interface ChatHistoryListProps {
   onSelectContact: (contact: Contact) => void
   searchQuery: string
   onSearchChange: (query: string) => void
+  activeTab?: 'assigned' | 'unassigned' | 'resolved'
+  onTabChange?: (tab: 'assigned' | 'unassigned' | 'resolved') => void
 }
 
 export default function ChatHistoryList({
@@ -22,9 +24,22 @@ export default function ChatHistoryList({
   onSelectContact,
   searchQuery,
   onSearchChange,
+  activeTab: controlledActiveTab,
+  onTabChange,
 }: ChatHistoryListProps) {
   const { contacts, loading, error, assignedCount, unassignedCount, resolvedCount } = useContacts()
-  const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
+  const [internalActiveTab, setInternalActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
+
+  // Use controlled tab if provided, otherwise use internal state
+  const activeTab = controlledActiveTab ?? internalActiveTab
+
+  const handleTabChange = (tab: 'assigned' | 'unassigned' | 'resolved') => {
+    if (onTabChange) {
+      onTabChange(tab)
+    } else {
+      setInternalActiveTab(tab)
+    }
+  }
 
   const filteredContacts = contacts.filter((contact: Contact) => {
     // Filter berdasarkan search query
@@ -60,6 +75,19 @@ export default function ChatHistoryList({
         return "bg-yellow-100 text-yellow-800 border-yellow-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getSourceTypeIcon = (sourceType: string) => {
+    switch (sourceType) {
+      case "WhatsApp":
+        return <MessageCircle className="h-3 w-3 text-green-600" />
+      case "Instagram":
+        return <Instagram className="h-3 w-3 text-pink-600" />
+      case "Website":
+        return <Globe className="h-3 w-3 text-blue-600" />
+      default:
+        return <MessageCircle className="h-3 w-3 text-gray-600" />
     }
   }
 
@@ -135,7 +163,7 @@ export default function ChatHistoryList({
         <div className="flex gap-1 sm:gap-2 text-sm overflow-x-auto scrollbar-thin pb-2 min-w-0">
           <div className="flex gap-1 sm:gap-2 flex-nowrap">
             <button
-              onClick={() => setActiveTab('assigned')}
+              onClick={() => handleTabChange('assigned')}
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'assigned'
                 ? 'bg-primary/10 text-primary border border-primary/20'
                 : 'hover:bg-accent/50 text-muted-foreground'
@@ -149,7 +177,7 @@ export default function ChatHistoryList({
             </button>
 
             <button
-              onClick={() => setActiveTab('unassigned')}
+              onClick={() => handleTabChange('unassigned')}
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'unassigned'
                 ? 'bg-destructive/10 text-destructive border border-destructive/20'
                 : 'hover:bg-accent/50 text-muted-foreground'
@@ -163,7 +191,7 @@ export default function ChatHistoryList({
             </button>
 
             <button
-              onClick={() => setActiveTab('resolved')}
+              onClick={() => handleTabChange('resolved')}
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors flex-shrink-0 text-xs sm:text-sm ${activeTab === 'resolved'
                 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                 : 'hover:bg-accent/50 text-muted-foreground'
@@ -238,28 +266,40 @@ export default function ChatHistoryList({
                     <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{formatTimestamp(contact.last_message_at)}</span>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate mb-2">{contact.last_message}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate mb-1">{contact.last_message}</p>
+
+                  <div className="flex items-center gap-1 mb-2">
+                    {getSourceTypeIcon(contact.source_type)}
+                    <p className="text-xs text-muted-foreground truncate">{contact.platform_name}</p>
+                  </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1 sm:gap-2">
                       {contact.lead_status === "resolved" ? (
                         <CheckCircle2 className="h-3 w-3 text-green-500" />
                       ) : contact.lead_status === "assigned" ? (
-                        <Circle className="h-3 w-3 text-blue-500" />
+                        <>
+                          <User className="h-3 w-3 text-blue-500" />
+                          <span className="text-xs text-muted-foreground truncate">{contact.agent_name}</span>
+                        </>
                       ) : (
-                        <Circle className="h-3 w-3 text-muted-foreground" />
+                        <>
+                          <Bot className="h-3 w-3 text-orange-500" />
+                          <span className="text-xs text-muted-foreground truncate">{contact.agent_name}</span>
+                        </>
                       )}
-                      <span className="text-xs text-muted-foreground truncate">{contact.contact_identifier}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {contact.unread_messages > 0 && (
                         <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
                           {contact.unread_messages}
                         </Badge>
                       )}
+                      <Badge variant="outline" className={`text-xs ${getStatusColor(contact.lead_status)}`}>
+                        {contact.lead_status}
+                      </Badge>
                     </div>
-
-                    <Badge variant="outline" className={`text-xs ${getStatusColor(contact.lead_status)}`}>
-                      {contact.lead_status}
-                    </Badge>
                   </div>
                 </div>
               </div>

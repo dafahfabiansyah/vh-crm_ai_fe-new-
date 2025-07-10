@@ -79,6 +79,18 @@ export interface DecodeTokenResponse {
   iat ?: number; // Optional issued at time
 }
 
+// Platform mapping interface
+export interface PlatformMapping {
+  id: string;
+  id_agent: string;
+  id_platform: string;
+  agent_type: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  agent_name: string;
+}
+
 // WhatsApp Platform interface based on API response
 export interface PlatformInbox {
   id: string;
@@ -101,6 +113,8 @@ export interface PlatformInbox {
   humanAgent?: string;
   distributionMethod?: string;
   csatEnabled?: boolean;
+  // Raw platform mappings data from API
+  platformMappings?: PlatformMapping[];
 }
 
 // lead card interface

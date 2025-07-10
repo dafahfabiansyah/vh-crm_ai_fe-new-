@@ -111,6 +111,7 @@ export interface ChatConversationProps {
   showBackButton?: boolean
   onToggleInfo?: () => void
   showInfo?: boolean
+  onSwitchToAssignedTab?: () => void
 }
 // chat conversation types end
 

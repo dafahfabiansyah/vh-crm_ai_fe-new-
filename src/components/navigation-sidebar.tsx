@@ -137,8 +137,6 @@ export default function NavigationSidebar({
                 itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
               )}
               style={paddingLeft}
-              disabled={userRole?.toLowerCase() === "manager"}
-              title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
             >
               <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
               <div
@@ -167,7 +165,7 @@ export default function NavigationSidebar({
 
     if (item.href) {
       return (
-        <Link key={item.id} to={item.href} onClick={userRole?.toLowerCase() === "manager" ? (e) => e.preventDefault() : () => setIsMobileOpen(false)}>
+        <Link key={item.id} to={item.href} onClick={() => setIsMobileOpen(false)}>
           <Button
             variant="ghost"
             className={cn(
@@ -176,8 +174,6 @@ export default function NavigationSidebar({
               itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
             )}
             style={paddingLeft}
-            disabled={userRole?.toLowerCase() === "manager"}
-            title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
           >
             <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
             <div
