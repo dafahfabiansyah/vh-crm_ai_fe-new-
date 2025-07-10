@@ -818,6 +818,7 @@ const ProductPage = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
+                          <th className="text-left py-3 px-4">Image</th>
                           <th className="text-left py-3 px-4">SKU</th>
                           <th className="text-left py-3 px-4">Name</th>
                           <th className="text-left py-3 px-4">Description</th>
@@ -831,17 +832,24 @@ const ProductPage = () => {
                       </thead>
                       <tbody>
                         {filteredProducts.map((product: any) => (
-                          <tr
-                            key={product.id}
-                            className="border-b hover:bg-gray-50"
-                          >
+                          <tr key={product.id} className="border-b hover:bg-gray-50">
                             <td className="py-3 px-4">
-                              <Badge variant="outline">{product.sku}</Badge>
+                            <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="h-10 w-10 object-cover rounded"
+                                 
+                                />
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge variant="outline">{product.sku || product.code}</Badge>
                             </td>
                             <td className="py-3 px-4">{product.name}</td>
                             <td className="py-3 px-4">{product.description}</td>
                             <td className="py-3 px-4">
-                              <Badge variant="secondary">{product.category_name}</Badge>
+                              <Badge variant="secondary">
+                                {categories.find((cat) => cat.id === (product.id_category || product.category))?.name || "-"}
+                              </Badge>
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-medium">
@@ -857,11 +865,17 @@ const ProductPage = () => {
                             <td className="py-3 px-4">
                               {Array.isArray(product.attributes) && product.attributes.length > 0 ? (
                                 <div className="flex flex-wrap gap-1">
-                                  {product.attributes.map((attr: any) => (
-                                    <Badge key={attr.id} variant="outline" className="text-xs">
-                                      {attr.attribute_name}: {attr.value}
-                                    </Badge>
-                                  ))}
+                                  {product.attributes.map((attr: any) => {
+                                    const attrName =
+                                      categoriesWithAttributes
+                                        .get(product.id_category || product.category)
+                                        ?.find((a) => a.id === attr.id_category_attribute)?.attribute_name || attr.id_category_attribute;
+                                    return (
+                                      <Badge key={attr.id_category_attribute} variant="outline" className="text-xs">
+                                        {attrName}: {attr.value}
+                                      </Badge>
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <span className="text-sm text-gray-500">-</span>

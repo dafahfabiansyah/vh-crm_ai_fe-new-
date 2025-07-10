@@ -7,10 +7,7 @@ import { AuthService } from './authService';
 // Base axios instance configuration
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
-  timeout: 30000, // Increased timeout for WhatsApp operations
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: 30000, // Increased timeout for WhatsApp operations,
 });
 
 // Request interceptor to add auth token
@@ -53,6 +50,17 @@ axiosInstance.interceptors.request.use(
       console.log('✅ Authorization header added');
     } else {
       console.log('❌ No token found');
+    }
+    // Hanya set Content-Type application/json jika body bukan FormData
+    if (
+      config.data &&
+      typeof window !== 'undefined' &&
+      !(config.data instanceof FormData)
+    ) {
+      config.headers['Content-Type'] = 'application/json';
+    } else if (config.data instanceof FormData) {
+      // Biarkan browser/axios yang set Content-Type
+      delete config.headers['Content-Type'];
     }
     return config;
   },
