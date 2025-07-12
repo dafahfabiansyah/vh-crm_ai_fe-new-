@@ -110,21 +110,31 @@ export default function ConnectedPlatformsPage() {
       .getPlatformInbox()
       .then((data) => {
         // Map API response to PlatformInbox[]
-        const mapped = (data || []).map((item: any) => ({
-          id: item.id,
-          name: item.platform_name,
-          type: "whatsapp",
-          phone: item.platform_identifier,
-          description: item.source_type,
-          isActive: item.is_connected,
-          deviceId: item.id,
-          deviceName: item.platform_name,
-          status: item.is_connected ? "Connected" : "Disconnected",
-          sessionId: item.id_pipeline || "",
-          timestamp: item.updated_at,
-          isConnected: item.is_connected,
-          isLoggedIn: item.is_connected,
-        }));
+        const mapped = (data || []).map((item: any) => {
+          // Get the first active agent mapping if available
+          const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
+          
+          return {
+            id: item.id,
+            name: item.platform_name,
+            type: "whatsapp" as const,
+            phone: item.platform_identifier,
+            description: item.source_type,
+            isActive: item.is_connected,
+            deviceId: item.id,
+            deviceName: item.platform_name,
+            status: item.is_connected ? "Connected" : "Disconnected",
+            sessionId: item.id_pipeline || "",
+            timestamp: item.updated_at,
+            isConnected: item.is_connected,
+            isLoggedIn: item.is_connected,
+            // Map agent information from platform_mappings
+            aiAgent: activeMapping?.agent_name || undefined,
+            teams: activeMapping ? [activeMapping.agent_type] : undefined,
+            // Store raw mapping data for reference
+            platformMappings: item.platform_mappings || []
+          };
+        });
         setPlatformInboxs(mapped);
       })
       .catch((err) => {
@@ -868,23 +878,38 @@ export default function ConnectedPlatformsPage() {
                         )}
 
                         <div className="flex items-center gap-1 sm:gap-2 mt-2 overflow-x-auto">
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-gray-50 text-gray-700 border-gray-200 flex-shrink-0"
-                          >
-                            <Users className="h-3 w-3 mr-1" />
-                            <span className="truncate max-w-16 sm:max-w-none">
-                              {platform.teams?.[0] || "No Team"}
-                            </span>
-                          </Badge>
-                          {platform.aiAgent && (
+                          {platform.platformMappings && platform.platformMappings.length > 0 ? (
+                            platform.platformMappings.map((mapping) => (
+                              <Badge
+                                key={mapping.id}
+                                variant="outline"
+                                className={`text-xs flex-shrink-0 ${
+                                  mapping.agent_type === "AI"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                                    : "bg-green-50 text-green-700 border-green-200"
+                                }`}
+                              >
+                                {mapping.agent_type === "AI" ? (
+                                  <Bot className="h-3 w-3 mr-1" />
+                                ) : (
+                                  <User className="h-3 w-3 mr-1" />
+                                )}
+                                <span className="truncate max-w-16 sm:max-w-none">
+                                  {mapping.agent_name}
+                                </span>
+                                {!mapping.is_active && (
+                                  <span className="ml-1 text-gray-400">(Inactive)</span>
+                                )}
+                              </Badge>
+                            ))
+                          ) : (
                             <Badge
                               variant="outline"
-                              className="text-xs bg-blue-50 text-blue-700 border-blue-200 flex-shrink-0"
+                              className="text-xs bg-gray-50 text-gray-700 border-gray-200 flex-shrink-0"
                             >
-                              <Bot className="h-3 w-3 mr-1" />
+                              <Users className="h-3 w-3 mr-1" />
                               <span className="truncate max-w-16 sm:max-w-none">
-                                {platform.aiAgent.split(" ")[0]} AI
+                                No Agent Mapped
                               </span>
                             </Badge>
                           )}

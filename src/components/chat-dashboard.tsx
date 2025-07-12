@@ -58,10 +58,15 @@ export default function ChatDashboard() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showInfo, setShowInfo] = useState(false)
+  const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
 
   const handleSelectContact = (contact: Contact) => {
     setSelectedContactId(contact.id)
     setSelectedContact(contact)
+  }
+
+  const handleSwitchToAssignedTab = () => {
+    setActiveTab('assigned')
   }
 
   return (
@@ -75,6 +80,8 @@ export default function ChatDashboard() {
             onSelectContact={handleSelectContact}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
         </div>
 
@@ -86,6 +93,7 @@ export default function ChatDashboard() {
               selectedContact={selectedContact}
               onToggleInfo={() => { }} // No-op for desktop since info is always visible
               showInfo={false} // Don't show active state on desktop
+              onSwitchToAssignedTab={handleSwitchToAssignedTab}
             />
           </div>
         ) : (
@@ -112,6 +120,8 @@ export default function ChatDashboard() {
               onSelectContact={handleSelectContact}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           </div>
         ) : (
@@ -127,6 +137,7 @@ export default function ChatDashboard() {
               showBackButton={true}
               onToggleInfo={() => setShowInfo(!showInfo)}
               showInfo={showInfo}
+              onSwitchToAssignedTab={handleSwitchToAssignedTab}
             />
           </div>
         )}

@@ -3,12 +3,28 @@ import type { ApiSuccessResponse } from "../types/interface";
 
 export interface HumanAgent {
   id: string;
-  name: string;
-  user_email: string;
-  role: string;
-  department: string;
+  identifier: string;
+  department: string | null;
+  agent_type: string;
   is_active: boolean;
-  status?: string;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    password: string;
+    business_name: string;
+    phone_number: string;
+    type: string;
+    status: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  // Legacy properties for backward compatibility
+  name?: string;
+  user_email?: string;
+  role?: string;
 }
 
 export interface CreateHumanAgentRequest {
@@ -35,17 +51,15 @@ export class HumanAgentsService {
    */
   static async getHumanAgents(): Promise<HumanAgent[]> {
     try {
-      const response = await axiosInstance.get("/v1/agents?offset=0&limit=10");
-      // Response: { items: [...] }
+      const response = await axiosInstance.get("/v1/agents/human");
+      // Response: { page, per_page, page_count, total_count, items: [...] }
       const items = response.data.items || [];
       const transformedData: HumanAgent[] = items.map((item: any) => ({
-        id: item.id,
-        name: item.name || "-", // fallback jika tidak ada
-        user_email: item.user_email || "-", // fallback jika tidak ada
-        role: item.role || item.agent_type || "agent", // fallback ke agent_type jika role tidak ada
-        department: item.department || "-",
-        is_active: item.is_active,
-        status: undefined, // tidak ada di response
+        ...item,
+        // Add legacy properties for backward compatibility
+        name: item.user?.name || "-",
+        user_email: item.user?.email || "-",
+        role: item.agent_type || "Human",
       }));
       return transformedData;
     } catch (error: any) {

@@ -5,6 +5,7 @@ export interface ContactUpdateMessage {
     last_message: string
     last_message_at: string
     lead_status: 'unassigned' | 'assigned' | 'resolved'
+    agent_name?: string
   }
   timestamp: string
 }
