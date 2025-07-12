@@ -205,7 +205,13 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
                 <MessageSquare className="h-4 w-4" />
                 <span>Last Message</span>
               </div>
-              <span className="text-foreground">{contactData.last_message || "No messages"}</span>
+              <span className="text-foreground">
+                {contactData.last_message
+                  ? contactData.last_message.length > 30
+                    ? contactData.last_message.slice(0, 30) + "..."
+                    : contactData.last_message
+                  : "No messages"}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
