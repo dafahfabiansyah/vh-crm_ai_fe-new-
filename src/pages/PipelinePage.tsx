@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { HumanAgentsService, type HumanAgent } from "@/services/humanAgentsService";
+import { AgentsService } from "@/services/agentsService";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -65,6 +66,7 @@ const PipelinePage = () => {
   const [agents, setAgents] = useState<HumanAgent[]>([]);
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
+  const [, setAiAgents] = useState<any[]>([]);
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
@@ -72,18 +74,23 @@ const PipelinePage = () => {
   };
 
   const handleDropLead = useCallback(
-    (leadId: string, targetStageId: string) => {
+    async (leadId: string, targetStageId: string) => {
       setPipelineData((prev) => {
         const newData = [...prev];
 
         // Find source stage and lead
         let leadToMove: Lead | undefined;
+        let leadIndexInSource = -1;
+        let sourceStageIdx = -1;
 
-        for (const stage of newData) {
-          const leadIndex = stage.leads.findIndex((lead) => lead.id === leadId);
-          if (leadIndex >= 0) {
-            leadToMove = stage.leads[leadIndex];
-            stage.leads.splice(leadIndex, 1);
+        for (let i = 0; i < newData.length; i++) {
+          const stage = newData[i];
+          const idx = stage.leads.findIndex((lead) => lead.id === leadId);
+          if (idx >= 0) {
+            leadToMove = stage.leads[idx];
+            leadIndexInSource = idx;
+            sourceStageIdx = i;
+            stage.leads.splice(idx, 1);
             stage.count--;
             break;
           }
@@ -91,17 +98,26 @@ const PipelinePage = () => {
 
         // Add to target stage
         if (leadToMove) {
+          // Update moved_by/source to 'human' di state lokal
+          const updatedLead = { ...leadToMove, source: 'human' };
           const targetStage = newData.find(
             (stage) => stage.id === targetStageId
           );
           if (targetStage) {
-            targetStage.leads.push(leadToMove);
+            targetStage.leads.push(updatedLead);
             targetStage.count++;
           }
         }
 
         return newData;
       });
+      // PATCH ke backend
+      try {
+        await PipelineService.moveLeadCard(leadId, { id_stage: targetStageId, moved_by: 'Human' });
+      } catch (err) {
+        // TODO: tampilkan error jika perlu
+        console.error('Failed to move lead card:', err);
+      }
     },
     []
   );
@@ -284,6 +300,7 @@ const PipelinePage = () => {
             count: stageLeads.length,
             value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
             stage_order: stage.stage_order ?? idx,
+            agent_id: stage.id_agent || undefined,
           };
         });
         setPipelineData(mappedStages);
@@ -309,6 +326,11 @@ const PipelinePage = () => {
       .then(setAgents)
       .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
   }, [isAddStageOpen]);
+
+  // Fetch AI agents saat mount
+  useEffect(() => {
+    AgentsService.getAgents().then(setAiAgents).catch(() => setAiAgents([]));
+  }, []);
 
   const handleOpenAddStage = () => {
     setStageName("");
@@ -683,7 +705,7 @@ const PipelinePage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="stage-agent">Pilih Agent</Label>
                       <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
-                        <SelectTrigger id="stage-agent">
+                        <SelectTrigger className="w-full" id="stage-agent">
                           <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
                         </SelectTrigger>
                         <SelectContent>

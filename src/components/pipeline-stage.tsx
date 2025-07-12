@@ -20,13 +20,22 @@ export const PipelineStageColumn: React.FC<{
   ) => void;
   onDeleteStage: (stageId: string) => void;
   onLeadClick: (lead: Lead) => void;
-}> = ({ stage, onDropLead, onUpdateLead, onUpdateStage, onDeleteStage, onLeadClick }) => {
+}> = ({
+  stage,
+  onDropLead,
+  onUpdateLead,
+  onUpdateStage,
+  onDeleteStage,
+  onLeadClick,
+}) => {
   const [isEditingStage, setIsEditingStage] = useState(false);
   const [editStageName, setEditStageName] = useState(stage.name);
   const [editStageDescription, setEditStageDescription] = useState(
     stage.description || ""
   );
-  const [editStageOrder, setEditStageOrder] = useState<number>(stage.stage_order ?? 0);
+  const [editStageOrder, setEditStageOrder] = useState<number>(
+    stage.stage_order ?? 0
+  );
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ITEM_TYPE,
@@ -127,7 +136,7 @@ export const PipelineStageColumn: React.FC<{
                 <input
                   type="number"
                   value={editStageOrder}
-                  onChange={e => setEditStageOrder(Number(e.target.value))}
+                  onChange={(e) => setEditStageOrder(Number(e.target.value))}
                   onKeyDown={handleStageKeyDown}
                   className="mt-1 px-2 py-1 text-xs text-gray-700 bg-white border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent min-w-0"
                   placeholder="Urutan stage"
@@ -148,15 +157,15 @@ export const PipelineStageColumn: React.FC<{
             </Badge>
           </div>
           <div className="text-right flex items-start gap-2">
-            <div className="text-sm font-medium text-gray-900">
-              Rp {stage.value.toLocaleString()}
-            </div>
+            {/* <div className="text-sm font-medium text-gray-900">
+            {stage.id}
+            </div> */}
             <button
               type="button"
               className="ml-2 p-1 rounded hover:bg-red-100 text-red-600 transition-colors"
               title="Hapus stage"
               onClick={() => {
-                if (window.confirm('Hapus stage ini?')) {
+                if (window.confirm("Hapus stage ini?")) {
                   onDeleteStage(stage.id);
                 }
               }}

@@ -256,6 +256,24 @@ export class PipelineService {
       }
     }
   }
+
+  /**
+   * Move a lead card (update lead by ID)
+   */
+  static async moveLeadCard(id: string, data: Record<string, any>): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/v1/leads/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to move lead card. Please try again.');
+      }
+    }
+  }
 }
 
 export default PipelineService;
