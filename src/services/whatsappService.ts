@@ -1,5 +1,6 @@
 // WhatsApp Service - Simplified version
 import { AuthService } from './authService';
+import axiosInstance from './axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_WHATSAPP_URL || 'http://localhost:8080';
 
@@ -48,85 +49,103 @@ export interface GetAllBusinessSessionsResponse {
 export const whatsappService = {
   createSession: async (sessionName: string): Promise<CreateSessionResponse> => {
     try {
-      // Get token from cookies
-      const token = AuthService.getStoredToken();
-      
-      const response = await fetch(`${API_BASE_URL}/create-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-        body: JSON.stringify({
-          session: sessionName,
-        }),
+      const response = await axiosInstance.post(`${API_BASE_URL}/create-session`, {
+        session: sessionName,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error: any) {
-      console.error('WhatsApp Create Session Error:', error);
-      throw new Error(error.message || 'Failed to create session');
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to create session',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
     }
   },
 
   getStatus: async (sessionId: string): Promise<GetStatusResponse> => {
     try {
-      // Get token from cookies
-      const token = AuthService.getStoredToken();
-      
-      const response = await fetch(`${API_BASE_URL}/status/${sessionId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await axiosInstance.get(`${API_BASE_URL}/status/${sessionId}`);
+      return response.data;
     } catch (error: any) {
-      console.error('WhatsApp Get Status Error:', error);
-      throw new Error(error.message || 'Failed to get status');
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to get status',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
     }
   },
 
   getQRCode: async (deviceId: string): Promise<GetQRCodeResponse> => {
-    const token = AuthService.getStoredToken();
-    const response = await fetch(`${API_BASE_URL}/qrcode/${deviceId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await axiosInstance.get(`${API_BASE_URL}/qrcode/${deviceId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to get QR code',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
     }
-    return response.json();
   },
 
   getAllBusinessSessions: async (): Promise<GetAllBusinessSessionsResponse> => {
-    const token = AuthService.getStoredToken();
-    const response = await fetch(`${API_BASE_URL}/sessions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await axiosInstance.get(`${API_BASE_URL}/sessions`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to get sessions',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
     }
-    return response.json();
+  },
+
+  sendMessage: async ({ session, number, message }: { session: string; number: string; message: string }) => {
+    try {
+      const response = await axiosInstance.post(`http://localhost:3000/send-message`, {
+        session,
+        number,
+        message,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to send message',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
   },
 };
 

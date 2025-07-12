@@ -75,9 +75,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rajaongkirEnabled, setRajaongkirEnabled] = useState(false);
-  const [rajaongkirOriginCity, setRajaongkirOriginCity] = useState("");
-  const [rajaongkirCouriers, setRajaongkirCouriers] = useState<string[]>([]);
+  const [, setRajaongkirEnabled] = useState(false);
+  const [, setRajaongkirOriginCity] = useState("");
+  const [, setRajaongkirCouriers] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

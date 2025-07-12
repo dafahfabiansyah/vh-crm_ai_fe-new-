@@ -47,6 +47,7 @@ import MainLayout from "@/main-layout";
 
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
+import whatsappService from "@/services/whatsappService";
 
 interface Contact {
   id: string;
@@ -80,7 +81,9 @@ export default function ContactsPage() {
     message: "Hello, this is an initial message.",
     title: "Customer inquiry",
     notes: "Customer asked about product X",
+    id_platform: "", // tambahkan field ini
   });
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [platforms, setPlatforms] = useState<any[]>([]);
   const [platformsLoading, setPlatformsLoading] = useState(false);
   const [platformsError, setPlatformsError] = useState<string | null>(null);
@@ -166,18 +169,32 @@ export default function ContactsPage() {
   }, [isWhatsAppModalOpen]);
 
   const handleOpenWhatsAppModal = (contact: Contact) => {
+    setSelectedContact(contact);
     setWhatsAppForm((prev) => ({
       ...prev,
       phone: contact.contact_identifier || "",
+      id_platform: contact.id_platform || "",
     }));
     setIsWhatsAppModalOpen(true);
   };
 
-  const handleWhatsAppSubmit = (e: React.FormEvent) => {
+  const handleWhatsAppSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("WhatsApp message data:", whatsAppForm);
-    setIsWhatsAppModalOpen(false);
+    if (!selectedContact || !whatsAppForm.phone || !whatsAppForm.message) {
+      alert("Contact, phone, dan pesan wajib diisi");
+      return;
+    }
+    try {
+      await whatsappService.sendMessage({
+        session: selectedContact.id_platform,
+        number: whatsAppForm.phone,
+        message: whatsAppForm.message,
+      });
+      alert("Pesan berhasil dikirim!");
+      setIsWhatsAppModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Gagal mengirim pesan WhatsApp");
+    }
   };
 
   const handleAddContactSubmit = async (e: React.FormEvent) => {
@@ -893,74 +910,7 @@ export default function ContactsPage() {
                 className="font-mono text-sm"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="deviceName" className="text-sm font-medium">
-                {/* Device Name */}
-                Platform Inbox
-              </Label>
-              <Select
-                value={whatsAppForm.deviceName}
-                onValueChange={(value) =>
-                  setWhatsAppForm((prev) => ({ ...prev, deviceName: value }))
-                }
-              >
-                <SelectTrigger className="text-sm w-full">
-                  <SelectValue placeholder="Pilih device..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {whatsAppPlatformsLoading && (
-                    <div className="px-3 py-2 text-muted-foreground text-sm">
-                      Memuat...
-                    </div>
-                  )}
-                  {whatsAppPlatformsError && (
-                    <div className="px-3 py-2 text-red-500 text-sm">
-                      {whatsAppPlatformsError}
-                    </div>
-                  )}
-                  {!whatsAppPlatformsLoading &&
-                    !whatsAppPlatformsError &&
-                    whatsAppPlatforms.length === 0 && (
-                      <div className="px-3 py-2 text-muted-foreground text-sm">
-                        Tidak ada platform
-                      </div>
-                    )}
-                  {!whatsAppPlatformsLoading &&
-                    !whatsAppPlatformsError &&
-                    whatsAppPlatforms.length > 0 &&
-                    whatsAppPlatforms.map((platform: any) => (
-                      <SelectItem key={platform.id} value={platform.id}>
-                        <div className="flex flex-col">
-                          <span className="text-sm">{platform.platform_name}</span>
-                          {/* <span className="text-xs text-muted-foreground">
-                            {platform.id}
-                          </span> */}
-                        </div>
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="agentId" className="text-sm font-medium">
-                Agent ID
-              </Label>
-              <Input
-                id="agentId"
-                value={whatsAppForm.agentId}
-                onChange={(e) =>
-                  setWhatsAppForm((prev) => ({
-                    ...prev,
-                    agentId: e.target.value,
-                  }))
-                }
-                placeholder="40b6f49a-60ad-41f0-889c-3aa73bd3af73"
-                className="font-mono text-xs sm:text-sm"
-              />
-            </div>
-
+            {/* Select deviceName di-nonaktifkan, karena session diambil dari contact */}
             <div className="space-y-2">
               <Label htmlFor="message" className="text-sm font-medium">
                 Pesan yang akan Dikirim *
@@ -983,7 +933,6 @@ export default function ContactsPage() {
                 Maksimal 1000 karakter
               </p>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <Button
                 type="button"

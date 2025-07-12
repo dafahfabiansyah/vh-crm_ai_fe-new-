@@ -41,7 +41,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { HumanAgentsService, type HumanAgent } from "@/services/humanAgentsService";
 import { AgentsService } from "@/services/agentsService";
 
 const PipelinePage = () => {
