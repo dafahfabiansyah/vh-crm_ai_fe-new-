@@ -459,7 +459,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     </div>
 
                     {/* RajaOngkir Enabled Toggle */}
-                    <div className="flex items-center space-x-2 mb-2">
+                    {/* <div className="flex items-center space-x-2 mb-2">
                       <Checkbox
                         id="rajaongkir_enabled"
                         checked={!!agentData.rajaongkir_enabled}
@@ -470,7 +470,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       <Label htmlFor="rajaongkir_enabled" className="text-sm font-medium">
                         Aktifkan RajaOngkir
                       </Label>
-                    </div>
+                    </div> */}
 
                     {/* Additional Settings */}
                     <Collapsible

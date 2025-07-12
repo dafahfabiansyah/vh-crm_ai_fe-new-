@@ -1,5 +1,5 @@
 // WhatsApp Service - Simplified version
-import { AuthService } from './authService';
+// import { AuthService } from './authService';
 import axiosInstance from './axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_WHATSAPP_URL || 'http://localhost:8080';

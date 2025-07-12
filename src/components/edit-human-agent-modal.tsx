@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { HumanAgentsService } from "@/services";
 
 interface EditHumanAgentModalProps {
   isOpen: boolean;
@@ -74,21 +75,23 @@ export default function EditHumanAgentModal({
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful update
-      console.log("Agent updated successfully (mock):", formData);
-      
+      // Panggil API update human agent
+      await HumanAgentsService.updateHumanAgent(agent.id, {
+        name: formData.name,
+        user_email: formData.email,
+        password: formData.password || undefined, // kosong = tidak update password
+        role: formData.role,
+        department: formData.department,
+        is_active: formData.active,
+      });
+
       // Close modal and refresh list
       onClose();
       if (onAgentUpdated) {
         onAgentUpdated();
       }
-      
       // Show success message
       alert("Agent updated successfully!");
-      
     } catch (err: any) {
       setError(err.message || "Failed to update agent");
       console.error("Error updating agent:", err);

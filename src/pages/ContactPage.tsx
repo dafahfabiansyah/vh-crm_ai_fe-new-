@@ -92,9 +92,12 @@ export default function ContactsPage() {
     phone: "",
     name: "",
   });
-  const [whatsAppPlatforms, setWhatsAppPlatforms] = useState<any[]>([]);
-  const [whatsAppPlatformsLoading, setWhatsAppPlatformsLoading] = useState(false);
-  const [whatsAppPlatformsError, setWhatsAppPlatformsError] = useState<string | null>(null);
+  const [, setWhatsAppPlatforms] = useState<any[]>([]);
+  const [, setWhatsAppPlatformsLoading] =
+    useState(false);
+  const [, setWhatsAppPlatformsError] = useState<
+    string | null
+  >(null);
 
   // API call to fetch contacts
   const fetchContacts = async (page: number = 1, perPage: number = 100) => {
@@ -161,7 +164,9 @@ export default function ContactsPage() {
           setWhatsAppPlatforms(Array.isArray(data) ? data : data.items || []);
         })
         .catch((err: any) => {
-          setWhatsAppPlatformsError(err.message || "Gagal mengambil data platform");
+          setWhatsAppPlatformsError(
+            err.message || "Gagal mengambil data platform"
+          );
           setWhatsAppPlatforms([]);
         })
         .finally(() => setWhatsAppPlatformsLoading(false));
@@ -231,12 +236,14 @@ export default function ContactsPage() {
 
   // Handler untuk hapus kontak
   const handleDeleteContact = async (id: string) => {
-    if (!window.confirm('Yakin ingin menghapus kontak ini?')) return;
+    if (!window.confirm("Yakin ingin menghapus kontak ini?")) return;
     try {
       await contactService.deleteContact(id);
       fetchContacts(currentPage, itemsPerPage);
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || 'Gagal menghapus kontak');
+      alert(
+        err.response?.data?.message || err.message || "Gagal menghapus kontak"
+      );
     }
   };
 
@@ -369,10 +376,7 @@ export default function ContactsPage() {
                             !platformsError &&
                             platforms.length > 0 &&
                             platforms.map((p: any) => (
-                              <SelectItem
-                                key={p.id}
-                                value={p.id}
-                              >
+                              <SelectItem key={p.id} value={p.id}>
                                 {p.platform_name}
                               </SelectItem>
                             ))}
@@ -606,11 +610,11 @@ export default function ContactsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                        variant="outline"
-                        className="bg-primary text-secondary border-blue-200 text-xs"
-                      >
-                        Whatsapp
-                      </Badge>
+                          variant="outline"
+                          className="bg-primary text-secondary border-blue-200 text-xs"
+                        >
+                          Whatsapp
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {contact.last_message || "-"}
@@ -770,8 +774,8 @@ export default function ContactsPage() {
                         <div className="text-xs text-muted-foreground">
                           <span className="font-medium">Last Message:</span>
                           <p className="mt-1 break-words text-ellipsis line-clamp-2">
-                            {contact.last_message.length > 30 
-                              ? `${contact.last_message.substring(0, 30)}...` 
+                            {contact.last_message.length > 30
+                              ? `${contact.last_message.substring(0, 30)}...`
                               : contact.last_message}
                           </p>
                         </div>
