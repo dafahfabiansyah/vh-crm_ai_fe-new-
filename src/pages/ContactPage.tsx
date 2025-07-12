@@ -400,7 +400,7 @@ export default function ContactsPage() {
                             phone: e.target.value,
                           }))
                         }
-                        placeholder="621234567890"
+                        placeholder="628123456790"
                         className="font-mono text-sm"
                         required
                       />
@@ -493,7 +493,7 @@ export default function ContactsPage() {
                 </DialogContent>
               </Dialog>
 
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 disabled={selectedContacts.length === 0}
@@ -501,7 +501,7 @@ export default function ContactsPage() {
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
-              </Button>
+              </Button> */}
 
               <Button
                 variant="outline"
@@ -512,7 +512,7 @@ export default function ContactsPage() {
                 Export
               </Button>
 
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 className="flex-1 sm:flex-none sm:hidden lg:flex"
@@ -520,7 +520,7 @@ export default function ContactsPage() {
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Customize</span>
                 <span className="sm:hidden">Settings</span>
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

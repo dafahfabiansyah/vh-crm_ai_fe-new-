@@ -356,31 +356,19 @@ export default function BillingPage() {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative transition-all duration-300 hover:shadow-md h-full flex flex-col ${
-                    plan.is_popular
-                      ? "border-primary shadow-md scale-[1.02]"
-                      : "border-border hover:border-primary/50"
-                  }`}
+                  className={
+                    "relative transition-all duration-300 hover:shadow-md h-full flex flex-col border-border hover:border-primary/50"
+                  }
                 >
-                  {plan.is_popular && (
-                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 text-xs">
-                        Current Plan
-                      </Badge>
-                    </div>
-                  )}
+                  {/* Removed Current Plan Badge */}
 
                   <CardHeader className="text-center pb-3 sm:pb-4">
                     <div className="flex justify-center mb-2">
                       <div
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
-                          plan.is_popular ? "bg-primary/10" : "bg-muted"
-                        }`}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-muted`}
                       >
                         <IconComponent
-                          className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                            plan.is_popular ? "text-primary" : "text-muted-foreground"
-                          }`}
+                          className={"h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground"}
                         />
                       </div>
                     </div>
@@ -451,10 +439,25 @@ export default function BillingPage() {
                       {/* Show limits if available */}
                       {plan.limits && (
                         <div className="flex flex-col gap-1 mt-2">
-                          <span className="text-xs text-muted-foreground">Limits:</span>
-                          <span className="text-xs">MAU: {plan.limits.mau === -1 ? 'Unlimited' : plan.limits.mau}</span>
-                          <span className="text-xs">Human Agents: {plan.limits.human_agent === -1 ? 'Unlimited' : plan.limits.human_agent}</span>
-                          <span className="text-xs">AI Responses: {plan.limits.ai_response === -1 ? 'Unlimited' : plan.limits.ai_response}</span>
+                          <div className="text-xs text-muted-foreground mb-1">Limits:</div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                            </div>
+                            <span className="text-xs sm:text-sm text-foreground">MAU: {plan.limits.mau === -1 ? 'Unlimited' : plan.limits.mau}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                            </div>
+                            <span className="text-xs sm:text-sm text-foreground">Human Agents: {plan.limits.human_agent === -1 ? 'Unlimited' : plan.limits.human_agent}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                            </div>
+                            <span className="text-xs sm:text-sm text-foreground">AI Responses: {plan.limits.ai_response === -1 ? 'Unlimited' : plan.limits.ai_response}</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -463,11 +466,7 @@ export default function BillingPage() {
                   <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
                     <Button
                       onClick={() => handleUpgrade(plan.id)}
-                      className={`w-full h-8 sm:h-9 text-xs sm:text-sm ${
-                        plan.is_popular
-                          ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                          : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                      }`}
+                      className={"w-full h-8 sm:h-9 text-xs sm:text-sm bg-secondary hover:bg-secondary/90 text-secondary-foreground"}
                     >
                       Upgrade Now
                     </Button>

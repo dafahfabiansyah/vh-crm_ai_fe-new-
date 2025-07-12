@@ -1051,9 +1051,9 @@ const ProductPage = () => {
                       alt="Product Preview"
                       className="max-h-32 rounded border"
                     />
-                    <div className="text-xs text-gray-500 break-all">
+                    {/* <div className="text-xs text-gray-500 break-all">
                       {formData.image}
-                    </div>
+                    </div> */}
                   </div>
                 )}
               </div>
