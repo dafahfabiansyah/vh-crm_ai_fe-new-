@@ -89,6 +89,9 @@ export default function ContactsPage() {
     phone: "",
     name: "",
   });
+  const [whatsAppPlatforms, setWhatsAppPlatforms] = useState<any[]>([]);
+  const [whatsAppPlatformsLoading, setWhatsAppPlatformsLoading] = useState(false);
+  const [whatsAppPlatformsError, setWhatsAppPlatformsError] = useState<string | null>(null);
 
   // API call to fetch contacts
   const fetchContacts = async (page: number = 1, perPage: number = 100) => {
@@ -143,6 +146,24 @@ export default function ContactsPage() {
         .finally(() => setPlatformsLoading(false));
     }
   }, [isAddContactOpen]);
+
+  // Fetch platforms when WhatsApp modal opens
+  useEffect(() => {
+    if (isWhatsAppModalOpen) {
+      setWhatsAppPlatformsLoading(true);
+      setWhatsAppPlatformsError(null);
+      platformsInboxService
+        .getPlatformInbox()
+        .then((data) => {
+          setWhatsAppPlatforms(Array.isArray(data) ? data : data.items || []);
+        })
+        .catch((err: any) => {
+          setWhatsAppPlatformsError(err.message || "Gagal mengambil data platform");
+          setWhatsAppPlatforms([]);
+        })
+        .finally(() => setWhatsAppPlatformsLoading(false));
+    }
+  }, [isWhatsAppModalOpen]);
 
   const handleOpenWhatsAppModal = (contact: Contact) => {
     setWhatsAppForm((prev) => ({
@@ -732,7 +753,9 @@ export default function ContactsPage() {
                         <div className="text-xs text-muted-foreground">
                           <span className="font-medium">Last Message:</span>
                           <p className="mt-1 break-words text-ellipsis line-clamp-2">
-                            {contact.last_message}
+                            {contact.last_message.length > 30 
+                              ? `${contact.last_message.substring(0, 30)}...` 
+                              : contact.last_message}
                           </p>
                         </div>
                       )}
@@ -882,36 +905,40 @@ export default function ContactsPage() {
                   setWhatsAppForm((prev) => ({ ...prev, deviceName: value }))
                 }
               >
-                <SelectTrigger className="text-sm">
+                <SelectTrigger className="text-sm w-full">
                   <SelectValue placeholder="Pilih device..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tenant_69b86cc342e043d4a8abcd7633f440dd_dev">
-                    <div className="flex flex-col">
-                      <span className="text-sm">
-                        tenant_69b86cc342e043d4a8abcd7633f440dd_dev
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Primary Device
-                      </span>
+                  {whatsAppPlatformsLoading && (
+                    <div className="px-3 py-2 text-muted-foreground text-sm">
+                      Memuat...
                     </div>
-                  </SelectItem>
-                  <SelectItem value="device_2">
-                    <div className="flex flex-col">
-                      <span className="text-sm">Device 2</span>
-                      <span className="text-xs text-muted-foreground">
-                        Secondary Device
-                      </span>
+                  )}
+                  {whatsAppPlatformsError && (
+                    <div className="px-3 py-2 text-red-500 text-sm">
+                      {whatsAppPlatformsError}
                     </div>
-                  </SelectItem>
-                  <SelectItem value="device_3">
-                    <div className="flex flex-col">
-                      <span className="text-sm">Device 3</span>
-                      <span className="text-xs text-muted-foreground">
-                        Backup Device
-                      </span>
-                    </div>
-                  </SelectItem>
+                  )}
+                  {!whatsAppPlatformsLoading &&
+                    !whatsAppPlatformsError &&
+                    whatsAppPlatforms.length === 0 && (
+                      <div className="px-3 py-2 text-muted-foreground text-sm">
+                        Tidak ada platform
+                      </div>
+                    )}
+                  {!whatsAppPlatformsLoading &&
+                    !whatsAppPlatformsError &&
+                    whatsAppPlatforms.length > 0 &&
+                    whatsAppPlatforms.map((platform: any) => (
+                      <SelectItem key={platform.id} value={platform.id}>
+                        <div className="flex flex-col">
+                          <span className="text-sm">{platform.platform_name}</span>
+                          {/* <span className="text-xs text-muted-foreground">
+                            {platform.id}
+                          </span> */}
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
