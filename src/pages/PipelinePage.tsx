@@ -63,7 +63,7 @@ const PipelinePage = () => {
   const [stageName, setStageName] = useState("");
   const [stageDescription, setStageDescription] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<string>("");
-  const [agents, setAgents] = useState<HumanAgent[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
@@ -322,7 +322,7 @@ const PipelinePage = () => {
     setIsSubmittingStage(false);
     setAgents([]);
     setSelectedAgent("");
-    HumanAgentsService.getHumanAgents()
+    AgentsService.getAgents()
       .then(setAgents)
       .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
   }, [isAddStageOpen]);
