@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,13 +7,19 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Plus, X, ChevronDown, ChevronUp, User, UserPlus, Calendar, Clock, Sparkles } from "lucide-react"
+import { Plus, X, ChevronDown, ChevronUp, User, UserPlus, Calendar, Sparkles, MessageSquare } from "lucide-react"
 import type { ChatInformationProps } from "@/types"
 
 export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
   const [newLabel, setNewLabel] = useState("")
-  const [notes, setNotes] = useState(chatInfo.notes)
+  const [notes, setNotes] = useState(chatInfo.notes || "")
+  const [contactData, setContactData] = useState(chatInfo)
+
+  useEffect(() => {
+    // Update contactData when chatInfo changes
+    setContactData(chatInfo)
+  }, [chatInfo])
 
   const handleAddLabel = () => {
     if (newLabel.trim()) {
@@ -39,21 +45,23 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
           <div className="flex items-center gap-2 sm:gap-3">
             <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
               <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-lg">
-                {chatInfo.customerName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .slice(0, 2)}
+                {contactData.push_name
+                  ? contactData.push_name
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")
+                      .slice(0, 2)
+                  : "NA"}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <h3 className="font-medium text-foreground text-sm sm:text-base truncate">{chatInfo.customerName}</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">{chatInfo.customerId}</p>
+              <h3 className="font-medium text-foreground text-sm sm:text-base truncate">{contactData.push_name || "Unknown"}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{contactData.contact_identifier || "No ID"}</p>
             </div>
           </div>
 
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 w-fit">
-            {chatInfo.agent}
+            {contactData.assigned_agent_name || "-"}
           </Badge>
         </div>
       </div>
@@ -78,11 +86,11 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         {/* Labels */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Labels</Label>
-          {chatInfo.labels.length === 0 ? (
+          {(!contactData.labels || contactData.labels.length === 0) ? (
             <p className="text-sm text-muted-foreground">No labels yet</p>
           ) : (
             <div className="flex flex-wrap gap-1 sm:gap-2">
-              {chatInfo.labels.map((label, index) => (
+              {contactData.labels.map((label, index) => (
                 <Badge key={index} variant="secondary" className="flex items-center gap-1 text-xs">
                   {label}
                   <X className="h-3 w-3 cursor-pointer" />
@@ -113,7 +121,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Handled By</Label>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            <span className="text-sm text-foreground">{chatInfo.handledBy}</span>
+            <span className="text-sm text-foreground">{contactData.assigned_agent_name || "-"}</span>
             <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto">
               <User className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Assign Agent</span>
@@ -124,11 +132,11 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         {/* Collaborators */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Collaborators</Label>
-          {chatInfo.collaborators.length === 0 ? (
+          {(!contactData.collaborators || contactData.collaborators.length === 0) ? (
             <p className="text-sm text-muted-foreground">No collaborators yet</p>
           ) : (
             <div className="space-y-2">
-              {chatInfo.collaborators.map((collaborator, index) => (
+              {contactData.collaborators.map((collaborator, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="text-xs">
@@ -194,42 +202,42 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Assigned By</span>
+                <MessageSquare className="h-4 w-4" />
+                <span>Last Message</span>
               </div>
-              <span className="text-foreground">{chatInfo.assignedBy}</span>
+              <span className="text-foreground">{contactData.last_message || "No messages"}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>Handled By</span>
+                <span>Assigned Agent</span>
               </div>
-              <span className="text-foreground">{chatInfo.handledBy}</span>
+              <span className="text-foreground">{contactData.assigned_agent_name || "-"}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>Resolved By</span>
+                <span>Lead Status</span>
               </div>
-              <span className="text-foreground">{chatInfo.resolvedBy}</span>
+              <span className="text-foreground capitalize">{contactData.lead_status}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Sparkles className="h-4 w-4" />
-                <span>AI Handoff At</span>
+                <MessageSquare className="h-4 w-4" />
+                <span>Unread Messages</span>
               </div>
-              <span className="text-foreground">{chatInfo.aiHandoffAt}</span>
+              <span className="text-foreground">{contactData.unread_messages}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Assigned At</span>
+                <span>Last Message At</span>
               </div>
-              <span className="text-foreground">{chatInfo.assignedAt}</span>
+              <span className="text-foreground">{contactData.last_message_at ? new Date(contactData.last_message_at).toLocaleString() : "N/A"}</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -237,23 +245,23 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
                 <Calendar className="h-4 w-4" />
                 <span>Created At</span>
               </div>
-              <span className="text-foreground">{chatInfo.createdAt}</span>
+              <span className="text-foreground">{contactData.created_at ? new Date(contactData.created_at).toLocaleString() : "N/A"}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Resolved At</span>
+                <span>Updated At</span>
               </div>
-              <span className="text-foreground">{chatInfo.resolvedAt}</span>
+              <span className="text-foreground">{contactData.updated_at ? new Date(contactData.updated_at).toLocaleString() : "N/A"}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Open Until</span>
+                <MessageSquare className="h-4 w-4" />
+                <span>Platform</span>
               </div>
-              <span className="text-foreground">{chatInfo.openUntil}</span>
+              <span className="text-foreground">{contactData.platform_name || "-"}</span>
             </div>
           </div>
         </div>

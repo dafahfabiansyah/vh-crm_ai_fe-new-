@@ -432,14 +432,14 @@ export default function RegisterForm() {
           saya menerima {" "}
           <button
             type="button"
-            className="text-secondary hover:text-secondary/80 underline"
+            className="text-foreground underline"
           >
             ketentuan layanan
           </button>{" "}
           dan{" "}
           <button
             type="button"
-            className="text-secondary hover:text-secondary/80 underline"
+            className="text-foreground underline"
           >
             kebijakan privasi
           </button>

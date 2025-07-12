@@ -76,21 +76,24 @@ export interface ChatLogMessage {
 }
 
 export interface ChatInfo {
-  customerName: string
-  customerId: string
-  agent: string
-  status: string
-  labels: string[]
-  handledBy: string
-  collaborators: string[]
-  notes: string
-  assignedBy: string
-  resolvedBy: string
-  aiHandoffAt: string
-  assignedAt: string
-  createdAt: string
-  resolvedAt: string
-  openUntil: string
+  id: string
+  id_platform: string
+  contact_identifier: string
+  push_name: string
+  last_message: string
+  last_message_at: string
+  unread_messages: number
+  created_at: string
+  updated_at: string
+  lead_status: 'assigned' | 'unassigned' | 'resolved'
+  assigned_agent_name: string | null
+  platform_name: string | null
+  source_type: string | null
+  platform_inbox_id: string | null
+  // Additional fields for UI
+  labels?: string[]
+  collaborators?: string[]
+  notes?: string
 }
 // dashboard conversation types end
 

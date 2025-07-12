@@ -18,15 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  ArrowLeft,
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  Package,
-} from "lucide-react";
+import { ArrowLeft, Plus, Search, Trash2, Package } from "lucide-react";
 import { Link } from "react-router";
 import {
   categoryService,
@@ -40,7 +32,14 @@ import type {
   Product,
   ProductFormData,
 } from "@/types";
-// import { cn } from "@/lib/utils";
+import ProductTable from "@/components/product-table";
+
+// Utility function untuk format angka dengan pemisah ribuan
+const formatNumber = (value: number | string): string => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "0";
+  return num.toLocaleString("id-ID");
+};
 
 // Tambahkan type Product sesuai response baru
 type ProductAPI = {
@@ -71,7 +70,9 @@ const ProductPage = () => {
   );
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
+  const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<
+    Map<string, CategoryAttribute[]>
+  >(new Map());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,11 +97,15 @@ const ProductPage = () => {
     attributes: [],
   });
 
-  const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
-  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
+  const [categoryAttributes, setCategoryAttributes] = useState<
+    CategoryAttribute[]
+  >([]);
+  const [attributeValues, setAttributeValues] = useState<
+    Record<string, string>
+  >({});
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUploadUrl, setImageUploadUrl] = useState<string>("");
+  const [, setImageUploadUrl] = useState<string>("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string>("");
 
@@ -111,9 +116,18 @@ const ProductPage = () => {
         HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
       >
     ) => {
+      let value = e.target.value;
+
+      // Format khusus untuk field numerik
+      if (field === "price" || field === "stock" || field === "weight") {
+        // Hapus semua karakter non-digit (termasuk titik pemisah ribuan)
+        const numericValue = value.replace(/[^\d]/g, "");
+        value = numericValue;
+      }
+
       setFormData((prev) => ({
         ...prev,
-        [field]: e.target.value,
+        [field]: value,
       }));
     };
 
@@ -163,7 +177,9 @@ const ProductPage = () => {
     }));
   };
 
-  const handleCategoryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCategoryChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const catId = e.target.value;
     setFormData((prev) => ({ ...prev, category: catId }));
     setSelectedCategoryId(catId);
@@ -176,7 +192,7 @@ const ProductPage = () => {
           setCategoryAttributes(detail.attributes);
           // Inisialisasi attributeValues kosong
           const attrInit: Record<string, string> = {};
-          detail.attributes.forEach(attr => {
+          detail.attributes.forEach((attr) => {
             attrInit[attr.attribute_name] = "";
           });
           setAttributeValues(attrInit);
@@ -221,9 +237,9 @@ const ProductPage = () => {
     setIsLoading(true);
     try {
       // Siapkan attributes array
-      const attributesArr = categoryAttributes.map(attr => ({
+      const attributesArr = categoryAttributes.map((attr) => ({
         id_category_attribute: attr.id,
-        value: attributeValues[attr.attribute_name] || ""
+        value: attributeValues[attr.attribute_name] || "",
       }));
       // Siapkan request body
       const productData = {
@@ -246,6 +262,7 @@ const ProductPage = () => {
       const newProduct: Product = {
         id: response.id,
         code: response.code,
+        sku: response.sku,
         name: response.name,
         description: response.description,
         price: response.price,
@@ -322,7 +339,7 @@ const ProductPage = () => {
 
       // Store the attributes for this category
       if (categoryFormData.attributes.length > 0) {
-        setCategoriesWithAttributes(prev => {
+        setCategoriesWithAttributes((prev) => {
           const newMap = new Map(prev);
           newMap.set(response.id, categoryFormData.attributes);
           return newMap;
@@ -370,7 +387,7 @@ const ProductPage = () => {
       );
 
       // Remove attributes from map
-      setCategoriesWithAttributes(prev => {
+      setCategoriesWithAttributes((prev) => {
         const newMap = new Map(prev);
         newMap.delete(categoryId);
         return newMap;
@@ -429,7 +446,7 @@ const ProductPage = () => {
       if (Array.isArray(response)) {
         // fallback lama
         productsData = response as any;
-      } else if (response ) {
+      } else if (response) {
         productsData = response;
       }
       // Transform ke state
@@ -445,21 +462,9 @@ const ProductPage = () => {
     fetchProducts();
   }, []);
 
-  const totalProducts = products.length;
   const totalCategories = categories.length;
-  const totalValue = products.reduce(
-    (sum, product) => sum + product.price * product.stock,
-    0
-  );
 
   // Filter functions
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const filteredCategories = categories.filter(
     (category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -571,7 +576,7 @@ const ProductPage = () => {
                     <div>
                       <p className="text-sm text-gray-600">Total Products</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {totalProducts}
+                        {products.length}
                       </p>
                     </div>
                   </div>
@@ -619,32 +624,43 @@ const ProductPage = () => {
                       <div>Updated</div>
                       <div>Actions</div>
                     </div>
-                    
+
                     {/* Categories Accordion */}
                     <Accordion type="single" collapsible className="w-full">
                       {filteredCategories.map((category) => {
-                        const attributes = categoriesWithAttributes.get(category.id) || [];
-                        
+                        const attributes =
+                          categoriesWithAttributes.get(category.id) || [];
+
                         return (
-                          <AccordionItem key={category.id} value={category.id} className="border rounded-lg">
+                          <AccordionItem
+                            key={category.id}
+                            value={category.id}
+                            className="border rounded-lg"
+                          >
                             <AccordionTrigger className="hover:no-underline px-4">
                               <div className="flex items-center justify-between w-full pr-4">
                                 <div className="grid grid-cols-4 gap-4 flex-1 text-left">
                                   <div>
-                                    <div className="font-medium">{category.name}</div>
+                                    <div className="font-medium">
+                                      {category.name}
+                                    </div>
                                     <div className="text-sm text-gray-600">
                                       {category.description || "-"}
                                     </div>
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    {new Date(category.created_at).toLocaleDateString("id-ID", {
+                                    {new Date(
+                                      category.created_at
+                                    ).toLocaleDateString("id-ID", {
                                       day: "2-digit",
                                       month: "2-digit",
                                       year: "numeric",
                                     })}
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    {new Date(category.updated_at).toLocaleDateString("id-ID", {
+                                    {new Date(
+                                      category.updated_at
+                                    ).toLocaleDateString("id-ID", {
                                       day: "2-digit",
                                       month: "2-digit",
                                       year: "numeric",
@@ -669,9 +685,12 @@ const ProductPage = () => {
                             <AccordionContent>
                               <div className="px-4 pb-4">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <h4 className="font-medium text-sm">Category Attributes</h4>
+                                  <h4 className="font-medium text-sm">
+                                    Category Attributes
+                                  </h4>
                                   <Badge variant="outline" className="text-xs">
-                                    {attributes.length} attribute{attributes.length !== 1 ? 's' : ''}
+                                    {attributes.length} attribute
+                                    {attributes.length !== 1 ? "s" : ""}
                                   </Badge>
                                 </div>
                                 {attributes.length === 0 ? (
@@ -681,7 +700,10 @@ const ProductPage = () => {
                                 ) : (
                                   <div className="space-y-2">
                                     {attributes
-                                      .sort((a, b) => a.display_order - b.display_order)
+                                      .sort(
+                                        (a, b) =>
+                                          a.display_order - b.display_order
+                                      )
                                       .map((attribute, index) => (
                                         <div
                                           key={index}
@@ -693,18 +715,25 @@ const ProductPage = () => {
                                                 {attribute.attribute_name}
                                               </div>
                                               <div className="text-xs text-gray-500">
-                                                Display Order: {attribute.display_order}
+                                                Display Order:{" "}
+                                                {attribute.display_order}
                                               </div>
                                             </div>
                                           </div>
                                           <div className="flex items-center gap-2">
                                             {attribute.is_required && (
-                                              <Badge variant="destructive" className="text-xs">
+                                              <Badge
+                                                variant="destructive"
+                                                className="text-xs"
+                                              >
                                                 Required
                                               </Badge>
                                             )}
                                             {!attribute.is_required && (
-                                              <Badge variant="secondary" className="text-xs">
+                                              <Badge
+                                                variant="secondary"
+                                                className="text-xs"
+                                              >
                                                 Optional
                                               </Badge>
                                             )}
@@ -728,181 +757,25 @@ const ProductPage = () => {
 
         {/* Products Tab Content */}
         {activeTab === "products" && (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <Package className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Total Products</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {totalProducts}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <Package className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        Total Inventory Value
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        Rp {totalValue.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-yellow-100 rounded-lg">
-                      <Package className="h-6 w-6 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Categories</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {totalCategories}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Search and Filter */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search products by name, code, or category..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Products Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Products ({products.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {products.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No products found</p>
-                    <p className="text-sm text-gray-400 mt-2">
-                      Create your first product to get started
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4">Image</th>
-                          <th className="text-left py-3 px-4">SKU</th>
-                          <th className="text-left py-3 px-4">Name</th>
-                          <th className="text-left py-3 px-4">Description</th>
-                          <th className="text-left py-3 px-4">Category</th>
-                          <th className="text-left py-3 px-4">Price</th>
-                          <th className="text-left py-3 px-4">Stock</th>
-                          <th className="text-left py-3 px-4">Status</th>
-                          <th className="text-left py-3 px-4">Attributes</th>
-                          <th className="text-left py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredProducts.map((product: any) => (
-                          <tr key={product.id} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4">
-                            <img
-                                  src={product.image}
-                                  alt={product.name}
-                                  className="h-10 w-10 object-cover rounded"
-                                 
-                                />
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge variant="outline">{product.sku || product.code}</Badge>
-                            </td>
-                            <td className="py-3 px-4">{product.name}</td>
-                            <td className="py-3 px-4">{product.description}</td>
-                            <td className="py-3 px-4">
-                              <Badge variant="secondary">
-                                {categories.find((cat) => cat.id === (product.id_category || product.category))?.name || "-"}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="font-medium">
-                                Rp {Number(product.price).toLocaleString()}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">{product.stock}</td>
-                            <td className="py-3 px-4">
-                              <Badge variant={product.status ? "default" : "destructive"}>
-                                {product.status ? "Active" : "Inactive"}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              {Array.isArray(product.attributes) && product.attributes.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {product.attributes.map((attr: any) => {
-                                    const attrName =
-                                      categoriesWithAttributes
-                                        .get(product.id_category || product.category)
-                                        ?.find((a) => a.id === attr.id_category_attribute)?.attribute_name || attr.id_category_attribute;
-                                    return (
-                                      <Badge key={attr.id_category_attribute} variant="outline" className="text-xs">
-                                        {attrName}: {attr.value}
-                                      </Badge>
-                                    );
-                                  })}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-gray-500">-</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
+          <ProductTable
+            products={products}
+            categories={categories}
+            categoriesWithAttributes={categoriesWithAttributes}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onEdit={(product) => {
+              // TODO: Implement edit functionality
+              console.log("Edit product:", product);
+            }}
+            onDelete={(productId) => {
+              // TODO: Implement delete functionality
+              console.log("Delete product:", productId);
+            }}
+            onView={(product) => {
+              // TODO: Implement view functionality
+              console.log("View product:", product);
+            }}
+          />
         )}
 
         {/* Create Category Modal */}
@@ -1082,7 +955,9 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <Label className="py-2" htmlFor="description">Description</Label>
+                <Label className="py-2" htmlFor="description">
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   placeholder="Enter Description"
@@ -1119,12 +994,25 @@ const ProductPage = () => {
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((attr) => (
                       <div key={attr.attribute_name}>
-                        <Label className="py-2" htmlFor={`attr-${attr.attribute_name}`}>{attr.attribute_name}{attr.is_required && <span className="text-red-500">*</span>}</Label>
+                        <Label
+                          className="py-2"
+                          htmlFor={`attr-${attr.attribute_name}`}
+                        >
+                          {attr.attribute_name}
+                          {attr.is_required && (
+                            <span className="text-red-500">*</span>
+                          )}
+                        </Label>
                         <Input
                           id={`attr-${attr.attribute_name}`}
                           placeholder={`Enter ${attr.attribute_name}`}
                           value={attributeValues[attr.attribute_name] || ""}
-                          onChange={e => handleAttributeValueChange(attr.attribute_name, e.target.value)}
+                          onChange={(e) =>
+                            handleAttributeValueChange(
+                              attr.attribute_name,
+                              e.target.value
+                            )
+                          }
                           required={attr.is_required}
                         />
                       </div>
@@ -1133,7 +1021,9 @@ const ProductPage = () => {
               )}
 
               <div>
-                <Label className="py-2" htmlFor="image">Product Image</Label>
+                <Label className="py-2" htmlFor="image">
+                  Product Image
+                </Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="image"
@@ -1141,15 +1031,29 @@ const ProductPage = () => {
                     accept="image/*"
                     onChange={handleImageFileChange}
                   />
-                  <Button type="button" onClick={handleUploadImage} disabled={!imageFile || isUploadingImage}>
+                  <Button
+                    type="button"
+                    onClick={handleUploadImage}
+                    disabled={!imageFile || isUploadingImage}
+                  >
                     {isUploadingImage ? "Uploading..." : "Upload Image"}
                   </Button>
                 </div>
-                {imageUploadError && <div className="text-red-500 text-sm mt-1">{imageUploadError}</div>}
+                {imageUploadError && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {imageUploadError}
+                  </div>
+                )}
                 {formData.image && (
                   <div className="mt-2">
-                    <img src={formData.image} alt="Product Preview" className="max-h-32 rounded border" />
-                    <div className="text-xs text-gray-500 break-all">{formData.image}</div>
+                    <img
+                      src={formData.image}
+                      alt="Product Preview"
+                      className="max-h-32 rounded border"
+                    />
+                    <div className="text-xs text-gray-500 break-all">
+                      {formData.image}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1165,9 +1069,9 @@ const ProductPage = () => {
                     </span>
                     <Input
                       id="price"
-                      type="number"
+                      type="text"
                       placeholder="0"
-                      value={formData.price}
+                      value={formData.price ? formatNumber(formData.price) : ""}
                       onChange={handleInputChange("price")}
                       className="pl-10"
                       required
@@ -1182,15 +1086,14 @@ const ProductPage = () => {
                   <div className="relative">
                     <Input
                       id="weight"
-                      type="number"
+                      type="text"
                       placeholder="0"
-                      value={formData.weight}
+                      value={
+                        formData.weight ? formatNumber(formData.weight) : ""
+                      }
                       onChange={handleInputChange("weight")}
                       required
                     />
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      grams
-                    </span>
                   </div>
                 </div>
 
@@ -1200,9 +1103,9 @@ const ProductPage = () => {
                   </Label>
                   <Input
                     id="stock"
-                    type="number"
+                    type="text"
                     placeholder="0"
-                    value={formData.stock}
+                    value={formData.stock ? formatNumber(formData.stock) : ""}
                     onChange={handleInputChange("stock")}
                     required
                   />

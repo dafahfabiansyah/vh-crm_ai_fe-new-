@@ -2,7 +2,7 @@ import type {
   AgentRole,
   // AIAgent,
   // AIAgent,
-  ChatInfo,
+  // ChatInfo,
   ChatSession,
   Message,
   NavigationItem,
@@ -209,23 +209,23 @@ export const mockMessages: Message[] = [
   },
 ];
 
-export const mockChatInfo: ChatInfo = {
-  customerName: "Ibu Vina Tangerang",
-  customerId: "628217328523",
-  agent: "CS DISTCCTV ex. Aulia",
-  status: "resolved",
-  labels: [],
-  handledBy: "Sales DISTCCTV",
-  collaborators: [],
-  notes: "whatsapp sync",
-  assignedBy: "Sales DISTCCTV",
-  resolvedBy: "SPV DISTCCTV",
-  aiHandoffAt: "June 18th 2025, 5:05 pm",
-  assignedAt: "June 19th 2025, 5:24 pm",
-  createdAt: "June 18th 2025, 4:58 pm",
-  resolvedAt: "June 19th 2025, 5:24 pm",
-  openUntil: "00:00:00",
-};
+// export const mockChatInfo: ChatInfo = {
+//   customerName: "Ibu Vina Tangerang",
+//   customerId: "628217328523",
+//   agent: "CS DISTCCTV ex. Aulia",
+//   status: "resolved",
+//   labels: [],
+//   handledBy: "Sales DISTCCTV",
+//   collaborators: [],
+//   notes: "whatsapp sync",
+//   assignedBy: "Sales DISTCCTV",
+//   resolvedBy: "SPV DISTCCTV",
+//   aiHandoffAt: "June 18th 2025, 5:05 pm",
+//   assignedAt: "June 19th 2025, 5:24 pm",
+//   createdAt: "June 18th 2025, 4:58 pm",
+//   resolvedAt: "June 19th 2025, 5:24 pm",
+//   openUntil: "00:00:00",
+// };
 
 export const aiAgents = [
   {

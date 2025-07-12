@@ -26,6 +26,7 @@ export interface CreateCategoryRequest {
 }
 
 export interface ProductResponse {
+  sku: string;
   id: string;
   code: string;
   name: string;

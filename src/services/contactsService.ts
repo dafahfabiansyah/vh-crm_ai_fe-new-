@@ -11,11 +11,11 @@ export interface Contact {
     created_at: string;
     updated_at: string;
     lead_status: 'assigned' | 'unassigned' | 'resolved';
-    assigned_agent_name: string;
+    assigned_agent_name: string | null;
     agent_name?: string;
-    platform_name: string;
-    source_type: 'WhatsApp' | 'Instagram' | 'Website';
-    platform_inbox_id: string;
+    platform_name: string | null;
+    source_type: string | null;
+    platform_inbox_id: string | null;
 }
 
 export interface ContactsResponse {

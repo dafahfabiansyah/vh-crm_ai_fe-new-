@@ -4,11 +4,12 @@ import { TabsContent } from "./ui/tabs";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, UploadCloud } from "lucide-react";
 import { KnowledgeService } from "@/services/knowledgeService";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
 import { productService } from "@/services/productService";
 import React from "react";
+import { useNavigate } from "react-router";
 
 interface KnowledgeTabProps {
   agentId: string;
@@ -64,6 +65,8 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   // Fetch products on mount
   React.useEffect(() => {
@@ -241,74 +244,91 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
               </span>
             </div>
           )}
-          <div className="space-y-3">
-            <Label htmlFor="productName" className="text-sm font-medium">
-              Name
-            </Label>
-            <Input
-              id="productName"
-              placeholder="Enter knowledge name"
-              className="w-full"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              disabled={productLoading}
-            />
-          </div>
-          <div className="space-y-3">
-            <Label htmlFor="productDescription" className="text-sm font-medium">
-              Description
-            </Label>
-            <Input
-              id="productDescription"
-              placeholder="Enter knowledge description"
-              className="w-full"
-              value={productDescription}
-              onChange={(e) => setProductDescription(e.target.value)}
-              disabled={productLoading}
-            />
-          </div>
-          <div className="space-y-3">
-            <Label htmlFor="productSelect" className="text-sm font-medium">
-              Product
-            </Label>
-            {productsLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Loading products...</div>
-            ) : productsError ? (
-              <div className="text-red-500 text-sm">{productsError}</div>
-            ) : (
-              <Select value={productId} onValueChange={setProductId} disabled={productLoading}>
-                <SelectTrigger className="w-full" id="productSelect">
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} {p.sku ? `(${p.sku})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <Button
-            className="bg-primary hover:bg-primary/90"
-            onClick={handleAddProductKnowledge}
-            disabled={
-              productLoading ||
-              !productName.trim() ||
-              !productDescription.trim() ||
-              !productId
-            }
-          >
-            {productLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              "Add Product Knowledge"
-            )}
-          </Button>
+          {productsLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Loading products...</div>
+          ) : productsError ? (
+            <div className="text-red-500 text-sm">{productsError}</div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 w-full">
+              <h2 className="text-lg font-semibold mb-2 text-foreground text-center capitalize">list product kosong</h2>
+              <p className="text-muted-foreground text-center mb-6 max-w-md">
+                AI agent anda membutuhkan pengetahuan produk untuk dapat membantu pelanggan dengan baik. 
+              </p>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => navigate("/products")}
+              >
+                <UploadCloud className="w-4 h-4" />
+                Tambahkan Produk
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                <Label htmlFor="productName" className="text-sm font-medium">
+                  Name
+                </Label>
+                <Input
+                  id="productName"
+                  placeholder="Enter knowledge name"
+                  className="w-full"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  disabled={productLoading}
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="productDescription" className="text-sm font-medium">
+                  Description
+                </Label>
+                <Input
+                  id="productDescription"
+                  placeholder="Enter knowledge description"
+                  className="w-full"
+                  value={productDescription}
+                  onChange={(e) => setProductDescription(e.target.value)}
+                  disabled={productLoading}
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="productSelect" className="text-sm font-medium">
+                  Product
+                </Label>
+                <Select value={productId} onValueChange={setProductId} disabled={productLoading}>
+                  <SelectTrigger className="w-full" id="productSelect">
+                    <SelectValue placeholder="Select a product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} {p.sku ? `(${p.sku})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="bg-primary hover:bg-primary/90"
+                onClick={handleAddProductKnowledge}
+                disabled={
+                  productLoading ||
+                  !productName.trim() ||
+                  !productDescription.trim() ||
+                  !productId
+                }
+              >
+                {productLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Product Knowledge"
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </TabsContent>
 

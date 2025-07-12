@@ -475,26 +475,29 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             onValueChange={(value) =>
                               handleInputChange("model", value)
                             }
-                            defaultValue="GPT-4.1"
+                            defaultValue="gpt-4"
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="GPT-4.1">
+                              <SelectItem value="gpt-4.1">
                                 Very High Intelligence
                               </SelectItem>
-                              <SelectItem value="GPT-4">
+                              <SelectItem value="gpt-4">
                                 High Intelligence (Recommended)
                               </SelectItem>
-                              <SelectItem value="GPT-3.5">
+                              <SelectItem value="gpt-4.1-mini">
                                 Medium Intelligence
                               </SelectItem>
-                              <SelectItem value="GPT-3.5">
+                              <SelectItem value="gpt-3.5">
                                 Low Intelligence
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Kecerdasan AI yang akan digunakan
+                          </p>
                         </div>
 
                         {/* AI History Limit */}
@@ -676,7 +679,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                         </TabsList>
                       </div>
 
-                     <KnowledgeTab agentId={actualAgentId || ""} />
+                      <KnowledgeTab agentId={actualAgentId || ""} />
                     </Tabs>
                   </TabsContent>
 
@@ -707,7 +710,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   <TabsContent value="existing" className="mt-0">
                     <ExistingKnowledgeList agentId={actualAgentId || ""} />
                   </TabsContent>
-
                 </div>
               </div>
 

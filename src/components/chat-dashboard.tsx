@@ -4,7 +4,6 @@ import ChatHistoryList from "./chat-history-list"
 import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { mockChatInfo } from "@/mock/data"
 import type { Contact } from "@/services/contactsService"
 
 // Default welcome content
@@ -103,9 +102,9 @@ export default function ChatDashboard() {
         )}
 
         {/* Right Sidebar - Chat Information - Fixed height, scrollable content */}
-        {selectedContactId && (
+        {selectedContactId && selectedContact && (
           <div className="w-80 border-l border-border bg-card h-full flex flex-col overflow-hidden">
-            <ChatInformation chatInfo={mockChatInfo} />
+            <ChatInformation chatInfo={selectedContact} />
           </div>
         )}
       </div>
@@ -149,7 +148,7 @@ export default function ChatDashboard() {
               <DialogTitle>Chat Information</DialogTitle>
             </DialogHeader>
             <div className="h-full overflow-hidden">
-              <ChatInformation chatInfo={mockChatInfo} />
+              {selectedContact && <ChatInformation chatInfo={selectedContact} />}
             </div>
           </DialogContent>
         </Dialog>

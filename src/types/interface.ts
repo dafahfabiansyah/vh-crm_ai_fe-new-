@@ -204,6 +204,7 @@ export interface AIAgentDetailPageProps {
 // product page interface
 export interface Product {
   id: string;
+  sku: string;
   code: string;
   name: string;
   description: string;
