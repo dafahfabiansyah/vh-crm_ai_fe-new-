@@ -93,6 +93,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
           aiContextLimit: settingsResponse.context_limit,
           messageAwait: settingsResponse.message_await,
           aiMessageLimit: settingsResponse.message_limit,
+          rajaongkir_enabled: settingsResponse.rajaongkir_enabled,
+          rajaongkir_origin_city: settingsResponse.rajaongkir_origin_city,
+          rajaongkir_couriers: settingsResponse.rajaongkir_couriers,
           // UI state (default values)
           isActive: true,
           stopAIAfterHandoff: true,
@@ -132,6 +135,17 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       });
 
       // Update agent settings using the settings ID
+      // Ensure rajaongkir_couriers is always an array
+      let couriers: string[] = [];
+      if (Array.isArray(agentData.rajaongkir_couriers)) {
+        couriers = agentData.rajaongkir_couriers.filter(Boolean);
+      } else if (typeof agentData.rajaongkir_couriers === 'string') {
+        try {
+          couriers = String(agentData.rajaongkir_couriers).split(',').map((s: string) => s.trim()).filter(Boolean);
+        } catch {
+          couriers = String(agentData.rajaongkir_couriers).split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+      }
       await AgentsService.updateAgentSettings(agentData.id_settings, {
         behaviour: agentData.behaviour,
         welcome_message: agentData.welcomeMessage,
@@ -141,6 +155,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         context_limit: agentData.aiContextLimit,
         message_await: agentData.messageAwait,
         message_limit: agentData.aiMessageLimit,
+        rajaongkir_enabled: agentData.rajaongkir_enabled,
+        rajaongkir_origin_city: agentData.rajaongkir_origin_city,
+        rajaongkir_couriers: couriers,
       });
 
       setHasChanges(false);
@@ -441,6 +458,20 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       </Label>
                     </div>
 
+                    {/* RajaOngkir Enabled Toggle */}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Checkbox
+                        id="rajaongkir_enabled"
+                        checked={!!agentData.rajaongkir_enabled}
+                        onCheckedChange={(checked) =>
+                          handleInputChange("rajaongkir_enabled", checked as boolean)
+                        }
+                      />
+                      <Label htmlFor="rajaongkir_enabled" className="text-sm font-medium">
+                        Aktifkan RajaOngkir
+                      </Label>
+                    </div>
+
                     {/* Additional Settings */}
                     <Collapsible
                       open={isAdditionalSettingsOpen}
@@ -475,7 +506,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             onValueChange={(value) =>
                               handleInputChange("model", value)
                             }
-                            defaultValue="gpt-4"
+                            defaultValue="gpt-4.1"
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select model" />
@@ -484,15 +515,15 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               <SelectItem value="gpt-4.1">
                                 Very High Intelligence
                               </SelectItem>
-                              <SelectItem value="gpt-4">
+                              {/* <SelectItem value="gpt-4.1">
                                 High Intelligence (Recommended)
                               </SelectItem>
-                              <SelectItem value="gpt-4.1-mini">
+                              <SelectItem value="gpt-4.1">
                                 Medium Intelligence
                               </SelectItem>
-                              <SelectItem value="gpt-3.5">
+                              <SelectItem value="gpt-4.1">
                                 Low Intelligence
-                              </SelectItem>
+                              </SelectItem> */}
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-muted-foreground">

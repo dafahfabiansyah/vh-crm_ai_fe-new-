@@ -32,7 +32,7 @@ const AGENT_TEMPLATES = {
         "Halo! Selamat datang di layanan pelanggan kami. Saya siap membantu Anda dengan pertanyaan atau keluhan. Ada yang bisa saya bantu hari ini?",
       transfer_condition:
         "Transfer to human agent when: customer requests to speak with human, has complex technical issues that require specialized knowledge, expresses strong dissatisfaction that requires human intervention, or asks for refund/cancellation beyond AI authority",
-      model: "gpt-4",
+      model: "gpt-4.1",
       history_limit: 15,
       context_limit: 2000,
       message_await: 30,
@@ -50,7 +50,7 @@ const AGENT_TEMPLATES = {
         "Halo! Saya admin sales yang siap membantu Anda dengan pertanyaan produk dan pemesanan. Apakah Anda sedang mencari produk tertentu atau ingin informasi lebih lanjut tentang penawaran kami?",
       transfer_condition:
         "Transfer to human sales agent when: customer wants to negotiate prices for bulk orders, has complex customization requests, requests detailed product demonstrations, or asks for special payment terms that require approval",
-      model: "gpt-4",
+      model: "gpt-4.1",
       history_limit: 20,
       context_limit: 2500,
       message_await: 25,
@@ -75,6 +75,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rajaongkirEnabled, setRajaongkirEnabled] = useState(false);
+  const [rajaongkirOriginCity, setRajaongkirOriginCity] = useState("");
+  const [rajaongkirCouriers, setRajaongkirCouriers] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +94,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
         behaviour: "You are a helpful AI assistant",
         welcome_message: "Hello! How can I help you today?",
         transfer_condition: "Transfer when customer requests human assistance",
-        model: "gpt-4",
+        model: "gpt-4.1",
         history_limit: 10,
         context_limit: 1000,
         message_await: 30,
@@ -99,10 +102,16 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
       };
 
       // Create agent with selected template settings
+      const settings = {
+        ...templateSettings,
+        rajaongkir_enabled: false,
+        rajaongkir_origin_city: "23",
+        rajaongkir_couriers: ["jne"],
+      };
       const newAgent = await AgentsService.createAgent({
         name: agentName,
         description: agentDescription,
-        settings: templateSettings,
+        settings,
       });
 
       // Reset form
@@ -125,6 +134,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
     setAgentName("");
     setAgentDescription("");
     setSelectedTemplate("");
+    setRajaongkirEnabled(false);
+    setRajaongkirOriginCity("");
+    setRajaongkirCouriers([]);
     setError(null);
     onClose();
   };

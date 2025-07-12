@@ -191,6 +191,10 @@ export interface AIAgentData {
   aiContextLimit: number;
   messageAwait: number;
   aiMessageLimit: number;
+  // RajaOngkir settings
+  rajaongkir_enabled?: boolean;
+  rajaongkir_origin_city?: string;
+  rajaongkir_couriers?: string[];
   // UI state
   isActive: boolean;
   stopAIAfterHandoff: boolean;

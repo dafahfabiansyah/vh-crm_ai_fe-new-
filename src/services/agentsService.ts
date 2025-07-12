@@ -13,6 +13,10 @@ export interface CreateAgentRequest {
     context_limit?: number;
     message_await?: number;
     message_limit?: number;
+    // RajaOngkir
+    rajaongkir_enabled?: boolean;
+    rajaongkir_origin_city?: string;
+    rajaongkir_couriers?: string[];
   };
 }
 
@@ -30,6 +34,10 @@ export interface AgentSettings {
   context_limit: number;
   message_await: number;
   message_limit: number;
+  // RajaOngkir
+  rajaongkir_enabled?: boolean;
+  rajaongkir_origin_city?: string;
+  rajaongkir_couriers?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +56,10 @@ export interface UpdateAgentSettingsRequest {
   context_limit?: number;
   message_await?: number;
   message_limit?: number;
+  // RajaOngkir
+  rajaongkir_enabled?: boolean;
+  rajaongkir_origin_city?: string;
+  rajaongkir_couriers?: string[];
 }
 
 export class AgentsService {
