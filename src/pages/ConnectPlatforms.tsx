@@ -131,6 +131,8 @@ export default function ConnectedPlatformsPage() {
             // Map agent information from platform_mappings
             aiAgent: activeMapping?.agent_name || undefined,
             teams: activeMapping ? [activeMapping.agent_type] : undefined,
+            // Map pipeline information
+            pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
             platformMappings: item.platform_mappings || []
           };
@@ -182,24 +184,66 @@ export default function ConnectedPlatformsPage() {
 
   // Add Platform Modal state
   const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
+  
+  // Pipeline mapping method state (for testing)
+  const [useAlternativePipelineMapping, setUseAlternativePipelineMapping] = useState(false);
 
   const filteredPlatforms = PlatformInboxs.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Mock refresh function
+  // Refresh function
   const handleRefresh = () => {
     setLoading(true);
-    // Simulate API call delay
-    setTimeout(() => {
-      setLoading(false);
-      setToast({
-        show: true,
-        type: "success",
-        title: "Platforms Refreshed",
-        description: "Platform status has been updated successfully.",
-      });
-    }, 1000);
+    platformsInboxService
+      .getPlatformInbox()
+      .then((data) => {
+        // Map API response to PlatformInbox[]
+        const mapped = (data || []).map((item: any) => {
+          // Get the first active agent mapping if available
+          const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
+          
+          return {
+            id: item.id,
+            name: item.platform_name,
+            type: "whatsapp" as const,
+            phone: item.platform_identifier,
+            description: item.source_type,
+            isActive: item.is_connected,
+            deviceId: item.id,
+            deviceName: item.platform_name,
+            status: item.is_connected ? "Connected" : "Disconnected",
+            sessionId: item.id_pipeline || "",
+            timestamp: item.updated_at,
+            isConnected: item.is_connected,
+            isLoggedIn: item.is_connected,
+            // Map agent information from platform_mappings
+            aiAgent: activeMapping?.agent_name || undefined,
+            teams: activeMapping ? [activeMapping.agent_type] : undefined,
+            // Map pipeline information
+            pipeline: item.id_pipeline || undefined,
+            // Store raw mapping data for reference
+            platformMappings: item.platform_mappings || []
+          };
+        });
+        setPlatformInboxs(mapped);
+        setToast({
+          show: true,
+          type: "success",
+          title: "Platforms Refreshed",
+          description: "Platform status has been updated successfully.",
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to refresh platforms from API:", err);
+        setToast({
+          show: true,
+          type: "error",
+          title: "Refresh Failed",
+          description: "Failed to refresh platform data.",
+        });
+      })
+      .finally(() => setLoading(false));
   };
 
   const handleSave = async () => {
@@ -209,16 +253,6 @@ export default function ConnectedPlatformsPage() {
     if (!currentPlatform) return;
 
     // Validate required fields
-    if (!currentPlatform.aiAgent) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Validation Error",
-        description: "Please select an AI Agent before saving.",
-      });
-      return;
-    }
-
     if (!currentPlatform.phone) {
       setToast({
         show: true,
@@ -239,42 +273,113 @@ export default function ConnectedPlatformsPage() {
       return;
     }
 
-    // Find the selected AI agent to get its ID
-    const selectedAIAgent = aiAgents.find(
-      (agent) => agent.name === currentPlatform.aiAgent
-    );
-    if (!selectedAIAgent) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Validation Error",
-        description: "Selected AI Agent not found.",
-      });
-      return;
-    }
-
     setIsSaving(true);
     try {
-      // Lakukan mapping AI Agent ke Platform
-      await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
+      // 1. Mapping pipeline
+      if (currentPlatform.pipeline) {
+        console.log('Before pipeline mapping - Platform data:', currentPlatform);
+        if (useAlternativePipelineMapping) {
+          // Option 2: Use POST to /v1/platform_mappings (alternative approach)
+          console.log('Using alternative pipeline mapping method');
+          await platformsInboxService.mapPipelineToPlatform(currentPlatform.pipeline, currentPlatform.id);
+        } else {
+          // Option 1: Use PATCH to /v1/platform-inbox (might disconnect platform)
+          console.log('Using standard pipeline mapping method');
+          await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
+        }
+        setToast({
+          show: true,
+          type: "success",
+          title: "Pipeline Mapping Saved Successfully",
+          description: `Pipeline berhasil di-mapping ke platform ${currentPlatform.name} .`,
+        });
+      }
+      // 2. Mapping AI agent (dan sebelumnya ada pipeline)
+      else if (currentPlatform.aiAgent) {
+        // PATCH ke /v1/platform-inbox dengan id_pipeline: null SETIAP KALI mapping AI agent
+        await platformsInboxService.updatePlatformMapping(currentPlatform.id, null);
+        // POST ke /v1/platform_mappings untuk AI agent
+        const selectedAIAgent = aiAgents.find(
+          (agent) => agent.name === currentPlatform.aiAgent
+        );
+        if (!selectedAIAgent) {
+          setToast({
+            show: true,
+            type: "error",
+            title: "Validation Error",
+            description: "Selected AI Agent not found.",
+          });
+          return;
+        }
+        await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
+        setToast({
+          show: true,
+          type: "success",
+          title: "AI Agent Mapping Saved Successfully",
+          description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name} .`,
+        });
+      } else {
+        setToast({
+          show: true,
+          type: "error",
+          title: "Validation Error",
+          description: "Please select either an AI Agent or Pipeline before saving.",
+        });
+        return;
+      }
 
-      setToast({
-        show: true,
-        type: "success",
-        title: "Mapping Saved Successfully",
-        description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name} .`,
+      // Refresh data from API to ensure consistency
+      const refreshedData = await platformsInboxService.getPlatformInbox();
+      console.log('After mapping - Refreshed data from API:', refreshedData);
+      const mapped = (refreshedData || []).map((item: any) => {
+        const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
+        const mappedItem = {
+          id: item.id,
+          name: item.platform_name,
+          type: "whatsapp" as const,
+          phone: item.platform_identifier,
+          description: item.source_type,
+          isActive: item.is_connected,
+          deviceId: item.id,
+          deviceName: item.platform_name,
+          status: item.is_connected ? "Connected" : "Disconnected",
+          sessionId: item.id_pipeline || "",
+          timestamp: item.updated_at,
+          isConnected: item.is_connected,
+          isLoggedIn: item.is_connected,
+          aiAgent: activeMapping?.agent_name || undefined,
+          teams: activeMapping ? [activeMapping.agent_type] : undefined,
+          pipeline: item.id_pipeline || undefined,
+          platformMappings: item.platform_mappings || []
+        };
+        // Log if this is the platform we just updated
+        if (item.id === currentPlatform.id) {
+          console.log('After mapping - Updated platform data:', mappedItem);
+          console.log('Connection status changed?', {
+            before: currentPlatform.isConnected,
+            after: mappedItem.isConnected,
+            beforeStatus: currentPlatform.status,
+            afterStatus: mappedItem.status
+          });
+        }
+        return mappedItem;
       });
-
-      // Update the platform in the list (simulasi saja, update sesuai kebutuhan)
-      setPlatformInboxs((prev) =>
-        prev.map((p) => (p.id === currentPlatform.id ? currentPlatform : p))
-      );
+      setPlatformInboxs(mapped);
+      // Update selected platform with refreshed data
+      const updatedPlatform = mapped.find((p: PlatformInbox) => p.id === currentPlatform.id);
+      if (updatedPlatform) {
+        if (showMobileDetail) {
+          setMobileSelectedPlatform(updatedPlatform);
+        } else {
+          setSelectedPlatform(updatedPlatform);
+        }
+      }
     } catch (error: any) {
       setToast({
         show: true,
         type: "error",
         title: "Mapping Failed",
-        description: error.message || "Failed to map AI Agent to platform.",
+        description: error.message || "Failed to save mapping.",
       });
     } finally {
       setIsSaving(false);
@@ -286,10 +391,10 @@ export default function ConnectedPlatformsPage() {
     try {
       await platformsInboxService.deletePlatformInbox(selectedPlatform.id);
       setPlatformInboxs((prev) =>
-        prev.filter((p) => p.id !== selectedPlatform.id)
+        prev.filter((p: PlatformInbox) => p.id !== selectedPlatform.id)
       );
       const remainingPlatforms = PlatformInboxs.filter(
-        (p) => p.id !== selectedPlatform.id
+        (p: PlatformInbox) => p.id !== selectedPlatform.id
       );
       if (remainingPlatforms.length > 0) {
         setSelectedPlatform(remainingPlatforms[0]);
@@ -368,8 +473,10 @@ export default function ConnectedPlatformsPage() {
     toast,
     setToast,
     aiAgents,
+    pipelines,
     // humanAgents,
     agentsLoading,
+    pipelinesLoading,
     humanAgentsLoading,
     updateSelectedPlatform,
     removeTeam,
@@ -382,8 +489,10 @@ export default function ConnectedPlatformsPage() {
     toast: any;
     setToast: (toast: any) => void;
     aiAgents: AIAgent[];
+    pipelines: PipelineListResponse[];
     humanAgents: any[];
     agentsLoading: boolean;
+    pipelinesLoading: boolean;
     humanAgentsLoading: boolean;
     updateSelectedPlatform: (updates: Partial<PlatformInbox>) => void;
     removeTeam: (team: string) => void;
@@ -471,6 +580,9 @@ export default function ConnectedPlatformsPage() {
               </TabsTrigger>
               <TabsTrigger value="flow" className="text-sm flex-1">
                 Flow
+              </TabsTrigger>
+              <TabsTrigger value="pipeline" className="text-sm flex-1">
+                Pipeline
               </TabsTrigger>
             </TabsList>
             <TabsContent value="basic" className="space-y-4">
@@ -677,6 +789,39 @@ export default function ConnectedPlatformsPage() {
                 </p>
               </div>
             </TabsContent>
+            <TabsContent value="pipeline" className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">
+                  Pipelines
+                </Label>
+                <Select
+                  value={platform.pipeline}
+                  onValueChange={(value) => updateSelectedPlatform({ pipeline: value })}
+                  disabled={pipelinesLoading}
+                >
+                  <SelectTrigger className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <GitBranch className="h-4 w-4 text-gray-600" />
+                      <SelectValue
+                        placeholder={pipelinesLoading ? "Loading Pipelines..." : "Select Pipeline"}
+                      />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pipelines.map((pipeline) => (
+                      <SelectItem key={pipeline.id} value={pipeline.id}>
+                        <div className="flex items-center gap-2">{pipeline.name}</div>
+                      </SelectItem>
+                    ))}
+                    {pipelines.length === 0 && !pipelinesLoading && (
+                      <SelectItem value="no-pipelines" disabled>
+                        No pipelines available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -697,8 +842,10 @@ export default function ConnectedPlatformsPage() {
             toast={toast}
             setToast={setToast}
             aiAgents={aiAgents}
+            pipelines={pipelines}
             humanAgents={humanAgents}
             agentsLoading={agentsLoading}
+            pipelinesLoading={pipelinesLoading}
             humanAgentsLoading={humanAgentsLoading}
             updateSelectedPlatform={updateSelectedPlatform}
             removeTeam={removeTeam}
@@ -712,6 +859,7 @@ export default function ConnectedPlatformsPage() {
           showMobileDetail ? "hidden lg:flex" : "flex"
         } flex-col lg:flex-row h-full bg-background`}
       >
+        
         {/* Left Sidebar - Platforms List */}
         <div className="w-full lg:w-96 border-b lg:border-b-0 lg:border-r border-border bg-card">
           <div className="p-3 sm:p-4 border-b border-border">
@@ -902,6 +1050,16 @@ export default function ConnectedPlatformsPage() {
                                 )}
                               </Badge>
                             ))
+                          ) : platform.sessionId ? (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-purple-50 text-purple-700 border-purple-200 flex-shrink-0"
+                            >
+                              <GitBranch className="h-3 w-3 mr-1" />
+                              <span className="truncate max-w-16 sm:max-w-none">
+                                Pipeline Mapped
+                              </span>
+                            </Badge>
                           ) : (
                             <Badge
                               variant="outline"
@@ -1356,7 +1514,7 @@ export default function ConnectedPlatformsPage() {
                   </p>
                 </div>
               </button>
-
+              
               {/* Web Chat Option */}
               <button
                 onClick={() => {
