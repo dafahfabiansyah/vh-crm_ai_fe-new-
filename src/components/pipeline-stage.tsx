@@ -106,7 +106,7 @@ export const PipelineStageColumn: React.FC<{
   return (
     <div
       ref={drop as any}
-      className={`flex-1 min-w-0 transition-all duration-200 ${
+      className={`flex items-center justify-between ${
         isOver && canDrop ? "bg-blue-50 border-blue-200" : ""
       }`}
     >
