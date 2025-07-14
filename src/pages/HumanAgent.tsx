@@ -95,8 +95,12 @@ export default function HumanAgentsPage() {
 
           <Tabs defaultValue="human-agent" className="w-full">
             <TabsList className="grid w-full max-w-full sm:max-w-md grid-cols-2">
-              <TabsTrigger value="human-agent" className="text-sm">Human Agent</TabsTrigger>
-              <TabsTrigger value="teams" className="text-sm">Teams</TabsTrigger>
+              <TabsTrigger value="human-agent" className="text-sm">
+                Human Agent
+              </TabsTrigger>
+              <TabsTrigger value="teams" className="text-sm">
+                Teams
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="human-agent" className="mt-4 sm:mt-6">
@@ -117,9 +121,11 @@ export default function HumanAgentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all-roles">All Roles</SelectItem>
-                      <SelectItem value="superadmin">Super Admin</SelectItem>
+                      {/* <SelectItem value="superadmin">Super Admin</SelectItem>
                       <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="human-agent">Human Agent</SelectItem>
+                      <SelectItem value="human-agent">Human Agent</SelectItem> */}
+                      <SelectItem value="owner">Owner</SelectItem>
+                      <SelectItem value="agent">Agent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -165,7 +171,7 @@ export default function HumanAgentsPage() {
                                 Email
                               </th>
                               <th className="text-left p-4 font-medium text-muted-foreground text-sm">
-                                Role
+                                Agent Type
                               </th>
                               <th className="text-left p-4 font-medium text-muted-foreground text-sm">
                                 Department
@@ -212,20 +218,8 @@ export default function HumanAgentsPage() {
                                     {String(agent.user_email || "")}
                                   </td>
                                   <td className="p-4">
-                                    <span
-                                      className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                                        agent.role === "superadmin"
-                                          ? "bg-red-100 text-red-800"
-                                          : agent.role === "manager"
-                                          ? "bg-blue-100 text-blue-800"
-                                          : "bg-green-100 text-green-800"
-                                      }`}
-                                    >
-                                      {agent.role === "superadmin"
-                                        ? "Super Admin"
-                                        : agent.role === "manager"
-                                        ? "Manager"
-                                        : "Human Agent"}
+                                    <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded-full whitespace-nowrap">
+                                      {agent.user.type}
                                     </span>
                                   </td>
                                   <td className="p-4 text-sm">
@@ -241,7 +235,9 @@ export default function HumanAgentsPage() {
                                         }`}
                                       ></div>
                                       <span className="text-sm">
-                                        {agent.is_active ? "Active" : "Inactive"}
+                                        {agent.is_active
+                                          ? "Active"
+                                          : "Inactive"}
                                       </span>
                                     </div>
                                   </td>
@@ -283,7 +279,10 @@ export default function HumanAgentsPage() {
                         ) : (
                           <div className="divide-y">
                             {filteredAgents.map((agent) => (
-                              <div key={agent.id} className="p-4 hover:bg-muted/25">
+                              <div
+                                key={agent.id}
+                                className="p-4 hover:bg-muted/25"
+                              >
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3 flex-1 min-w-0">
                                     <Avatar className="h-10 w-10 flex-shrink-0">

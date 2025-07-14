@@ -38,6 +38,14 @@ import type { AIAgent } from "@/types";
 import { KnowledgeService } from "@/services/knowledgeService";
 import { Toast } from "@/components/ui/toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import ExistingKnowledgeList from "@/components/existing-knowledge-list";
 
 // Utility function untuk format angka dengan pemisah ribuan
 const formatNumber = (value: number | string): string => {
@@ -70,9 +78,9 @@ type ProductAPI = {
 };
 
 const ProductPage = () => {
-  const [activeTab, setActiveTab] = useState<"products" | "categories" | "addToAI">(
-    "categories"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "products" | "categories" | "addToAI" | "checkKnowledgeToAI"
+  >("categories");
   // State untuk Add Product to AI
   const [aiAgents, setAIAgents] = useState<AIAgent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
@@ -466,7 +474,10 @@ const ProductPage = () => {
         price: parseFloat(editForm.price), // float
         status: editForm.status, // boolean
       };
-      const updated = await productService.updateProduct(editProduct.id, updatePayload);
+      const updated = await productService.updateProduct(
+        editProduct.id,
+        updatePayload
+      );
       setProducts((prev) =>
         prev.map((p) => (p.id === editProduct.id ? { ...p, ...updated } : p))
       );
@@ -513,7 +524,9 @@ const ProductPage = () => {
     setAddToAISuccess("");
     try {
       // Ambil produk yang dipilih
-      const selectedProducts = products.filter(p => selectedProductIds.includes(p.id));
+      const selectedProducts = products.filter((p) =>
+        selectedProductIds.includes(p.id)
+      );
       // Upload satu per satu (bisa dioptimasi parallel jika mau)
       for (const product of selectedProducts) {
         await KnowledgeService.createProductKnowledge(
@@ -586,6 +599,19 @@ const ProductPage = () => {
     }
   };
 
+  // Filter products by selected category for Add Product to AI tab
+  const selectedCategory = categories.find(
+    (cat) => cat.id === selectedCategoryId
+  );
+  const filteredProducts: Product[] =
+    !selectedCategoryId || selectedCategoryId === "all"
+      ? products
+      : selectedCategory
+      ? products.filter(
+          (p: Product) => p.category_name === selectedCategory.name
+        )
+      : products;
+
   // Fetch AI agents saat tab Add Product to AI aktif
   useEffect(() => {
     if (activeTab === "addToAI") {
@@ -609,7 +635,7 @@ const ProductPage = () => {
 
   useEffect(() => {
     if (addToAISuccess) {
-      const timer = setTimeout(() => setAddToAISuccess("") , 3000);
+      const timer = setTimeout(() => setAddToAISuccess(""), 3000);
       return () => clearTimeout(timer);
     }
   }, [addToAISuccess]);
@@ -698,6 +724,16 @@ const ProductPage = () => {
               }`}
             >
               Add Product to AI
+            </button>
+            <button
+              onClick={() => setActiveTab("checkKnowledgeToAI")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "checkKnowledgeToAI"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Check Knowledge to AI
             </button>
           </div>
           {categories.length === 0 && (
@@ -935,35 +971,96 @@ const ProductPage = () => {
           <Card>
             <CardContent className="p-6">
               <h2 className="text-xl font-bold mb-4">Add Product to AI</h2>
-              {/* Select AI Agent */}
-              <div className="mb-4">
-                <label className="block mb-2 font-medium">Select AI Agent</label>
-                {isLoadingAgents ? (
-                  <div className="text-gray-500">Loading agents...</div>
-                ) : addToAIError ? (
-                  <div className="text-red-500">{addToAIError}</div>
-                ) : (
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-md"
-                    value={selectedAgentId}
-                    onChange={e => setSelectedAgentId(e.target.value)}
+              {/* Select AI Agent & Filter by Category */}
+              <div className="mb-4 flex flex-col md:flex-row md:items-end md:gap-4">
+                <div className="flex-1">
+                  <label className="block mb-2 font-medium">
+                    Select AI Agent
+                  </label>
+                  {isLoadingAgents ? (
+                    <div className="text-gray-500">Loading agents...</div>
+                  ) : addToAIError ? (
+                    <div className="text-red-500">{addToAIError}</div>
+                  ) : (
+                    <Select
+                      value={selectedAgentId}
+                      onValueChange={setSelectedAgentId}
+                      disabled={isLoadingAgents || aiAgents.length === 0}
+                    >
+                      <SelectTrigger className="w-full max-w-md">
+                        <SelectValue
+                          placeholder={
+                            aiAgents.length === 0
+                              ? "No AI agent found"
+                              : "Select AI agent"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {aiAgents.length === 0 ? (
+                          <SelectItem value="" disabled>
+                            No AI agent found
+                          </SelectItem>
+                        ) : (
+                          aiAgents.map((agent) => (
+                            <SelectItem key={agent.id} value={agent.id}>
+                              {agent.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="flex-1 mt-4 md:mt-0">
+                  <label className="block mb-2 font-medium">
+                    Filter by Category
+                  </label>
+                  <Select
+                    value={selectedCategoryId || "all"}
+                    onValueChange={setSelectedCategoryId}
                   >
-                    {aiAgents.length === 0 && <option value="">No AI agent found</option>}
-                    {aiAgents.map(agent => (
-                      <option key={agent.id} value={agent.id}>{agent.name}</option>
-                    ))}
-                  </select>
-                )}
+                    <SelectTrigger className="w-full max-w-md">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Product Table with Checkbox */}
               {addToAILoading && (
                 <div className="flex justify-center items-center py-4">
-                  <svg className="animate-spin h-6 w-6 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  <svg
+                    className="animate-spin h-6 w-6 text-blue-600 mr-2"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
                   </svg>
-                  <span className="text-blue-600 font-medium">Uploading products to AI...</span>
+                  <span className="text-blue-600 font-medium">
+                    Uploading products to AI...
+                  </span>
                 </div>
               )}
               <div className="overflow-x-auto mb-4">
@@ -972,10 +1069,16 @@ const ProductPage = () => {
                     <tr className="bg-gray-50">
                       <th className="p-3 text-left font-bold">
                         <Checkbox
-                          checked={selectedProductIds.length === products.length && products.length > 0}
-                          onCheckedChange={checked => {
+                          checked={
+                            selectedProductIds.length ===
+                              filteredProducts.length &&
+                            filteredProducts.length > 0
+                          }
+                          onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedProductIds(products.map(p => p.id));
+                              setSelectedProductIds(
+                                filteredProducts.map((p) => p.id)
+                              );
                             } else {
                               setSelectedProductIds([]);
                             }
@@ -993,21 +1096,34 @@ const ProductPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.length === 0 ? (
+                    {filteredProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="text-center py-6 text-gray-500">No products found</td>
+                        <td
+                          colSpan={8}
+                          className="text-center py-6 text-gray-500"
+                        >
+                          No products found
+                        </td>
                       </tr>
                     ) : (
-                      products.map(product => (
-                        <tr key={product.id} className="border-b hover:bg-gray-50">
+                      filteredProducts.map((product: Product) => (
+                        <tr
+                          key={product.id}
+                          className="border-b hover:bg-gray-50"
+                        >
                           <td className="p-3">
                             <Checkbox
                               checked={selectedProductIds.includes(product.id)}
-                              onCheckedChange={checked => {
+                              onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedProductIds(prev => [...prev, product.id]);
+                                  setSelectedProductIds((prev) => [
+                                    ...prev,
+                                    product.id,
+                                  ]);
                                 } else {
-                                  setSelectedProductIds(prev => prev.filter(id => id !== product.id));
+                                  setSelectedProductIds((prev) =>
+                                    prev.filter((id) => id !== product.id)
+                                  );
                                 }
                               }}
                               aria-label={`Select product ${product.name}`}
@@ -1015,17 +1131,29 @@ const ProductPage = () => {
                           </td>
                           <td className="p-3">
                             {product.image ? (
-                              <img src={product.image} alt={product.name} className="h-12 w-12 object-cover rounded border" />
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="h-12 w-12 object-cover rounded border"
+                              />
                             ) : (
-                              <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">-</div>
+                              <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                                -
+                              </div>
                             )}
                           </td>
                           <td className="p-3 font-medium">{product.name}</td>
-                          <td className="p-3">{product.sku || product.code || '-'}</td>
-                          <td className="p-3">{product.category_name || '-'}</td>
-                          <td className="p-3">{product.stock ?? '-'}</td>
+                          <td className="p-3">
+                            {product.sku || product.code || "-"}
+                          </td>
+                          <td className="p-3">
+                            {product.category_name || "-"}
+                          </td>
+                          <td className="p-3">{product.stock ?? "-"}</td>
                           <td className="p-3">{formatNumber(product.price)}</td>
-                          <td className="p-3 text-gray-600 text-sm">{product.description || '-'}</td>
+                          <td className="p-3 text-gray-600 text-sm">
+                            {product.description || "-"}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -1035,7 +1163,11 @@ const ProductPage = () => {
 
               <Button
                 className="w-full"
-                disabled={selectedProductIds.length === 0 || !selectedAgentId || addToAILoading}
+                disabled={
+                  selectedProductIds.length === 0 ||
+                  !selectedAgentId ||
+                  addToAILoading
+                }
                 onClick={handleAddProductsToAI}
               >
                 {addToAILoading ? "Adding..." : "Add Selected Products to AI"}
@@ -1052,6 +1184,50 @@ const ProductPage = () => {
               )}
               {addToAIError && (
                 <div className="text-red-600 mt-2">{addToAIError}</div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Check Knowledge to AI Tab Content */}
+        {activeTab === "checkKnowledgeToAI" && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold mb-4">Check Knowledge to AI</h2>
+              <div className="mb-4 max-w-md">
+                <label className="block mb-2 font-medium">Select AI Agent</label>
+                {isLoadingAgents ? (
+                  <div className="text-gray-500">Loading agents...</div>
+                ) : addToAIError ? (
+                  <div className="text-red-500">{addToAIError}</div>
+                ) : (
+                  <Select
+                    value={selectedAgentId}
+                    onValueChange={setSelectedAgentId}
+                    disabled={isLoadingAgents || aiAgents.length === 0}
+                  >
+                    <SelectTrigger className="w-full max-w-md">
+                      <SelectValue placeholder={aiAgents.length === 0 ? 'No AI agent found' : 'Select AI agent'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {aiAgents.length === 0 ? (
+                        <SelectItem value="" disabled>No AI agent found</SelectItem>
+                      ) : (
+                        aiAgents.map(agent => (
+                          <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              {selectedAgentId ? (
+                <div className="mt-6">
+                  {/* Daftar knowledge milik agent */}
+                  <ExistingKnowledgeList agentId={selectedAgentId} />
+                </div>
+              ) : (
+                <div className="text-gray-500 mt-8">Pilih AI agent untuk melihat knowledge.</div>
               )}
             </CardContent>
           </Card>
@@ -1435,7 +1611,9 @@ const ProductPage = () => {
                 <Label>Description</Label>
                 <Textarea
                   value={editForm.description}
-                  onChange={(e) => handleEditFormChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleEditFormChange("description", e.target.value)
+                  }
                 />
               </div>
               <div>
@@ -1443,7 +1621,9 @@ const ProductPage = () => {
                 <Input
                   type="number"
                   value={editForm.stock}
-                  onChange={(e) => handleEditFormChange("stock", e.target.value)}
+                  onChange={(e) =>
+                    handleEditFormChange("stock", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -1452,7 +1632,9 @@ const ProductPage = () => {
                 <Input
                   type="number"
                   value={editForm.price}
-                  onChange={(e) => handleEditFormChange("price", e.target.value)}
+                  onChange={(e) =>
+                    handleEditFormChange("price", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -1460,7 +1642,9 @@ const ProductPage = () => {
                 <Label>Status</Label>
                 <select
                   value={editForm.status ? "active" : "inactive"}
-                  onChange={(e) => handleEditFormChange("status", e.target.value === "active")}
+                  onChange={(e) =>
+                    handleEditFormChange("status", e.target.value === "active")
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
                   <option value="active">Active</option>
@@ -1476,7 +1660,11 @@ const ProductPage = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isEditLoading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={isEditLoading}
+                  className="flex-1"
+                >
                   {isEditLoading ? "Saving..." : "Save"}
                 </Button>
               </div>
@@ -1493,7 +1681,8 @@ const ProductPage = () => {
             {viewProduct && (
               <div className="space-y-4">
                 <div>
-                  <strong>SKU / Product Code:</strong> {viewProduct.sku || viewProduct.code || "-"}
+                  <strong>SKU / Product Code:</strong>{" "}
+                  {viewProduct.sku || viewProduct.code || "-"}
                 </div>
                 <div>
                   <strong>Name:</strong> {viewProduct.name}
@@ -1508,22 +1697,47 @@ const ProductPage = () => {
                   <strong>Price:</strong> {viewProduct.price}
                 </div>
                 <div>
-                  <strong>Status:</strong> {(viewProduct as any).status !== false ? "Active" : "Inactive"}
+                  <strong>Status:</strong>{" "}
+                  {(viewProduct as any).status !== false
+                    ? "Active"
+                    : "Inactive"}
                 </div>
                 <div>
                   <strong>Category:</strong> {viewProduct.category_name}
                 </div>
                 <div>
-                  <strong>Created At:</strong> {viewProduct.created_at ? new Date(viewProduct.created_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                  <strong>Created At:</strong>{" "}
+                  {viewProduct.created_at
+                    ? new Date(viewProduct.created_at).toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "-"}
                 </div>
                 <div>
-                  <strong>Updated At:</strong> {viewProduct.updated_at ? new Date(viewProduct.updated_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                  <strong>Updated At:</strong>{" "}
+                  {viewProduct.updated_at
+                    ? new Date(viewProduct.updated_at).toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "-"}
                 </div>
                 {viewProduct.image && (
                   <div>
                     <strong>Image:</strong>
                     <div className="mt-2">
-                      <img src={viewProduct.image} alt={viewProduct.name} className="max-h-32 rounded border" />
+                      <img
+                        src={viewProduct.image}
+                        alt={viewProduct.name}
+                        className="max-h-32 rounded border"
+                      />
                     </div>
                   </div>
                 )}
@@ -1540,7 +1754,10 @@ const ProductPage = () => {
             </DialogHeader>
             {deleteProduct && (
               <div className="space-y-4">
-                <p>Are you sure you want to delete the product <strong>{deleteProduct.name}</strong>?</p>
+                <p>
+                  Are you sure you want to delete the product{" "}
+                  <strong>{deleteProduct.name}</strong>?
+                </p>
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="button"

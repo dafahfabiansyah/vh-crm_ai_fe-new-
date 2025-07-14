@@ -7,7 +7,8 @@ import {
   Settings,
   Package,
   ChevronRight,
-  Workflow
+  Workflow,
+  Combine
 } from 'lucide-react'
 
 const SettingsPage = () => {
@@ -29,6 +30,15 @@ const SettingsPage = () => {
       path: '/flow',
       iconColor: 'text-green-600',
       bgColor: 'bg-green-100'
+    },
+    {
+      id: 'Integration',
+      title: 'Integration Settings',
+      description: 'API keys, webhooks, and third-party integrations',
+      icon: Combine,
+      path: '/integration/shipping',
+      iconColor: 'text-orange-600',
+      bgColor: 'bg-orange-100'
     }
   ]
 
@@ -123,7 +133,7 @@ const SettingsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="opacity-60">
+            {/* <Card className="opacity-60">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-gray-100 rounded-lg">
@@ -138,7 +148,7 @@ const SettingsPage = () => {
                   Coming Soon
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

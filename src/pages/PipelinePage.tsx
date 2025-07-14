@@ -478,9 +478,9 @@ const PipelinePage = () => {
                         <p className="text-2xl font-bold text-gray-900">
                           Rp {totalValue.toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        {/* <p className="text-xs text-gray-500">
                           • Belum ada data perbandingan
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   </CardContent>
