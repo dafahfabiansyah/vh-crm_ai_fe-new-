@@ -41,7 +41,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { AgentsService } from "@/services/agentsService";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -321,14 +320,28 @@ const PipelinePage = () => {
     setIsSubmittingStage(false);
     setAgents([]);
     setSelectedAgent("");
-    AgentsService.getAgents()
-      .then(setAgents)
-      .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
+    import("@/services/axios").then((axiosInstanceModule) => {
+      const axiosInstance = axiosInstanceModule.default;
+      axiosInstance.get("/v1/agents?offset=0&limit=100")
+        .then((response) => {
+          const items = response.data.items || [];
+          const aiAgents = items.filter((agent: any) => agent.agent_type === "AI");
+          setAgents(aiAgents);
+        })
+        .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
+    });
   }, [isAddStageOpen]);
 
   // Fetch AI agents saat mount
   useEffect(() => {
-    AgentsService.getAgents().then(setAiAgents).catch(() => setAiAgents([]));
+    import("@/services/humanAgentsService").then(({ HumanAgentsService }) => {
+      HumanAgentsService.getHumanAgents()
+        .then((allAgents) => {
+          const aiAgents = allAgents.filter(agent => agent.agent_type === "AI");
+          setAiAgents(aiAgents);
+        })
+        .catch(() => setAiAgents([]));
+    });
   }, []);
 
   const handleOpenAddStage = () => {
@@ -484,9 +497,9 @@ const PipelinePage = () => {
                         <p className="text-2xl font-bold text-gray-900">
                           {totalLeads} Lead
                         </p>
-                        <p className="text-xs text-blue-600">
-                          • 2 lead baru hari ini
-                        </p>
+                        {/* <p className="text-xs text-blue-600">
+                          • {totalLeads} lead baru hari ini
+                        </p> */}
                       </div>
                     </div>
                   </CardContent>
@@ -709,7 +722,9 @@ const PipelinePage = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {agents.map(agent => (
-                            <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                            <SelectItem key={agent.id} value={agent.id}>
+                              {(agent.name || agent.identifier)} ({agent.agent_type})
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

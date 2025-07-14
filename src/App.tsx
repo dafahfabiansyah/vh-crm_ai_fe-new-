@@ -21,6 +21,7 @@ import ProductPage from "./pages/ProductPage";
 import TicketPage from "./pages/TicketPage";
 import FlowSettingsPage from "./pages/FlowSettingsPage";
 import SettingsPage from "./pages/SettingsPage";
+import ShippingIntegrationPage from "./pages/ShippingIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
@@ -82,6 +83,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AIAgentDetailWrapper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integration/shipping"
+          element={
+            <ProtectedRoute>
+              <ShippingIntegrationPage />
             </ProtectedRoute>
           }
         />

@@ -40,6 +40,7 @@ import { AgentsService } from "@/services/agentsService";
 import KnowledgeTab from "@/components/knowledge-tab";
 import ExistingKnowledgeList from "@/components/existing-knowledge-list";
 import type { AIAgentData, AIAgentDetailPageProps } from "@/types";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const navigate = useNavigate();
@@ -715,14 +716,25 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   </TabsContent>
 
                   <TabsContent value="integrations" className="mt-0">
-                    <div className="text-center py-12">
-                      <Link className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        Integrations
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Connect your AI agent with external services.
-                      </p>
+                    <div className="flex justify-center py-8">
+                      <div className="w-full max-w-sm">
+                        <Card>
+                          <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                            <div className="p-3 bg-yellow-100 rounded-lg">
+                              <Link className="h-6 w-6 text-yellow-600" />
+                            </div>
+                            <CardTitle className="text-lg">Cek Ongkos Kirim</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <CardDescription>
+                              Mengecek ongkir dari berbagai kurir dan mendapatkan status pengiriman
+                            </CardDescription>
+                          </CardContent>
+                          <CardFooter>
+                            <Button onClick={() => navigate("/integration/shipping")} className="w-full" variant="outline">Aktifkan</Button>
+                          </CardFooter>
+                        </Card>
+                      </div>
                     </div>
                   </TabsContent>
 
