@@ -109,6 +109,25 @@ const ProductPage = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string>("");
 
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    code: "",
+    name: "",
+    description: "",
+    stock: "",
+    price: "",
+    status: true,
+  });
+  const [isEditLoading, setIsEditLoading] = useState(false);
+
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+
   const handleInputChange =
     (field: keyof ProductFormData) =>
     (
@@ -271,9 +290,9 @@ const ProductPage = () => {
         colors: response.colors,
         material: response.material,
         image: response.image,
-        category: response.category,
-        createdAt: response.created_at,
-        updatedAt: response.updated_at,
+        category_name: response.category,
+        created_at: response.created_at,
+        updated_at: response.updated_at,
       };
 
       setProducts((prev) => [...prev, newProduct]);
@@ -400,6 +419,75 @@ const ProductPage = () => {
       alert(`Failed to delete category: ${error.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditClick = (product: Product) => {
+    setEditProduct(product);
+    setEditForm({
+      code: product.sku || product.code || "", // Prioritaskan SKU
+      name: product.name || "",
+      description: product.description || "",
+      stock: String(product.stock ?? ""),
+      price: String(product.price ?? ""),
+      status: (product as any).status !== false, // fallback for status, if available
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditFormChange = (field: string, value: any) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editProduct) return;
+    setIsEditLoading(true);
+    try {
+      const updatePayload: any = {
+        sku: editForm.code, // send as sku
+        name: editForm.name,
+        description: editForm.description,
+        stock: editForm.stock, // string
+        price: parseFloat(editForm.price), // float
+        status: editForm.status, // boolean
+      };
+      const updated = await productService.updateProduct(editProduct.id, updatePayload);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editProduct.id ? { ...p, ...updated } : p))
+      );
+      setIsEditModalOpen(false);
+      setEditProduct(null);
+    } catch (err: any) {
+      alert("Failed to update product: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsEditLoading(false);
+    }
+  };
+
+  const handleViewClick = (product: Product) => {
+    setViewProduct(product);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDeleteClick = (productId: string) => {
+    const product = products.find((p) => p.id === productId) || null;
+    setDeleteProduct(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteProduct) return;
+    setIsDeleteLoading(true);
+    try {
+      await productService.deleteProduct(deleteProduct.id);
+      setProducts((prev) => prev.filter((p) => p.id !== deleteProduct.id));
+      setIsDeleteModalOpen(false);
+      setDeleteProduct(null);
+    } catch (err: any) {
+      alert("Failed to delete product: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsDeleteLoading(false);
     }
   };
 
@@ -763,18 +851,9 @@ const ProductPage = () => {
             categoriesWithAttributes={categoriesWithAttributes}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            onEdit={(product) => {
-              // TODO: Implement edit functionality
-              console.log("Edit product:", product);
-            }}
-            onDelete={(productId) => {
-              // TODO: Implement delete functionality
-              console.log("Delete product:", productId);
-            }}
-            onView={(product) => {
-              // TODO: Implement view functionality
-              console.log("View product:", product);
-            }}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            onView={handleViewClick}
           />
         )}
 
@@ -1126,6 +1205,164 @@ const ProductPage = () => {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Product Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="w-full max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <Label>SKU / Product Code</Label>
+                <Input
+                  value={editForm.code}
+                  onChange={(e) => handleEditFormChange("code", e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => handleEditFormChange("name", e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editForm.description}
+                  onChange={(e) => handleEditFormChange("description", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Stock</Label>
+                <Input
+                  type="number"
+                  value={editForm.stock}
+                  onChange={(e) => handleEditFormChange("stock", e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Price</Label>
+                <Input
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e) => handleEditFormChange("price", e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <select
+                  value={editForm.status ? "active" : "inactive"}
+                  onChange={(e) => handleEditFormChange("status", e.target.value === "active")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isEditLoading} className="flex-1">
+                  {isEditLoading ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Product Modal */}
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="w-full max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Product Details</DialogTitle>
+            </DialogHeader>
+            {viewProduct && (
+              <div className="space-y-4">
+                <div>
+                  <strong>SKU / Product Code:</strong> {viewProduct.sku || viewProduct.code || "-"}
+                </div>
+                <div>
+                  <strong>Name:</strong> {viewProduct.name}
+                </div>
+                <div>
+                  <strong>Description:</strong> {viewProduct.description}
+                </div>
+                <div>
+                  <strong>Stock:</strong> {viewProduct.stock}
+                </div>
+                <div>
+                  <strong>Price:</strong> {viewProduct.price}
+                </div>
+                <div>
+                  <strong>Status:</strong> {(viewProduct as any).status !== false ? "Active" : "Inactive"}
+                </div>
+                <div>
+                  <strong>Category:</strong> {viewProduct.category_name}
+                </div>
+                <div>
+                  <strong>Created At:</strong> {viewProduct.created_at ? new Date(viewProduct.created_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                </div>
+                <div>
+                  <strong>Updated At:</strong> {viewProduct.updated_at ? new Date(viewProduct.updated_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                </div>
+                {viewProduct.image && (
+                  <div>
+                    <strong>Image:</strong>
+                    <div className="mt-2">
+                      <img src={viewProduct.image} alt={viewProduct.name} className="max-h-32 rounded border" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Product Confirmation Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent className="w-full max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Product</DialogTitle>
+            </DialogHeader>
+            {deleteProduct && (
+              <div className="space-y-4">
+                <p>Are you sure you want to delete the product <strong>{deleteProduct.name}</strong>?</p>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="flex-1"
+                    disabled={isDeleteLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleConfirmDelete}
+                    className="flex-1"
+                    disabled={isDeleteLoading}
+                  >
+                    {isDeleteLoading ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

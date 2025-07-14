@@ -219,9 +219,9 @@ export interface Product {
   colors: string[];
   material: string;
   image: string;
-  category: string;
-  createdAt: string;
-  updatedAt: string;
+  category_name: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Category {
