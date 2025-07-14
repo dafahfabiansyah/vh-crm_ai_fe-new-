@@ -232,8 +232,10 @@ export default function Topbar({
           <div className="flex items-center">
             <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 mr-1 sm:mr-2 flex-shrink-0" />
             <AlertDescription className="text-xs sm:text-sm font-medium whitespace-nowrap">
-              <span className="hidden sm:inline">Anda sedang menggunakan paket standar</span>
-              <span className="sm:hidden">Paket Standar</span>
+              {/* <span className="hidden sm:inline">Anda sedang menggunakan paket standar</span> */}
+              <span className="hidden sm:inline capitalize">Belum Berlangganan, Silakan lakukan pembelian</span>
+              {/* <span className="sm:hidden">Paket Standar</span> */}
+              <span className="sm:hidden">Belum Berlangganan</span>
             </AlertDescription>
           </div>
         </Alert>

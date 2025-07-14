@@ -24,7 +24,7 @@ import {
   Plus,
   TrendingUp,
   Calendar,
- 
+
   FileText,
   Clock,
 } from "lucide-react";
@@ -44,6 +44,8 @@ export default function BillingPage() {
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isProcessingDialogOpen, setIsProcessingDialogOpen] = useState(false);
+  const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
+  const [topUpType, setTopUpType] = useState<null | 'mau' | 'responses'>(null);
 
   const handleUpgrade = (planId: string) => {
     const plan = pricingPlans.find((p) => p.id === planId);
@@ -203,6 +205,7 @@ export default function BillingPage() {
               </div>
               <Button
                 variant="secondary"
+                disabled
                 size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
               >
@@ -238,6 +241,7 @@ export default function BillingPage() {
                   variant="secondary"
                   size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs"
+                  onClick={() => { setTopUpType('mau'); setIsTopUpDialogOpen(true); }}
                 >
                   Top Up MAU
                 </Button>
@@ -296,6 +300,7 @@ export default function BillingPage() {
                 variant="secondary"
                 size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30 mb-3 w-full sm:w-auto text-xs"
+                onClick={() => { setTopUpType('responses'); setIsTopUpDialogOpen(true); }}
               >
                 Top Up Responses
               </Button>
@@ -648,6 +653,39 @@ export default function BillingPage() {
           <p className="text-foreground">
             Akun anda sedang kami siapkan dan akan kami kabari secepatnya, anda bisa menutup tab ini
           </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Top Up Dialog */}
+    <Dialog open={isTopUpDialogOpen} onOpenChange={(open) => { setIsTopUpDialogOpen(open); if (!open) setTopUpType(null); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">
+            {topUpType === 'mau' ? 'Top Up Monthly Active Users (MAU)' : topUpType === 'responses' ? 'Top Up AI Responses' : ''}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {topUpType === 'mau' && (
+            <div>
+              <p className="text-foreground mb-2">Masukkan jumlah MAU tambahan yang ingin Anda beli.</p>
+              <Input placeholder="Jumlah MAU" type="number" min={1} />
+            </div>
+          )}
+          {topUpType === 'responses' && (
+            <div>
+              <p className="text-foreground mb-2">Masukkan jumlah AI Responses tambahan yang ingin Anda beli.</p>
+              <Input placeholder="Jumlah Responses" type="number" min={1} />
+            </div>
+          )}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsTopUpDialogOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+              Top Up Now
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

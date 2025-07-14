@@ -33,6 +33,11 @@ import type {
   ProductFormData,
 } from "@/types";
 import ProductTable from "@/components/product-table";
+import { AgentsService } from "@/services/agentsService";
+import type { AIAgent } from "@/types";
+import { KnowledgeService } from "@/services/knowledgeService";
+import { Toast } from "@/components/ui/toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Utility function untuk format angka dengan pemisah ribuan
 const formatNumber = (value: number | string): string => {
@@ -65,9 +70,18 @@ type ProductAPI = {
 };
 
 const ProductPage = () => {
-  const [activeTab, setActiveTab] = useState<"products" | "categories">(
+  const [activeTab, setActiveTab] = useState<"products" | "categories" | "addToAI">(
     "categories"
   );
+  // State untuk Add Product to AI
+  const [aiAgents, setAIAgents] = useState<AIAgent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
+  const [addToAIError, setAddToAIError] = useState<string>("");
+  const [addToAILoading, setAddToAILoading] = useState(false);
+  const [addToAISuccess, setAddToAISuccess] = useState<string>("");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<
@@ -491,6 +505,33 @@ const ProductPage = () => {
     }
   };
 
+  // Handler untuk upload produk ke AI
+  const handleAddProductsToAI = async () => {
+    if (!selectedAgentId || selectedProductIds.length === 0) return;
+    setAddToAILoading(true);
+    setAddToAIError("");
+    setAddToAISuccess("");
+    try {
+      // Ambil produk yang dipilih
+      const selectedProducts = products.filter(p => selectedProductIds.includes(p.id));
+      // Upload satu per satu (bisa dioptimasi parallel jika mau)
+      for (const product of selectedProducts) {
+        await KnowledgeService.createProductKnowledge(
+          selectedAgentId,
+          product.name,
+          product.description || `Product Knowledge for ${product.name}`,
+          product.id
+        );
+      }
+      setAddToAISuccess("Products successfully added to AI agent.");
+      setSelectedProductIds([]);
+    } catch (err: any) {
+      setAddToAIError(err?.message || "Failed to add products to AI agent");
+    } finally {
+      setAddToAILoading(false);
+    }
+  };
+
   // Fetch categories on component mount
   const fetchCategories = async () => {
     try {
@@ -545,11 +586,33 @@ const ProductPage = () => {
     }
   };
 
+  // Fetch AI agents saat tab Add Product to AI aktif
+  useEffect(() => {
+    if (activeTab === "addToAI") {
+      setIsLoadingAgents(true);
+      AgentsService.getAgents()
+        .then((agents) => {
+          setAIAgents(agents);
+          if (agents.length > 0) setSelectedAgentId(agents[0].id);
+        })
+        .catch((err) => {
+          setAddToAIError(err?.message || "Failed to fetch AI agents");
+        })
+        .finally(() => setIsLoadingAgents(false));
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     fetchCategories();
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (addToAISuccess) {
+      const timer = setTimeout(() => setAddToAISuccess("") , 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [addToAISuccess]);
   const totalCategories = categories.length;
 
   // Filter functions
@@ -625,6 +688,16 @@ const ProductPage = () => {
               }`}
             >
               Products
+            </button>
+            <button
+              onClick={() => setActiveTab("addToAI")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "addToAI"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Add Product to AI
             </button>
           </div>
           {categories.length === 0 && (
@@ -855,6 +928,133 @@ const ProductPage = () => {
             onDelete={handleDeleteClick}
             onView={handleViewClick}
           />
+        )}
+
+        {/* Add Product to AI Tab Content */}
+        {activeTab === "addToAI" && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold mb-4">Add Product to AI</h2>
+              {/* Select AI Agent */}
+              <div className="mb-4">
+                <label className="block mb-2 font-medium">Select AI Agent</label>
+                {isLoadingAgents ? (
+                  <div className="text-gray-500">Loading agents...</div>
+                ) : addToAIError ? (
+                  <div className="text-red-500">{addToAIError}</div>
+                ) : (
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-md"
+                    value={selectedAgentId}
+                    onChange={e => setSelectedAgentId(e.target.value)}
+                  >
+                    {aiAgents.length === 0 && <option value="">No AI agent found</option>}
+                    {aiAgents.map(agent => (
+                      <option key={agent.id} value={agent.id}>{agent.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Product Table with Checkbox */}
+              {addToAILoading && (
+                <div className="flex justify-center items-center py-4">
+                  <svg className="animate-spin h-6 w-6 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  <span className="text-blue-600 font-medium">Uploading products to AI...</span>
+                </div>
+              )}
+              <div className="overflow-x-auto mb-4">
+                <table className="min-w-full bg-white border rounded-lg">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="p-3 text-left font-bold">
+                        <Checkbox
+                          checked={selectedProductIds.length === products.length && products.length > 0}
+                          onCheckedChange={checked => {
+                            if (checked) {
+                              setSelectedProductIds(products.map(p => p.id));
+                            } else {
+                              setSelectedProductIds([]);
+                            }
+                          }}
+                          aria-label="Select all products"
+                        />
+                      </th>
+                      <th className="p-3 text-left font-bold">Image</th>
+                      <th className="p-3 text-left font-bold">Name</th>
+                      <th className="p-3 text-left font-bold">SKU</th>
+                      <th className="p-3 text-left font-bold">Category</th>
+                      <th className="p-3 text-left font-bold">Stock</th>
+                      <th className="p-3 text-left font-bold">Price</th>
+                      <th className="p-3 text-left font-bold">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-6 text-gray-500">No products found</td>
+                      </tr>
+                    ) : (
+                      products.map(product => (
+                        <tr key={product.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3">
+                            <Checkbox
+                              checked={selectedProductIds.includes(product.id)}
+                              onCheckedChange={checked => {
+                                if (checked) {
+                                  setSelectedProductIds(prev => [...prev, product.id]);
+                                } else {
+                                  setSelectedProductIds(prev => prev.filter(id => id !== product.id));
+                                }
+                              }}
+                              aria-label={`Select product ${product.name}`}
+                            />
+                          </td>
+                          <td className="p-3">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} className="h-12 w-12 object-cover rounded border" />
+                            ) : (
+                              <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">-</div>
+                            )}
+                          </td>
+                          <td className="p-3 font-medium">{product.name}</td>
+                          <td className="p-3">{product.sku || product.code || '-'}</td>
+                          <td className="p-3">{product.category_name || '-'}</td>
+                          <td className="p-3">{product.stock ?? '-'}</td>
+                          <td className="p-3">{formatNumber(product.price)}</td>
+                          <td className="p-3 text-gray-600 text-sm">{product.description || '-'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={selectedProductIds.length === 0 || !selectedAgentId || addToAILoading}
+                onClick={handleAddProductsToAI}
+              >
+                {addToAILoading ? "Adding..." : "Add Selected Products to AI"}
+              </Button>
+              {/* Toast Success Bottom Left */}
+              {addToAISuccess && (
+                <div className="fixed bottom-4 left-4 z-50 w-[320px]">
+                  <Toast
+                    type="success"
+                    title="Success"
+                    description={addToAISuccess}
+                  />
+                </div>
+              )}
+              {addToAIError && (
+                <div className="text-red-600 mt-2">{addToAIError}</div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Create Category Modal */}
