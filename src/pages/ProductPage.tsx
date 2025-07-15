@@ -650,10 +650,10 @@ const ProductPage = () => {
 
   return (
     <MainLayout>
-      <div className="p-6">
+      <div className="p-4 md:p-6 max-w-full mx-auto w-full">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 md:mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
             <div className="flex items-center gap-4">
               <Link
                 to="#"
@@ -675,6 +675,7 @@ const ProductPage = () => {
                   : setIsCategoryModalOpen(true)
               }
               disabled={activeTab === "products" && categories.length === 0}
+              className="w-full md:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               {activeTab === "products" ? "Add Product" : "Add Category"}
@@ -683,18 +684,18 @@ const ProductPage = () => {
 
           <div className="flex items-center gap-2 mb-4">
             <Package className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
               Product & Category Management
             </h1>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="mb-4 md:mb-6">
+          <div className="flex flex-wrap gap-2 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("categories")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors min-w-[120px] ${
                 activeTab === "categories"
                   ? "bg-white text- shadow-sm"
                   : "hover:text-gray-900"
@@ -705,7 +706,7 @@ const ProductPage = () => {
             <button
               onClick={() => setActiveTab("products")}
               disabled={categories.length === 0}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors min-w-[120px] ${
                 activeTab === "products"
                   ? "bg-white shadow-sm"
                   : categories.length === 0
@@ -717,7 +718,7 @@ const ProductPage = () => {
             </button>
             <button
               onClick={() => setActiveTab("addToAI")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors min-w-[120px] ${
                 activeTab === "addToAI"
                   ? "bg-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -727,7 +728,7 @@ const ProductPage = () => {
             </button>
             <button
               onClick={() => setActiveTab("checkKnowledgeToAI")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors min-w-[120px] ${
                 activeTab === "checkKnowledgeToAI"
                   ? "bg-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -747,9 +748,9 @@ const ProductPage = () => {
         {activeTab === "categories" && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardContent className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+              <Card className="rounded-lg shadow-sm">
+                <CardContent className="p-4 md:p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-blue-100 rounded-lg">
                       <Package className="h-6 w-6 text-blue-600" />
@@ -764,8 +765,8 @@ const ProductPage = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-6">
+              <Card className="rounded-lg shadow-sm">
+                <CardContent className="p-4 md:p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-green-100 rounded-lg">
                       <Package className="h-6 w-6 text-green-600" />
@@ -782,16 +783,16 @@ const ProductPage = () => {
             </div>
 
             {/* Search and Filter */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
+            <Card className="mb-4 md:mb-6 rounded-lg shadow-sm">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 min-w-0">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search categories by name or description..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 w-full"
                     />
                   </div>
                 </div>
@@ -799,7 +800,7 @@ const ProductPage = () => {
             </Card>
 
             {/* Categories Table */}
-            <Card>
+            <Card className="rounded-lg shadow-sm">
               <CardHeader>
                 <CardTitle>Categories ({categories.length})</CardTitle>
               </CardHeader>
@@ -815,7 +816,7 @@ const ProductPage = () => {
                 ) : (
                   <div className="space-y-2">
                     {/* Header */}
-                    <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 px-2 md:px-4 py-2 md:py-3 bg-gray-50 rounded-lg text-xs md:text-sm font-medium text-gray-700">
                       <div>Name & Description</div>
                       <div>Created</div>
                       <div>Updated</div>
@@ -832,20 +833,20 @@ const ProductPage = () => {
                           <AccordionItem
                             key={category.id}
                             value={category.id}
-                            className="border rounded-lg"
+                            className="border rounded-lg shadow-sm"
                           >
-                            <AccordionTrigger className="hover:no-underline px-4">
-                              <div className="flex items-center justify-between w-full pr-4">
-                                <div className="grid grid-cols-4 gap-4 flex-1 text-left">
+                            <AccordionTrigger className="hover:no-underline px-2 md:px-4">
+                              <div className="flex items-center justify-between w-full pr-2 md:pr-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-1 text-left">
                                   <div>
                                     <div className="font-medium">
                                       {category.name}
                                     </div>
-                                    <div className="text-sm text-gray-600">
+                                    <div className="text-xs md:text-sm text-gray-600">
                                       {category.description || "-"}
                                     </div>
                                   </div>
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-xs md:text-sm text-gray-500">
                                     {new Date(
                                       category.created_at
                                     ).toLocaleDateString("id-ID", {
@@ -854,7 +855,7 @@ const ProductPage = () => {
                                       year: "numeric",
                                     })}
                                   </div>
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-xs md:text-sm text-gray-500">
                                     {new Date(
                                       category.updated_at
                                     ).toLocaleDateString("id-ID", {
@@ -872,6 +873,7 @@ const ProductPage = () => {
                                         handleDeleteCategory(category.id);
                                       }}
                                       disabled={isLoading}
+                                      className="w-full md:w-auto"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -880,9 +882,9 @@ const ProductPage = () => {
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="px-4 pb-4">
+                              <div className="px-2 md:px-4 pb-4">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <h4 className="font-medium text-sm">
+                                  <h4 className="font-medium text-xs md:text-sm">
                                     Category Attributes
                                   </h4>
                                   <Badge variant="outline" className="text-xs">
@@ -891,7 +893,7 @@ const ProductPage = () => {
                                   </Badge>
                                 </div>
                                 {attributes.length === 0 ? (
-                                  <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg">
+                                  <div className="text-xs md:text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg">
                                     No attributes defined for this category
                                   </div>
                                 ) : (
@@ -908,12 +910,11 @@ const ProductPage = () => {
                                         >
                                           <div className="flex items-center gap-3">
                                             <div>
-                                              <div className="font-medium text-sm">
+                                              <div className="font-medium text-xs md:text-sm">
                                                 {attribute.attribute_name}
                                               </div>
                                               <div className="text-xs text-gray-500">
-                                                Display Order:{" "}
-                                                {attribute.display_order}
+                                                Display Order: {attribute.display_order}
                                               </div>
                                             </div>
                                           </div>
@@ -954,27 +955,29 @@ const ProductPage = () => {
 
         {/* Products Tab Content */}
         {activeTab === "products" && (
-          <ProductTable
-            products={products}
-            categories={categories}
-            categoriesWithAttributes={categoriesWithAttributes}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onView={handleViewClick}
-          />
+          <div className="overflow-x-auto rounded-lg shadow-sm bg-white">
+            <ProductTable
+              products={products}
+              categories={categories}
+              categoriesWithAttributes={categoriesWithAttributes}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+              onView={handleViewClick}
+            />
+          </div>
         )}
 
         {/* Add Product to AI Tab Content */}
         {activeTab === "addToAI" && (
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4">Add Product to AI</h2>
+          <Card className="rounded-lg shadow-sm">
+            <CardContent className="p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-bold mb-4">Add Product to AI</h2>
               {/* Select AI Agent & Filter by Category */}
-              <div className="mb-4 flex flex-col md:flex-row md:items-end md:gap-4">
-                <div className="flex-1">
-                  <label className="block mb-2 font-medium">
+              <div className="mb-4 flex flex-col md:flex-row md:items-end md:gap-4 gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block mb-2 font-medium text-xs md:text-sm">
                     Select AI Agent
                   </label>
                   {isLoadingAgents ? (
@@ -987,7 +990,7 @@ const ProductPage = () => {
                       onValueChange={setSelectedAgentId}
                       disabled={isLoadingAgents || aiAgents.length === 0}
                     >
-                      <SelectTrigger className="w-full max-w-md">
+                      <SelectTrigger className="w-full max-w-full md:max-w-md">
                         <SelectValue
                           placeholder={
                             aiAgents.length === 0
@@ -1012,15 +1015,15 @@ const ProductPage = () => {
                     </Select>
                   )}
                 </div>
-                <div className="flex-1 mt-4 md:mt-0">
-                  <label className="block mb-2 font-medium">
+                <div className="flex-1 min-w-0">
+                  <label className="block mb-2 font-medium text-xs md:text-sm">
                     Filter by Category
                   </label>
                   <Select
                     value={selectedCategoryId || "all"}
                     onValueChange={setSelectedCategoryId}
                   >
-                    <SelectTrigger className="w-full max-w-md">
+                    <SelectTrigger className="w-full max-w-full md:max-w-md">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1063,11 +1066,12 @@ const ProductPage = () => {
                   </span>
                 </div>
               )}
-              <div className="overflow-x-auto mb-4">
-                <table className="min-w-full bg-white border rounded-lg">
+              {/* Table (desktop/tablet) */}
+              <div className="overflow-x-auto mb-4 rounded-lg shadow-sm hidden sm:block">
+                <table className="min-w-full bg-white border rounded-lg text-xs md:text-sm">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="p-3 text-left font-bold">
+                      <th className="p-2 md:p-3 text-left font-bold">
                         <Checkbox
                           checked={
                             selectedProductIds.length ===
@@ -1086,13 +1090,13 @@ const ProductPage = () => {
                           aria-label="Select all products"
                         />
                       </th>
-                      <th className="p-3 text-left font-bold">Image</th>
-                      <th className="p-3 text-left font-bold">Name</th>
-                      <th className="p-3 text-left font-bold">SKU</th>
-                      <th className="p-3 text-left font-bold">Category</th>
-                      <th className="p-3 text-left font-bold">Stock</th>
-                      <th className="p-3 text-left font-bold">Price</th>
-                      <th className="p-3 text-left font-bold">Description</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Image</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Name</th>
+                      <th className="p-2 md:p-3 text-left font-bold">SKU</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Category</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Stock</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Price</th>
+                      <th className="p-2 md:p-3 text-left font-bold">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1111,7 +1115,7 @@ const ProductPage = () => {
                           key={product.id}
                           className="border-b hover:bg-gray-50"
                         >
-                          <td className="p-3">
+                          <td className="p-2 md:p-3">
                             <Checkbox
                               checked={selectedProductIds.includes(product.id)}
                               onCheckedChange={(checked) => {
@@ -1129,29 +1133,25 @@ const ProductPage = () => {
                               aria-label={`Select product ${product.name}`}
                             />
                           </td>
-                          <td className="p-3">
+                          <td className="p-2 md:p-3">
                             {product.image ? (
                               <img
                                 src={product.image}
                                 alt={product.name}
-                                className="h-12 w-12 object-cover rounded border"
+                                className="h-10 w-10 md:h-12 md:w-12 object-cover rounded border"
                               />
                             ) : (
-                              <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                              <div className="h-10 w-10 md:h-12 md:w-12 bg-gray-200 rounded flex items-center justify-center text-gray-400">
                                 -
                               </div>
                             )}
                           </td>
-                          <td className="p-3 font-medium">{product.name}</td>
-                          <td className="p-3">
-                            {product.sku || product.code || "-"}
-                          </td>
-                          <td className="p-3">
-                            {product.category_name || "-"}
-                          </td>
-                          <td className="p-3">{product.stock ?? "-"}</td>
-                          <td className="p-3">{formatNumber(product.price)}</td>
-                          <td className="p-3 text-gray-600 text-sm">
+                          <td className="p-2 md:p-3 font-medium">{product.name}</td>
+                          <td className="p-2 md:p-3">{product.sku || product.code || "-"}</td>
+                          <td className="p-2 md:p-3">{product.category_name || "-"}</td>
+                          <td className="p-2 md:p-3">{product.stock ?? "-"}</td>
+                          <td className="p-2 md:p-3">{formatNumber(product.price)}</td>
+                          <td className="p-2 md:p-3 text-gray-600 text-xs md:text-sm">
                             {product.description || "-"}
                           </td>
                         </tr>
@@ -1160,9 +1160,60 @@ const ProductPage = () => {
                   </tbody>
                 </table>
               </div>
+              {/* Card List (mobile) */}
+              <div className="block sm:hidden space-y-4 mb-4">
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center text-gray-500 py-6">No products found</div>
+                ) : (
+                  filteredProducts.map((product: Product) => (
+                    <Card key={product.id} className="rounded-lg shadow-sm">
+                      <CardContent className="flex gap-3 p-4 items-start">
+                        <Checkbox
+                          checked={selectedProductIds.includes(product.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedProductIds((prev) => [
+                                ...prev,
+                                product.id,
+                              ]);
+                            } else {
+                              setSelectedProductIds((prev) =>
+                                prev.filter((id) => id !== product.id)
+                              );
+                            }
+                          }}
+                          aria-label={`Select product ${product.name}`}
+                          className="mt-1"
+                        />
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="h-14 w-14 object-cover rounded border"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                            -
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-base truncate">{product.name}</div>
+                          <div className="text-xs text-gray-500 truncate">SKU: {product.sku || product.code || '-'}</div>
+                          <div className="text-xs text-gray-500 truncate">{product.category_name || '-'}</div>
+                          <div className="text-sm mt-1 line-clamp-2">{product.description || '-'}</div>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            <Badge variant="secondary">Rp {formatNumber(product.price)}</Badge>
+                            <Badge variant="outline">Stok: {product.stock}</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
 
               <Button
-                className="w-full"
+                className="w-full md:w-auto"
                 disabled={
                   selectedProductIds.length === 0 ||
                   !selectedAgentId ||
@@ -1174,7 +1225,7 @@ const ProductPage = () => {
               </Button>
               {/* Toast Success Bottom Left */}
               {addToAISuccess && (
-                <div className="fixed bottom-4 left-4 z-50 w-[320px]">
+                <div className="fixed bottom-4 left-4 z-50 w-[90vw] max-w-xs md:max-w-sm">
                   <Toast
                     type="success"
                     title="Success"

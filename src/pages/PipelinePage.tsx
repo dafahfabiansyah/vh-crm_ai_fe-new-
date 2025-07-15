@@ -434,10 +434,10 @@ const PipelinePage = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm">
+                    {/* <Button variant="outline" size="sm">
                       <Download className="h-4 w-4 mr-2" />
                       Import Dari WhatsApp
-                    </Button>
+                    </Button> */}
                     <Button size="sm" onClick={handleOpenAddStage}>
                       <Plus className="h-4 w-4 mr-2" />
                       Tambah Stage Baru

@@ -3,7 +3,16 @@ import { LeadCard } from "./lead-card";
 import { Badge } from "./ui/badge";
 import { useDrop } from "react-dnd";
 import type { Lead, PipelineStage } from "@/types";
-import { Trash } from "lucide-react";
+import { Trash, Pencil } from "lucide-react";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "./ui/dialog";
 
 const ITEM_TYPE = "LEAD";
 
@@ -28,14 +37,12 @@ export const PipelineStageColumn: React.FC<{
   onDeleteStage,
   onLeadClick,
 }) => {
-  const [isEditingStage, setIsEditingStage] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  // State untuk edit dialog
   const [editStageName, setEditStageName] = useState(stage.name);
-  const [editStageDescription, setEditStageDescription] = useState(
-    stage.description || ""
-  );
-  const [editStageOrder, setEditStageOrder] = useState<number>(
-    stage.stage_order ?? 0
-  );
+  const [editStageDescription, setEditStageDescription] = useState(stage.description || "");
+  const [editStageOrder, setEditStageOrder] = useState<number>(stage.stage_order ?? 0);
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ITEM_TYPE,
@@ -50,136 +57,128 @@ export const PipelineStageColumn: React.FC<{
     }),
   });
 
-  const handleStageNameClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditingStage(true);
-  };
-
-  const handleStageNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      (editStageName.trim() && editStageName !== stage.name) ||
-      editStageDescription.trim() !== (stage.description || "") ||
-      editStageOrder !== (stage.stage_order ?? 0)
-    ) {
-      onUpdateStage(
-        stage.id,
-        editStageName.trim(),
-        editStageDescription.trim(),
-        editStageOrder
-      );
-    }
-    setIsEditingStage(false);
-  };
-
-  const handleStageKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleStageNameSubmit(e as any);
-    } else if (e.key === "Escape") {
-      setEditStageName(stage.name);
-      setEditStageDescription(stage.description || "");
-      setEditStageOrder(stage.stage_order ?? 0);
-      setIsEditingStage(false);
-    }
-  };
-
-  // const handleStageBlur = () => {
-  //   if (
-  //     (editStageName.trim() && editStageName !== stage.name) ||
-  //     editStageDescription.trim() !== (stage.description || "") ||
-  //     editStageOrder !== (stage.stage_order ?? 0)
-  //   ) {
-  //     onUpdateStage(
-  //       stage.id,
-  //       editStageName.trim(),
-  //       editStageDescription.trim(),
-  //       editStageOrder
-  //     );
-  //   } else {
-  //     setEditStageName(stage.name);
-  //     setEditStageDescription(stage.description || "");
-  //     setEditStageOrder(stage.stage_order ?? 0);
-  //   }
-  //   setIsEditingStage(false);
-  // };
-
   return (
     <div
       ref={drop as any}
-      className={`flex items-center justify-between ${
+      className={`w-[260px] min-w-[260px] max-w-[260px] h-full flex flex-col ${
         isOver && canDrop ? "bg-blue-50 border-blue-200" : ""
       }`}
     >
-      <div className="bg-white border border-gray-200 rounded-lg p-4 h-full">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full bg-${stage.color}-500`} />
-            {isEditingStage ? (
-              <form onSubmit={handleStageNameSubmit} className="flex-1">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center justify-between mb-4 w-full">
+          <div className="flex items-center gap-2 w-full min-w-0">
+            <div className={`w-3 h-3 rounded-full bg-${stage.color}-500 flex-shrink-0`} />
+            <h3
+              className="font-medium text-gray-900 truncate max-w-[90px]"
+              title={stage.name}
+              style={{ minWidth: 0 }}
+            >
+              {stage.name}
+            </h3>
+            <Badge variant="secondary" className="text-xs flex-shrink-0">
+              {stage.count}
+            </Badge>
+            <Button
+              type="button"
+              title="Edit stage"
+              onClick={() => {
+                setEditStageName(stage.name);
+                setEditStageDescription(stage.description || "");
+                setEditStageOrder(stage.stage_order ?? 0);
+                setShowEditDialog(true);
+              }}
+              size="icon"
+              className="ml-1 bg-blue-500 hover:bg-blue-600 text-white w-8 h-8 p-0 flex-shrink-0"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          </div>
+          <Button
+            type="button"
+            title="Hapus stage"
+            onClick={() => setShowDeleteDialog(true)}
+            size="icon"
+            className="ml-2 bg-green-500 hover:bg-green-600 text-white w-8 h-8 p-0 flex-shrink-0"
+          >
+            <Trash className="w-4 h-4" />
+          </Button>
+        </div>
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Stage</DialogTitle>
+            </DialogHeader>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                onUpdateStage(
+                  stage.id,
+                  editStageName.trim(),
+                  editStageDescription.trim(),
+                  editStageOrder
+                );
+                setShowEditDialog(false);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium mb-1">Nama Stage</label>
                 <input
                   type="text"
                   value={editStageName}
-                  onChange={(e) => setEditStageName(e.target.value)}
-                  onKeyDown={handleStageKeyDown}
-                  className="px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
+                  onChange={e => setEditStageName(e.target.value)}
+                  className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Deskripsi</label>
                 <input
                   type="text"
                   value={editStageDescription}
-                  onChange={(e) => setEditStageDescription(e.target.value)}
-                  onKeyDown={handleStageKeyDown}
-                  className="mt-1 px-2 py-1 text-xs text-gray-700 bg-white border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent min-w-0"
-                  placeholder="Deskripsi stage"
+                  onChange={e => setEditStageDescription(e.target.value)}
+                  className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <input
-                  type="number"
-                  value={editStageOrder}
-                  onChange={(e) => setEditStageOrder(Number(e.target.value))}
-                  onKeyDown={handleStageKeyDown}
-                  className="mt-1 px-2 py-1 text-xs text-gray-700 bg-white border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent min-w-0"
-                  placeholder="Urutan stage"
-                  min={0}
-                />
-              </form>
-            ) : (
-              <h3
-                className="font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={handleStageNameClick}
-                title="Click to edit stage name"
-              >
-                {stage.name}
-              </h3>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              {stage.count}
-            </Badge>
-          </div>
-          <div className="text-right flex items-start gap-2">
-            {/* <div className="text-sm font-medium text-gray-900">
-            {stage.id}
-            </div> */}
-            <button
-              type="button"
-              className="ml-2 p-1 rounded hover:bg-red-100 text-red-600 transition-colors"
-              title="Hapus stage"
-              onClick={() => {
-                if (window.confirm("Hapus stage ini?")) {
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">Batal</Button>
+                </DialogClose>
+                <Button type="submit" variant="default">Simpan</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus Stage</DialogTitle>
+            </DialogHeader>
+            <p>Apakah Anda yakin ingin menghapus stage ini?</p>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline" type="button">
+                  Batalkan
+                </Button>
+              </DialogClose>
+              <Button
+                variant="destructive"
+                type="button"
+                onClick={() => {
                   onDeleteStage(stage.id);
-                }
-              }}
-            >
-              <Trash className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        {!isEditingStage && !!stage.description && (
-          <div className="text-xs text-gray-500 mb-2 ml-1">
+                  setShowDeleteDialog(false);
+                }}
+              >
+                Hapus
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {!isOver && canDrop && (
+          <div className="text-xs text-gray-500 mb-2 ml-1 truncate max-w-full">
             {stage.description}
           </div>
         )}
-
         <div className="space-y-3 min-h-[200px]">
           {stage.leads.map((lead, index) => (
             <LeadCard
@@ -191,7 +190,6 @@ export const PipelineStageColumn: React.FC<{
               onLeadClick={onLeadClick}
             />
           ))}
-
           {isOver && canDrop && (
             <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center text-blue-600 bg-blue-50">
               Drop lead here

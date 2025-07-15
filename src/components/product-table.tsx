@@ -114,153 +114,210 @@ const ProductTable: React.FC<ProductTableProps> = ({
         </CardContent>
       </Card>
 
-      {/* Products Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Products ({products.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {products.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No products found</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Create your first product to get started
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4">Image</th>
-                    <th className="text-left py-3 px-4">SKU</th>
-                    <th className="text-left py-3 px-4">Name</th>
-                    <th className="text-left py-3 px-4">Description</th>
-                    <th className="text-left py-3 px-4">Category</th>
-                    <th className="text-left py-3 px-4">Price</th>
-                    <th className="text-left py-3 px-4">Stock</th>
-                    <th className="text-left py-3 px-4">Status</th>
-                    <th className="text-left py-3 px-4">Attributes</th>
-                    <th className="text-left py-3 px-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((product: any) => (
-                    <tr
-                      key={product.id}
-                      className="border-b hover:bg-gray-50"
+      {/* Products Table (desktop/tablet) */}
+      <div className="overflow-x-auto hidden sm:block">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-3 px-4">Image</th>
+              <th className="text-left py-3 px-4">SKU</th>
+              <th className="text-left py-3 px-4">Name</th>
+              <th className="text-left py-3 px-4">Description</th>
+              <th className="text-left py-3 px-4">Category</th>
+              <th className="text-left py-3 px-4">Price</th>
+              <th className="text-left py-3 px-4">Stock</th>
+              <th className="text-left py-3 px-4">Status</th>
+              <th className="text-left py-3 px-4">Attributes</th>
+              <th className="text-left py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map((product: any) => (
+              <tr
+                key={product.id}
+                className="border-b hover:bg-gray-50"
+              >
+                <td className="py-3 px-4">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="h-10 w-10 object-cover rounded"
+                  />
+                </td>
+                <td className="py-3 px-4">
+                  <Badge variant="outline">{product.sku}</Badge>
+                </td>
+                <td className="py-3 px-4">{product.name}</td>
+                <td className="py-3 px-4">
+                  {product.description && product.description.length > 30 ? (
+                    <span
+                      className="text-blue-600 cursor-pointer hover:underline"
+                      title="Lihat detail"
+                      onClick={() => onView?.(product)}
                     >
-                      <td className="py-3 px-4">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="h-10 w-10 object-cover rounded"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="outline">{product.sku}</Badge>
-                      </td>
-                      <td className="py-3 px-4">{product.name}</td>
-                      <td className="py-3 px-4">
-                        {product.description && product.description.length > 30 ? (
-                          <span
-                            className="text-blue-600 cursor-pointer hover:underline"
-                            title="Lihat detail"
-                            onClick={() => onView?.(product)}
+                      {product.description.slice(0, 30)}... <span className="text-xs">[detail]</span>
+                    </span>
+                  ) : (
+                    <span>{product.description || '-'}</span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <Badge variant="secondary">
+                    {product.description}
+                  </Badge>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="font-medium">
+                    Rp {formatNumber(Number(product.price))}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  {formatNumber(product.stock)}
+                </td>
+                <td className="py-3 px-4">
+                  <Badge
+                    variant={
+                      product.status ? "default" : "destructive"
+                    }
+                  >
+                    {product.status ? "Active" : "Inactive"}
+                  </Badge>
+                </td>
+                <td className="py-3 px-4">
+                  {Array.isArray(product.attributes) &&
+                  product.attributes.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {product.attributes.map((attr: any) => {
+                        const attrName =
+                          categoriesWithAttributes
+                            .get(
+                              product.id_category ||
+                                product.category
+                            )
+                            ?.find(
+                              (a) =>
+                                a.id === attr.id_category_attribute
+                            )?.attribute_name ||
+                          attr.id_category_attribute;
+                        return (
+                          <Badge
+                            key={attr.id_category_attribute}
+                            variant="outline"
+                            className="text-xs"
                           >
-                            {product.description.slice(0, 30)}... <span className="text-xs">[detail]</span>
-                          </span>
-                        ) : (
-                          <span>{product.description || '-'}</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="secondary">
-                          {product.description}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-medium">
-                          Rp {formatNumber(Number(product.price))}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        {formatNumber(product.stock)}
-                      </td>
-                      <td className="py-3 px-4">
+                            {attrName}: {attr.value}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">-</span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onView?.(product)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onEdit?.(product)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onDelete?.(product.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Products Card List (mobile) */}
+      <div className="block sm:hidden space-y-4">
+        {filteredProducts.map((product: any) => (
+          <Card key={product.id} className="rounded-lg shadow-sm">
+            <CardContent className="flex gap-3 p-4">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-16 w-16 object-cover rounded border"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-base truncate">{product.name}</div>
+                <div className="text-xs text-gray-500 truncate">SKU: {product.sku}</div>
+                <div className="text-xs text-gray-500 truncate">{product.category_name}</div>
+                <div className="text-sm mt-1 line-clamp-2">{product.description || '-'}</div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  <Badge variant="secondary">Rp {formatNumber(product.price)}</Badge>
+                  <Badge variant="outline">Stok: {product.stock}</Badge>
+                  <Badge variant={product.status ? "default" : "destructive"}>{product.status ? "Active" : "Inactive"}</Badge>
+                </div>
+                {/* Attributes */}
+                {Array.isArray(product.attributes) && product.attributes.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {product.attributes.map((attr: any) => {
+                      const attrName =
+                        categoriesWithAttributes
+                          .get(product.id_category || product.category)
+                          ?.find((a) => a.id === attr.id_category_attribute)?.attribute_name ||
+                        attr.id_category_attribute;
+                      return (
                         <Badge
-                          variant={
-                            product.status ? "default" : "destructive"
-                          }
+                          key={attr.id_category_attribute}
+                          variant="outline"
+                          className="text-xs"
                         >
-                          {product.status ? "Active" : "Inactive"}
+                          {attrName}: {attr.value}
                         </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        {Array.isArray(product.attributes) &&
-                        product.attributes.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {product.attributes.map((attr: any) => {
-                              const attrName =
-                                categoriesWithAttributes
-                                  .get(
-                                    product.id_category ||
-                                      product.category
-                                  )
-                                  ?.find(
-                                    (a) =>
-                                      a.id === attr.id_category_attribute
-                                  )?.attribute_name ||
-                                attr.id_category_attribute;
-                              return (
-                                <Badge
-                                  key={attr.id_category_attribute}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {attrName}: {attr.value}
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-500">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => onView?.(product)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => onEdit?.(product)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => onDelete?.(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Actions */}
+                <div className="flex gap-2 mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => onView?.(product)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => onEdit?.(product)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => onDelete?.(product.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </>
   );
 };
