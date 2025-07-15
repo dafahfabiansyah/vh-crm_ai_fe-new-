@@ -35,6 +35,7 @@ export default function HumanAgentsPage() {
     setError(null);
     try {
       const agents = await HumanAgentsService.getHumanAgents();
+      console.log('Fetched agents:', agents); // DEBUG: cek struktur data
       setHumanAgents(agents);
     } catch (err: any) {
       setError(err.message || "Failed to fetch agents");
@@ -73,15 +74,15 @@ export default function HumanAgentsPage() {
   };
   // Filter agents based on search term and role
   const filteredAgents = humanAgents.filter((agent) => {
-    const agentName = String(agent.name || "").toLowerCase();
-    const agentEmail = String(agent.user_email || "").toLowerCase();
-    const agentRole = String(agent.role || "").toLowerCase();
+    const agentName = String(agent.name || "");
+    const agentEmail = String(agent.user_email || "");
+    const agentRole = String(agent.user?.type || "");
 
     const matchesSearch =
-      agentName.includes(searchTerm.toLowerCase()) ||
-      agentEmail.includes(searchTerm.toLowerCase());
+      agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agentEmail.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole =
-      roleFilter === "all-roles" || agentRole === roleFilter.toLowerCase();
+      roleFilter === "all-roles" || agentRole === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -121,11 +122,8 @@ export default function HumanAgentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all-roles">All Roles</SelectItem>
-                      {/* <SelectItem value="superadmin">Super Admin</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="human-agent">Human Agent</SelectItem> */}
-                      <SelectItem value="owner">Owner</SelectItem>
-                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="Agent">Agent</SelectItem>
+                      <SelectItem value="Owner">Owner</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

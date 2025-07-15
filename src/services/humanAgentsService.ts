@@ -195,4 +195,32 @@ export class HumanAgentsService {
       };
     }
   }
+
+  /**
+   * PATCH update a human agent (minimal fields)
+   */
+  static async patchAgent(
+    id: string,
+    data: { department?: string; is_active?: boolean; agent_type?: string }
+  ): Promise<HumanAgent> {
+    try {
+      const response = await axiosInstance.patch<ApiSuccessResponse<HumanAgent>>(
+        `/agents/${id}`,
+        data
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || "Failed to patch agent",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
 }

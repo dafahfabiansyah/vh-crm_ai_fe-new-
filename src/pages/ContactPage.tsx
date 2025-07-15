@@ -568,7 +568,7 @@ export default function ContactsPage() {
                     <TableHead className="min-w-24">Last Message</TableHead>
                     <TableHead className="min-w-24">Unread</TableHead>
                     <TableHead className="min-w-40">Created</TableHead>
-                    <TableHead className="min-w-40">Updated</TableHead>
+                    {/* <TableHead className="min-w-40">Updated</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -640,7 +640,7 @@ export default function ContactsPage() {
                           }
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
+                      {/* <TableCell className="text-muted-foreground font-mono text-xs">
                         {new Date(contact.updated_at).toLocaleDateString(
                           "id-ID",
                           {
@@ -651,7 +651,7 @@ export default function ContactsPage() {
                             minute: "2-digit",
                           }
                         )}
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   ))}
                 </TableBody>
