@@ -95,10 +95,10 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
         welcome_message: "Hello! How can I help you today?",
         transfer_condition: "Transfer when customer requests human assistance",
         model: "gpt-4.1",
-        history_limit: 10,
-        context_limit: 1000,
-        message_await: 30,
-        message_limit: 15,
+        history_limit: 15,
+        context_limit: 10,
+        message_await: 10,
+        message_limit: 1000,
       };
 
       // Create agent with selected template settings

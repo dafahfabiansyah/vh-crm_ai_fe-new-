@@ -162,7 +162,19 @@ const ProductTable: React.FC<ProductTableProps> = ({
                         <Badge variant="outline">{product.sku}</Badge>
                       </td>
                       <td className="py-3 px-4">{product.name}</td>
-                      <td className="py-3 px-4">{product.description}</td>
+                      <td className="py-3 px-4">
+                        {product.description && product.description.length > 30 ? (
+                          <span
+                            className="text-blue-600 cursor-pointer hover:underline"
+                            title="Lihat detail"
+                            onClick={() => onView?.(product)}
+                          >
+                            {product.description.slice(0, 30)}... <span className="text-xs">[detail]</span>
+                          </span>
+                        ) : (
+                          <span>{product.description || '-'}</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <Badge variant="secondary">
                           {product.description}

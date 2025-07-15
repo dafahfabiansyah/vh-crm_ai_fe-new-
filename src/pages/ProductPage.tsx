@@ -696,8 +696,8 @@ const ProductPage = () => {
               onClick={() => setActiveTab("categories")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "categories"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text- shadow-sm"
+                  : "hover:text-gray-900"
               }`}
             >
               Categories
@@ -707,7 +707,7 @@ const ProductPage = () => {
               disabled={categories.length === 0}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "products"
-                  ? "bg-white text-blue-600 shadow-sm"
+                  ? "bg-white shadow-sm"
                   : categories.length === 0
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-600 hover:text-gray-900"
@@ -719,7 +719,7 @@ const ProductPage = () => {
               onClick={() => setActiveTab("addToAI")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "addToAI"
-                  ? "bg-white text-blue-600 shadow-sm"
+                  ? "bg-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -729,7 +729,7 @@ const ProductPage = () => {
               onClick={() => setActiveTab("checkKnowledgeToAI")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "checkKnowledgeToAI"
-                  ? "bg-white text-blue-600 shadow-sm"
+                  ? "bg-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
