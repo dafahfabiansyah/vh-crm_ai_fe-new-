@@ -72,7 +72,7 @@ export default function HumanAgentsPage() {
     setSelectedAgent(agent);
     setIsEditModalOpen(true);
   };
-  // Filter agents based on search term and role
+  // Filter agents based on search term and role 
   const filteredAgents = humanAgents.filter((agent) => {
     const agentName = String(agent.name || "");
     const agentEmail = String(agent.user_email || "");

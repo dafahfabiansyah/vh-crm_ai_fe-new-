@@ -59,7 +59,7 @@ export class HumanAgentsService {
         // Add legacy properties for backward compatibility
         name: item.user?.name || "-",
         user_email: item.user?.email || "-",
-        role: item.agent_type || "Human",
+        // role: item.agent_type ? item.agent_type : "",
       }));
       return transformedData;
     } catch (error: any) {
@@ -89,6 +89,7 @@ export class HumanAgentsService {
       password: string;
       department?: string | null;
       phone_number?: string;
+      agent_type : string;
     }
   ): Promise<any> {
     try {
@@ -99,7 +100,7 @@ export class HumanAgentsService {
         // department: agentData.department ?? null,
         department: null,
         phone_number: agentData.phone_number,
-        agent_type: "Human",
+        agent_type: agentData.agent_type,
         is_active: true,
       };
       const response = await axiosInstance.post(
@@ -205,7 +206,7 @@ export class HumanAgentsService {
   ): Promise<HumanAgent> {
     try {
       const response = await axiosInstance.patch<ApiSuccessResponse<HumanAgent>>(
-        `/agents/${id}`,
+        `/v1/agents/${id}`,
         data
       );
       return response.data.data || response.data;

@@ -49,7 +49,7 @@ export default function EditHumanAgentModal({
   const [formData, setFormData] = useState<EditHumanAgentFormData>({
     department: "",
     active: true,
-    role: "agent",
+    role: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export default function EditHumanAgentModal({
       setFormData({
         department: agent.department|| "",
         active: agent.is_active !== undefined ? agent.is_active : true,
-        role: agent.role || "agent",
+        role: agent.role || "Human",
       });
     }
   }, [agent]);
@@ -74,11 +74,16 @@ export default function EditHumanAgentModal({
 
     try {
       // PATCH update human agent
-      await HumanAgentsService.patchAgent(agent.id, {
-        department: formData.department,
+      const payload: any = {
         is_active: formData.active,
-        agent_type: formData.role,
-      });
+      };
+      if (formData.department) {
+        payload.department = formData.department;
+      }
+      if (formData.role) {
+        payload.agent_type = formData.role;
+      }
+      await HumanAgentsService.patchAgent(agent.id, payload);
 
       onClose();
       if (onAgentUpdated) {
