@@ -292,7 +292,7 @@ const ProductPage = () => {
         price: parseFloat(formData.price),
         status: true,
         attributes: attributesArr,
-        image: formData.image, // Pastikan image yang dikirim adalah url string
+        image: formData.image, // <-- kirim image ke backend
       };
       // API call
       const response = await productService.createProduct(productData as any);
@@ -311,7 +311,7 @@ const ProductPage = () => {
         stock: response.stock,
         colors: response.colors,
         material: response.material,
-        image: response.image,
+        image: response.image, // <-- mapping image dari response
         category_name: response.category,
         created_at: response.created_at,
         updated_at: response.updated_at,
