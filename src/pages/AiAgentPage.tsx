@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 import { Search, Plus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
@@ -21,6 +22,8 @@ export default function AIAgentsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<AIAgent | null>(null);
 
   // Fetch agents on component mount
   useEffect(() => {
@@ -71,6 +74,21 @@ export default function AIAgentsPage() {
 
   const handleAgentClick = (agentId: string) => {
     navigate(`/ai-agents/${agentId}`);
+  };
+
+  const openDeleteConfirm = (agent: AIAgent) => {
+    setAgentToDelete(agent);
+    setIsConfirmOpen(true);
+  };
+  const closeDeleteConfirm = () => {
+    setIsConfirmOpen(false);
+    setAgentToDelete(null);
+  };
+  const confirmDeleteAgent = async () => {
+    if (agentToDelete) {
+      await handleDeleteAgent(agentToDelete);
+      closeDeleteConfirm();
+    }
   };
 
   const filteredAgents = Array.isArray(agents)
@@ -209,7 +227,7 @@ export default function AIAgentsPage() {
                         className="h-8 w-8 p-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteAgent(agent);
+                          openDeleteConfirm(agent);
                         }}
                         disabled={loading}
                       >
@@ -245,6 +263,25 @@ export default function AIAgentsPage() {
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleAgentCreated}
         />
+        {/* Confirm Delete Dialog */}
+        <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus AI Agent?</DialogTitle>
+            </DialogHeader>
+            <div className="py-2">
+              Apakah Anda yakin ingin menghapus AI Agent <b>{agentToDelete?.name}</b>? Tindakan ini tidak dapat dibatalkan.
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeDeleteConfirm} disabled={loading}>
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteAgent} disabled={loading}>
+                Ya, Hapus
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

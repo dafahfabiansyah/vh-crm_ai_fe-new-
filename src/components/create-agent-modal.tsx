@@ -34,9 +34,9 @@ const AGENT_TEMPLATES = {
         "Transfer to human agent when: customer requests to speak with human, has complex technical issues that require specialized knowledge, expresses strong dissatisfaction that requires human intervention, or asks for refund/cancellation beyond AI authority",
       model: "gpt-4.1",
       history_limit: 15,
-      context_limit: 2000,
-      message_await: 30,
-      message_limit: 20,
+      context_limit:10,
+      message_await: 10,
+      message_limit: 1000,
     },
   },
   admin_sales: {
@@ -51,10 +51,10 @@ const AGENT_TEMPLATES = {
       transfer_condition:
         "Transfer to human sales agent when: customer wants to negotiate prices for bulk orders, has complex customization requests, requests detailed product demonstrations, or asks for special payment terms that require approval",
       model: "gpt-4.1",
-      history_limit: 20,
-      context_limit: 2500,
-      message_await: 25,
-      message_limit: 25,
+      history_limit: 15,
+      context_limit:10,
+      message_await: 10,
+      message_limit: 1000,
     },
   },
 };
