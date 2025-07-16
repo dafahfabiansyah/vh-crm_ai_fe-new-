@@ -32,7 +32,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   }
 
   // Format timestamp to display time difference
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: string): string => {
     // Convert UTC timestamp to UTC+7 (WIB - Western Indonesia Time)
     const date = new Date(timestamp)
     const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000)
@@ -55,6 +55,17 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       const diffInDays = Math.floor(diffInMinutes / 1440)
       return `${diffInDays}d ago`
     }
+  }
+
+  // Fungsi utilitas untuk memecah setiap 50 karakter
+  function breakEvery50Chars(text: string): string {
+    const result = [];
+    let i = 0;
+    while (i < text.length) {
+      result.push(text.slice(i, i + 50));
+      i += 50;
+    }
+    return result.join('\n');
   }
 
   useEffect(() => {
@@ -105,7 +116,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     setIsSending(true)
     try {
       await ContactsService.sendMessage(
-        selectedContact.platform_inbox_id,
+        selectedContact.platform_inbox_id as string,
         selectedContact.contact_identifier,
         newMessage
       )
@@ -348,7 +359,14 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
                   ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
                   : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
                   } px-3 py-2 shadow-sm`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{chatLog.message}</p>
+                  <p className="text-sm leading-relaxed break-words">
+                    {breakEvery50Chars(chatLog.message).split('\n').map((line, idx, arr) => (
+                      <span key={idx}>
+                        {line}
+                        {idx !== arr.length - 1 && <br />}
+                      </span>
+                    ))}
+                  </p>
                 </div>
                 <div className={`flex items-center gap-1 mt-1 px-2 text-xs text-muted-foreground ${chatLog.from_me ? "flex-row-reverse" : "flex-row"}`}>
                   <span>{formatTimestamp(chatLog.sent_at)}</span>

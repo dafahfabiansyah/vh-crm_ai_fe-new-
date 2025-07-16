@@ -33,9 +33,7 @@ import {
   Search,
   Filter,
   Download,
-  Settings,
   MessageSquare,
-  Edit,
   ChevronLeft,
   ChevronRight,
   Send,
@@ -93,11 +91,8 @@ export default function ContactsPage() {
     name: "",
   });
   const [, setWhatsAppPlatforms] = useState<any[]>([]);
-  const [, setWhatsAppPlatformsLoading] =
-    useState(false);
-  const [, setWhatsAppPlatformsError] = useState<
-    string | null
-  >(null);
+  const [, setWhatsAppPlatformsLoading] = useState(false);
+  const [, setWhatsAppPlatformsError] = useState<string | null>(null);
 
   // API call to fetch contacts
   const fetchContacts = async (page: number = 1, perPage: number = 100) => {

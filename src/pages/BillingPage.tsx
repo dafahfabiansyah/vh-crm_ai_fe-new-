@@ -30,10 +30,11 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
+import { createTransaction } from "@/services/transactionService";
 
 export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("3months");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("monthly");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
   const [couponCode, setCouponCode] = useState("");
@@ -59,13 +60,27 @@ export default function BillingPage() {
     }
   };
 
-  const handlePayment = () => {
-    console.log(`Processing payment for plan: ${selectedPlan}`);
-    console.log(`Coupon code: ${couponCode}`);
-    // Here you would typically integrate with your payment processor
-    setIsPaymentDialogOpen(false);
-    setCouponCode("");
-    setIsProcessingDialogOpen(true);
+  const handlePayment = async () => {
+    if (!selectedPlanData?.id) {
+      alert("No plan selected");
+      return;
+    }
+    try {
+      setIsPaymentDialogOpen(false);
+      setIsProcessingDialogOpen(true);
+      await createTransaction({
+        id_subscription: selectedPlanData.id,
+        voucher: couponCode.trim() !== "" ? couponCode : undefined,
+      });
+      setCouponCode("");
+      setTimeout(() => {
+        setIsProcessingDialogOpen(false);
+        alert("Transaksi berhasil! Silakan cek status pembayaran Anda.");
+      }, 1200);
+    } catch (err) {
+      setIsProcessingDialogOpen(false);
+      alert("Gagal melakukan transaksi. Silakan coba lagi.");
+    }
   };
 
   const handleApplyCoupon = () => {

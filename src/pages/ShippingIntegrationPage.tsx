@@ -19,7 +19,6 @@ export default function ShippingIntegrationPage() {
   const [courier, setCourier] = useState<string[]>([]);
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   const [aiAgentId, setAiAgentId] = useState("");
-  const [aiAgentText, setAiAgentText] = useState("");
 
   useEffect(() => {
     AgentsService.getAgents().then(setAiAgents);

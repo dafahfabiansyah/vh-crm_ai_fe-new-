@@ -74,14 +74,22 @@ export const platformsInboxService = {
   },
 
   /**
-   * Update platform mapping dengan pipeline
+   * Update platform mapping dengan pipeline atau agent
    */
-  async updatePlatformMapping(id: string, id_pipeline: string | null, preserveConnectionStatus: boolean = true) {
+  async updatePlatformMapping(
+    id: string,
+    id_pipeline: string | null,
+    id_agent?: string | null,
+    agent_type?: string | null,
+    preserveConnectionStatus: boolean = true
+  ) {
     try {
-      const requestBody: any = { id, id_pipeline };
-      // If we want to preserve connection status, we might need to send additional fields
+      const requestBody: any = { id };
+      if (id_pipeline !== undefined && id_pipeline !== null) requestBody.id_pipeline = id_pipeline;
+      if (id_agent !== undefined && id_agent !== null) requestBody.id_agent = id_agent;
+      if (agent_type !== undefined && agent_type !== null) requestBody.agent_type = agent_type;
       if (preserveConnectionStatus) {
-        console.log('Attempting to preserve connection status during pipeline mapping');
+        console.log('Attempting to preserve connection status during pipeline/agent mapping');
       }
       console.log('Sending PATCH request to /v1/platform-inbox with:', requestBody);
       const response = await axiosInstance.patch('/v1/platform-inbox', requestBody);

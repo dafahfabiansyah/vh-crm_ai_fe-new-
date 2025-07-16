@@ -186,7 +186,7 @@ export default function ConnectedPlatformsPage() {
   const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
   
   // Pipeline mapping method state (for testing)
-  const [useAlternativePipelineMapping, setUseAlternativePipelineMapping] = useState(false);
+  const [useAlternativePipelineMapping, ] = useState(false);
 
   const filteredPlatforms = PlatformInboxs.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -296,9 +296,7 @@ export default function ConnectedPlatformsPage() {
       }
       // 2. Mapping AI agent (dan sebelumnya ada pipeline)
       else if (currentPlatform.aiAgent) {
-        // PATCH ke /v1/platform-inbox dengan id_pipeline: null SETIAP KALI mapping AI agent
-        await platformsInboxService.updatePlatformMapping(currentPlatform.id, null);
-        // POST ke /v1/platform_mappings untuk AI agent
+        // Temukan agent yang dipilih
         const selectedAIAgent = aiAgents.find(
           (agent) => agent.name === currentPlatform.aiAgent
         );
@@ -311,6 +309,14 @@ export default function ConnectedPlatformsPage() {
           });
           return;
         }
+        // PATCH ke /v1/platform-inbox dengan id_pipeline: null dan id_agent
+        await platformsInboxService.updatePlatformMapping(
+          currentPlatform.id,
+          null,
+          selectedAIAgent.id_agent,
+          'AI'
+        );
+        // POST ke /v1/platform_mappings untuk AI agent
         await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
         setToast({
           show: true,

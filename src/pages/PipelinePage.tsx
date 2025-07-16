@@ -23,7 +23,6 @@ import {
   Users,
   Phone,
   MoreHorizontal,
-  Download,
   Clock,
   User,
   MessageCircle,
@@ -78,16 +77,16 @@ const PipelinePage = () => {
 
         // Find source stage and lead
         let leadToMove: Lead | undefined;
-        let leadIndexInSource = -1;
-        let sourceStageIdx = -1;
+        // let leadIndexInSource = -1;
+        // let sourceStageIdx = -1;
 
         for (let i = 0; i < newData.length; i++) {
           const stage = newData[i];
           const idx = stage.leads.findIndex((lead) => lead.id === leadId);
           if (idx >= 0) {
             leadToMove = stage.leads[idx];
-            leadIndexInSource = idx;
-            sourceStageIdx = i;
+            // leadIndexInSource = idx;
+            // sourceStageIdx = i;
             stage.leads.splice(idx, 1);
             stage.count--;
             break;

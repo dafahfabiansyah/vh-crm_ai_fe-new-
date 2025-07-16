@@ -66,7 +66,8 @@ export default function CreateHumanAgentModal({
         password: formData.password,
         // department: formData.department || null, // endpoint sekarang hardcode null
         department: null,
-        phone_number: formData.phone_number, // TODO: ganti dengan input jika ada
+        phone_number: formData.phone_number,
+        agent_type: ""
       });
       // Reset form
       setFormData({
