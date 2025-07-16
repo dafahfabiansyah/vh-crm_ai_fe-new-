@@ -718,42 +718,50 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   </TabsContent>
 
                   <TabsContent value="integrations" className="mt-0">
-                    <div className="flex flex-col sm:flex-row justify-center py-8 gap-6">
-                      <div className="w-full max-w-sm">
-                        <Card>
-                          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                            <div className="p-3 bg-yellow-100 rounded-lg">
-                            <Truck className="h-6 w-6 text-yellow-600" />
-                            </div>
-                            <CardTitle className="text-lg">Cek Ongkos Kirim</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription>
-                              Mengecek ongkir dari berbagai kurir dan mendapatkan status pengiriman
-                            </CardDescription>
-                          </CardContent>
-                          <CardFooter>
-                            <Button onClick={() => navigate("/integration/shipping")} className="w-full" variant="outline">Aktifkan</Button>
-                          </CardFooter>
-                        </Card>
+                    <div className="flex flex-col justify-center py-8 gap-10">
+                      {/* Section 1: Integrations */}
+                      <div>
+                        <h2 className="text-lg font-semibold mb-4">Integrations</h2>
+                        <div className="w-full max-w-sm">
+                          <Card>
+                            <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                              <div className="p-3 bg-yellow-100 rounded-lg">
+                                <Truck className="h-6 w-6 text-yellow-600" />
+                              </div>
+                              <CardTitle className="text-lg">Cek Ongkos Kirim</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <CardDescription>
+                                Mengecek ongkir dari berbagai kurir dan mendapatkan status pengiriman
+                              </CardDescription>
+                            </CardContent>
+                            <CardFooter>
+                              <Button onClick={() => navigate("/integration/shipping")} className="w-full" variant="outline">Aktifkan</Button>
+                            </CardFooter>
+                          </Card>
+                        </div>
                       </div>
-                      <div className="w-full max-w-sm">
-                        <Card>
-                          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                            <div className="p-3 bg-blue-100 rounded-lg">
-                              <Webhook className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <CardTitle className="text-lg">API Integration</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription>
-                              Integrasi dengan API eksternal untuk memperluas kemampuan AI Agent Anda
-                            </CardDescription>
-                          </CardContent>
-                          <CardFooter>
-                            <Button onClick={() => navigate("/integration/api")} className="w-full" variant="outline">Aktifkan</Button>
-                          </CardFooter>
-                        </Card>
+                      {/* Section 2: Custom Integration */}
+                      <div>
+                        <h2 className="text-lg font-semibold mb-4">Custom Integration</h2>
+                        <div className="w-full max-w-sm">
+                          <Card>
+                            <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                              <div className="p-3 bg-blue-100 rounded-lg">
+                                <Webhook className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <CardTitle className="text-lg">API Integration</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <CardDescription>
+                                Integrasi dengan API eksternal untuk memperluas kemampuan AI Agent Anda
+                              </CardDescription>
+                            </CardContent>
+                            <CardFooter>
+                              <Button onClick={() => navigate("/integration/api")} className="w-full" variant="outline">Aktifkan</Button>
+                            </CardFooter>
+                          </Card>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
