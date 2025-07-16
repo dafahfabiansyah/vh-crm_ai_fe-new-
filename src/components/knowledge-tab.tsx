@@ -11,6 +11,7 @@ import { productService } from "@/services/productService";
 import React from "react";
 import { useNavigate } from "react-router";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
+import { useRef } from "react";
 
 interface KnowledgeTabProps {
   agentId: string;
@@ -135,6 +136,8 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
     setDummyLinks((prev: typeof dummyLinks) => [...prev, newLink]);
     setWebsiteUrl('');
   };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <>
@@ -422,16 +425,44 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
 
       {/* file knowledge */}
       <TabsContent value="file" className="mt-0">
-        <div className="text-center py-12">
-          <h4 className="text-lg font-semibold text-foreground mb-2">
-            Coming Soon
-          </h4>
-          <p className="text-muted-foreground">
-            File upload feature is coming soon
-          </p>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Left: Upload area */}
+          <div className="flex-1">
+            <h4 className="text-lg font-semibold text-foreground mb-2">Files</h4>
+            <div className="border rounded-lg bg-background p-4 mb-4">
+              <div
+                className="border-2 border-dashed border-muted-foreground rounded-lg min-h-[120px] flex flex-col items-center justify-center text-center p-6 cursor-pointer hover:border-primary transition-colors"
+                // Dummy: no real upload
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={e => e.preventDefault()}
+                onDragOver={e => e.preventDefault()}
+              >
+                <input ref={fileInputRef} type="file" accept=".pdf" multiple className="hidden" />
+                <div className="text-base font-medium mb-1">Drag & drop your files here or click to select files</div>
+                <div className="text-xs text-muted-foreground">Supported File Type: <span className="font-semibold">.pdf</span></div>
+              </div>
+              <div className="text-xs text-muted-foreground mt-2 text-center">
+                If you are uploading a PDF, make sure you can highlight the text
+              </div>
+            </div>
+            <div className="mb-2 text-sm"><span className="font-medium">Already Included Files:</span> -</div>
+            <div className="mb-2 text-sm"><span className="font-medium">To be added:</span> -</div>
+          </div>
+          {/* Right: Summary */}
+          <div className="w-full md:w-64 bg-background rounded-lg border p-6 flex flex-col gap-4 items-center self-start">
+            <div className="w-full flex flex-col gap-1 text-sm">
+              <div className="flex justify-between"><span>Files</span><span>0</span></div>
+              <div className="flex justify-between"><span>Text Input Characters</span><span>0</span></div>
+              <div className="flex justify-between"><span>Links</span><span>8</span></div>
+              <div className="flex justify-between"><span>Q&A</span><span>8</span></div>
+            </div>
+            <div className="w-full border-t pt-4 mt-2 flex flex-col items-center">
+              <div className="text-xs text-muted-foreground mb-1">Total Detected Characters</div>
+              <div className="text-2xl font-bold text-primary">2376</div>
+            </div>
+            <Button className="w-full mt-2">Save</Button>
+          </div>
         </div>
-        
-        
       </TabsContent>
 
       {/* Q&A knowledge */}
