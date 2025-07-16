@@ -32,6 +32,8 @@ import {
   FileText,
   ChevronDown,
   MessageCircle,
+  Webhook,
+  Truck,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
@@ -721,7 +723,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                         <Card>
                           <CardHeader className="flex flex-row items-center gap-3 pb-2">
                             <div className="p-3 bg-yellow-100 rounded-lg">
-                              <Link className="h-6 w-6 text-yellow-600" />
+                            <Truck className="h-6 w-6 text-yellow-600" />
                             </div>
                             <CardTitle className="text-lg">Cek Ongkos Kirim</CardTitle>
                           </CardHeader>
@@ -739,7 +741,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                         <Card>
                           <CardHeader className="flex flex-row items-center gap-3 pb-2">
                             <div className="p-3 bg-blue-100 rounded-lg">
-                              <Link className="h-6 w-6 text-blue-600" />
+                              <Webhook className="h-6 w-6 text-blue-600" />
                             </div>
                             <CardTitle className="text-lg">API Integration</CardTitle>
                           </CardHeader>
