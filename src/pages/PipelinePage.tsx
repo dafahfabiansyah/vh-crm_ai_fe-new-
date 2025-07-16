@@ -77,16 +77,11 @@ const PipelinePage = () => {
 
         // Find source stage and lead
         let leadToMove: Lead | undefined;
-        // let leadIndexInSource = -1;
-        // let sourceStageIdx = -1;
-
         for (let i = 0; i < newData.length; i++) {
           const stage = newData[i];
           const idx = stage.leads.findIndex((lead) => lead.id === leadId);
           if (idx >= 0) {
             leadToMove = stage.leads[idx];
-            // leadIndexInSource = idx;
-            // sourceStageIdx = i;
             stage.leads.splice(idx, 1);
             stage.count--;
             break;
@@ -110,13 +105,20 @@ const PipelinePage = () => {
       });
       // PATCH ke backend
       try {
-        await PipelineService.moveLeadCard(leadId, { id_stage: targetStageId, moved_by: 'Human' });
+        // Cari agent_id dari stage tujuan
+        const targetStage = pipelineData.find((stage) => stage.id === targetStageId);
+        const assigned_to = targetStage?.agent_id || null;
+        await PipelineService.moveLeadCard(leadId, {
+          id_stage: targetStageId,
+          moved_by: 'Human',
+          assigned_to: assigned_to,
+        });
       } catch (err) {
         // TODO: tampilkan error jika perlu
         console.error('Failed to move lead card:', err);
       }
     },
-    []
+    [pipelineData]
   );
 
   const handleUpdateLead = useCallback((leadId: string, newName: string) => {
@@ -324,8 +326,8 @@ const PipelinePage = () => {
       axiosInstance.get("/v1/agents?offset=0&limit=100")
         .then((response) => {
           const items = response.data.items || [];
-          const aiAgents = items.filter((agent: any) => agent.agent_type === "AI");
-          setAgents(aiAgents);
+          // Tampilkan SEMUA agent_type, tidak perlu filter
+          setAgents(items);
         })
         .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
     });
