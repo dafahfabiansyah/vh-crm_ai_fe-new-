@@ -110,6 +110,31 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
     }
   };
 
+  // Website Knowledge State
+  const [websiteTab, setWebsiteTab] = useState('batch'); // 'batch' or 'single'
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [searchLink, setSearchLink] = useState('');
+
+  const [dummyLinks, setDummyLinks] = useState([
+    { url: "https://example.com/page1", characters: 1234, batch: "Batch A" },
+    { url: "https://example.com/page2", characters: 2345, batch: "Batch A" },
+    { url: "https://example.com/page3", characters: 3456, batch: "Batch B" },
+    { url: "https://example.com/page4", characters: 4567, batch: "Batch B" },
+    { url: "https://example.com/page5", characters: 5678, batch: "Batch A" },
+    { url: "https://example.com/page6", characters: 6789, batch: "Batch C" },
+    { url: "https://example.com/page7", characters: 7890, batch: "Batch A" },
+    { url: "https://example.com/page8", characters: 8901, batch: "Batch B" },
+    { url: "https://example.com/page9", characters: 9012, batch: "Batch A" },
+    { url: "https://example.com/page10", characters: 10123, batch: "Batch C" },
+  ]);
+
+  const handleCollectLink = () => {
+    if (!websiteUrl.trim()) return;
+    const newLink = { url: websiteUrl, characters: Math.floor(Math.random() * 1000) + 100, batch: "Batch A" };
+    setDummyLinks((prev: typeof dummyLinks) => [...prev, newLink]);
+    setWebsiteUrl('');
+  };
+
   return (
     <>
       {/* text knowledge */}
@@ -205,16 +230,57 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
 
       {/* website knowledge  */}
       <TabsContent value="website" className="mt-0">
-        <div className="text-center py-12">
-          <h4 className="text-lg font-semibold text-foreground mb-2">
-            Coming Soon
+        <div className="max-w-3xl mx-auto py-8">
+          <h4 className="text-lg font-semibold text-foreground mb-2 text-center">
+            Provide Link
           </h4>
-          <p className="text-muted-foreground">
-            Website knowledge import feature is coming soon
+          <p className="text-muted-foreground mb-4 text-center">
+            Provide a link to the page you want the AI to learn from.
           </p>
+          <div className="flex gap-2 justify-center mb-6">
+            <Button variant={websiteTab === 'batch' ? 'default' : 'outline'} onClick={() => setWebsiteTab('batch')}>Batch Link</Button>
+            <Button variant={websiteTab === 'single' ? 'default' : 'outline'} onClick={() => setWebsiteTab('single')}>Single Link</Button>
+          </div>
+          <div className="mb-6">
+            <Label htmlFor="web-link-url" className="block mb-2">Web Link Collector</Label>
+            <div className="flex gap-2">
+              <Input id="web-link-url" placeholder="Link URL" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} />
+              <Button onClick={handleCollectLink} disabled={!websiteUrl.trim()}>Collect Link</Button>
+            </div>
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <span>🔵</span>
+              <span>Start with URL and this tool will gather up to <b>30 unique</b> links from the site, excluding any files</span>
+            </div>
+          </div>
+          <div className="border rounded-lg p-4 bg-background">
+            <h5 className="font-semibold mb-2">Trained Link</h5>
+            <div className="flex items-center gap-2 mb-2">
+              <Input placeholder="Search Links" className="max-w-xs" value={searchLink} onChange={e => setSearchLink(e.target.value)} />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="px-2 py-1 text-left"><input type="checkbox" /></th>
+                    <th className="px-2 py-1 text-left">Link</th>
+                    <th className="px-2 py-1 text-left">Characters</th>
+                    <th className="px-2 py-1 text-left">Batch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dummyLinks.filter(l => l.url.includes(searchLink)).map((link, idx) => (
+                    <tr key={link.url} className="border-b hover:bg-accent/30">
+                      <td className="px-2 py-1"><input type="checkbox" /></td>
+                      <td className="px-2 py-1 text-blue-700 underline flex items-center gap-2"><span>🔗</span><a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a></td>
+                      <td className="px-2 py-1">{link.characters.toLocaleString()} characters</td>
+                      <td className="px-2 py-1">{link.batch}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        
-       
       </TabsContent>
 
       {/* product knowledge */}

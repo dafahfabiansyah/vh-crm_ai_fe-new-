@@ -17,6 +17,7 @@ const ApiIntegrationPage = () => {
   const [body, setBody] = useState(`{
   "kota": "Enter value..."
 }`)
+  const [address, setAddress] = useState('https://www.abangbenerin.com/api/location/check')
 
   return (
     <MainLayout>
@@ -26,7 +27,7 @@ const ApiIntegrationPage = () => {
           <div className="flex items-center gap-2 mb-2">
             <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to tools
+              Back To Settings
             </Button>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -54,7 +55,7 @@ const ApiIntegrationPage = () => {
                   </div>
                   <div className="w-full md:w-1/2">
                     <label className="block text-sm font-medium mb-1">Address</label>
-                    <Input value="https://www.abangbenerin.com/api/location/check" readOnly className="font-mono" />
+                    <Input value={address} onChange={e => setAddress(e.target.value)} className="font-mono" />
                   </div>
                 </div>
                 {/* AI Inputs */}
@@ -85,7 +86,7 @@ const ApiIntegrationPage = () => {
             <Card className="shadow-none border border-gray-200 bg-gray-900 text-white flex flex-col h-full">
               <CardHeader className="flex-row items-center gap-2 pb-2">
                 <span className="bg-blue-700 text-xs px-2 py-0.5 rounded mr-2">{method}</span>
-                <Input value="https://www.abangbenerin.com/api/location/check" readOnly className="bg-gray-800 text-white font-mono border-none p-1 h-8" />
+                <Input value={address} onChange={e => setAddress(e.target.value)} className="bg-gray-800 text-white font-mono border-none p-1 h-8" />
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-4">
                 <div>
