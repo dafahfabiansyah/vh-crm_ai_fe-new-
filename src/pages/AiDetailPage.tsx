@@ -716,7 +716,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   </TabsContent>
 
                   <TabsContent value="integrations" className="mt-0">
-                    <div className="flex justify-center py-8">
+                    <div className="flex flex-col sm:flex-row justify-center py-8 gap-6">
                       <div className="w-full max-w-sm">
                         <Card>
                           <CardHeader className="flex flex-row items-center gap-3 pb-2">
@@ -732,6 +732,24 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                           </CardContent>
                           <CardFooter>
                             <Button onClick={() => navigate("/integration/shipping")} className="w-full" variant="outline">Aktifkan</Button>
+                          </CardFooter>
+                        </Card>
+                      </div>
+                      <div className="w-full max-w-sm">
+                        <Card>
+                          <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                            <div className="p-3 bg-blue-100 rounded-lg">
+                              <Link className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <CardTitle className="text-lg">API Integration</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <CardDescription>
+                              Integrasi dengan API eksternal untuk memperluas kemampuan AI Agent Anda
+                            </CardDescription>
+                          </CardContent>
+                          <CardFooter>
+                            <Button onClick={() => navigate("/integration/api")} className="w-full" variant="outline">Aktifkan</Button>
                           </CardFooter>
                         </Card>
                       </div>
