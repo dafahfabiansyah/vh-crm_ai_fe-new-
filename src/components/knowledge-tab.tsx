@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from ".
 import { productService } from "@/services/productService";
 import React from "react";
 import { useNavigate } from "react-router";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
 
 interface KnowledgeTabProps {
   agentId: string;
@@ -257,28 +258,49 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
             <div className="flex items-center gap-2 mb-2">
               <Input placeholder="Search Links" className="max-w-xs" value={searchLink} onChange={e => setSearchLink(e.target.value)} />
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="px-2 py-1 text-left"><input type="checkbox" /></th>
-                    <th className="px-2 py-1 text-left">Link</th>
-                    <th className="px-2 py-1 text-left">Characters</th>
-                    <th className="px-2 py-1 text-left">Batch</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dummyLinks.filter(l => l.url.includes(searchLink)).map((link, idx) => (
-                    <tr key={link.url} className="border-b hover:bg-accent/30">
-                      <td className="px-2 py-1"><input type="checkbox" /></td>
-                      <td className="px-2 py-1 text-blue-700 underline flex items-center gap-2"><span>🔗</span><a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a></td>
-                      <td className="px-2 py-1">{link.characters.toLocaleString()} characters</td>
-                      <td className="px-2 py-1">{link.batch}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Group links by parent domain */}
+            <Accordion type="multiple" className="w-full">
+              {Object.entries(
+                dummyLinks
+                  .filter(l => l.url.includes(searchLink))
+                  .reduce((acc, link) => {
+                    const urlObj = new URL(link.url);
+                    const domain = urlObj.origin;
+                    if (!acc[domain]) acc[domain] = [];
+                    acc[domain].push(link);
+                    return acc;
+                  }, {} as Record<string, typeof dummyLinks>)
+              ).map(([domain, links]) => (
+                <AccordionItem key={domain} value={domain}>
+                  <AccordionTrigger>
+                    <span className="font-medium text-blue-900">{domain}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">{links.length} link</span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="px-2 py-1 text-left"><input type="checkbox" /></th>
+                          <th className="px-2 py-1 text-left">Link</th>
+                          <th className="px-2 py-1 text-left">Characters</th>
+                          <th className="px-2 py-1 text-left">Batch</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {links.map(link => (
+                          <tr key={link.url} className="border-b hover:bg-accent/30">
+                            <td className="px-2 py-1"><input type="checkbox" /></td>
+                            <td className="px-2 py-1 text-blue-700 underline flex items-center gap-2"><span>🔗</span><a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a></td>
+                            <td className="px-2 py-1">{link.characters.toLocaleString()} characters</td>
+                            <td className="px-2 py-1">{link.batch}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </div>
       </TabsContent>
