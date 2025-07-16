@@ -22,6 +22,7 @@ import TicketPage from "./pages/TicketPage";
 import FlowSettingsPage from "./pages/FlowSettingsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ShippingIntegrationPage from "./pages/ShippingIntegrationPage";
+import ApiIntegrationPage from "./pages/ApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
@@ -91,6 +92,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ShippingIntegrationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integration/api"
+          element={
+            <ProtectedRoute>
+              <ApiIntegrationPage/>
             </ProtectedRoute>
           }
         />

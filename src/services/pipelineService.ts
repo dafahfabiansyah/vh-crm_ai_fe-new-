@@ -274,6 +274,26 @@ export class PipelineService {
       }
     }
   }
+
+  /**
+   * Get leads by pipeline ID
+   */
+  static async getLeadsByPipeline(pipelineId: string): Promise<any[]> {
+    try {
+      const response = await axiosInstance.get(`v1/leads/pipeline/${pipelineId}`);
+      console.log('Leads by pipeline:', response.data);
+      return response.data.items || [];
+    } catch (error: any) {
+      console.error('Get leads by pipeline error:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch leads by pipeline. Please try again.');
+      }
+    }
+  }
 }
 
 export default PipelineService;
