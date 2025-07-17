@@ -32,7 +32,7 @@ import { getSubscriptionPlans } from "@/services/subscriptionService";
 import { createTransaction } from "@/services/transactionService";
 
 export default function BillingPage() {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [, setSelectedPlan] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("monthly");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);

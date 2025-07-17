@@ -10,7 +10,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from ".
 import { productService } from "@/services/productService";
 import React from "react";
 import { useNavigate } from "react-router";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
 import { useRef } from "react";
 
 interface KnowledgeTabProps {
@@ -120,7 +119,7 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
   const [websiteLoading, setWebsiteLoading] = useState(false);
   const [websiteSuccess, setWebsiteSuccess] = useState(false);
   const [websiteError, setWebsiteError] = useState<string | null>(null);
-  const [searchLink, setSearchLink] = useState('');
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -291,12 +290,12 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                 setWebsiteSuccess(false);
                 try {
                   // Auto title dari domain
-                  let title = '';
+                  // let title = '';
                   try {
-                    const urlObj = new URL(websiteUrl);
-                    title = urlObj.hostname;
+                    // const urlObj = new URL(websiteUrl);
+                    // title = urlObj.hostname;
                   } catch {
-                    title = websiteUrl;
+                    // title = websiteUrl;
                   }
                   // Format baru: hanya kirim name, description, status, url, scrape_type, max_links
                   await KnowledgeService.postWebsiteKnowledge(

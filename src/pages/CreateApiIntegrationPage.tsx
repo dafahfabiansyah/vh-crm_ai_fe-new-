@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { createCustomIntegration } from "@/services/customIntegrationService";
-import axios from 'axios'
+// import axios from 'axios'
 
 interface AiInput {
   name: string;
@@ -40,8 +40,6 @@ const CreateApiIntegrationPage = () => {
   const [triggerCondition, setTriggerCondition] = useState("");
   const [loading, setLoading] = useState(false);
   const [testParams, setTestParams] = useState<Record<string, string>>({})
-  const [testResult, setTestResult] = useState<string>('')
-  const [testLoading, setTestLoading] = useState(false)
 
   const handleAddInput = () => {
     setAiInputs([
@@ -108,34 +106,34 @@ const CreateApiIntegrationPage = () => {
     setTestParams(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSendTestRequest = async () => {
-    setTestLoading(true)
-    setTestResult('')
-    try {
-      let url = webhook
-      let data: any = {}
-      let params: any = {}
-      aiInputs.forEach(input => {
-        if (method === 'GET') {
-          params[input.name] = testParams[input.name] || ''
-        } else {
-          data[input.name] = testParams[input.name] || ''
-        }
-      })
-      const config = {
-        method: method as 'POST' | 'GET',
-        url,
-        params: method === 'GET' ? params : undefined,
-        data: method === 'POST' ? data : undefined,
-      }
-      const res = await axios(config)
-      setTestResult(JSON.stringify(res.data, null, 2))
-    } catch (e: any) {
-      setTestResult(e?.response ? JSON.stringify(e.response.data, null, 2) : e.message)
-    } finally {
-      setTestLoading(false)
-    }
-  }
+  // const handleSendTestRequest = async () => {
+  //   setTestLoading(true)
+  //   setTestResult('')
+  //   try {
+  //     let url = webhook
+  //     let data: any = {}
+  //     let params: any = {}
+  //     aiInputs.forEach(input => {
+  //       if (method === 'GET') {
+  //         params[input.name] = testParams[input.name] || ''
+  //       } else {
+  //         data[input.name] = testParams[input.name] || ''
+  //       }
+  //     })
+  //     const config = {
+  //       method: method as 'POST' | 'GET',
+  //       url,
+  //       params: method === 'GET' ? params : undefined,
+  //       data: method === 'POST' ? data : undefined,
+  //     }
+  //     const res = await axios(config)
+  //     setTestResult(JSON.stringify(res.data, null, 2))
+  //   } catch (e: any) {
+  //     setTestResult(e?.response ? JSON.stringify(e.response.data, null, 2) : e.message)
+  //   } finally {
+  //     setTestLoading(false)
+  //   }
+  // }
 
   return (
     <MainLayout>
