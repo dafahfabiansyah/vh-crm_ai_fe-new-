@@ -294,6 +294,24 @@ export class PipelineService {
       }
     }
   }
+
+  /**
+   * Get leads by stage ID
+   */
+  static async getLeadsByStageId(stageId: string): Promise<any[]> {
+    try {
+      const response = await axiosInstance.get(`/v1/leads/stage/${stageId}`);
+      return response.data.items || response.data || [];
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch leads by stage. Please try again.');
+      }
+    }
+  }
 }
 
 export default PipelineService;

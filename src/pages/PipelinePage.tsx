@@ -244,16 +244,24 @@ const PipelinePage = () => {
         );
         setPipelineInfo(pipeline);
 
-        // Fetch stages dari backend
-        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
-        // Fetch leads dari backend
-        const leads = await PipelineService.getLeads({ id_pipeline: pipelineId });
-        // Kelompokkan leads berdasarkan id_stage, mapping ke interface Lead
+        // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
+        let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+        stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
+        console.log('Stages for pipeline', pipelineId, stages);
+
+        // Fetch leads per stage, filter manual juga
         const leadsByStage: Record<string, any[]> = {};
-        const unassignedLeads: any[] = [];
-        leads.forEach((lead: any) => {
-          // Mapping ke interface Lead
-          const mappedLead = {
+        const stageLeadsPromises = stages.map((stage: any) =>
+          PipelineService.getLeadsByStageId(stage.id).then((leads) => {
+            // Filter leads yang id_pipeline-nya sama
+            const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
+            console.log('Leads for stage', stage.id, filteredLeads);
+            return { stageId: stage.id, leads: filteredLeads };
+          })
+        );
+        const stageLeadsResults = await Promise.all(stageLeadsPromises);
+        stageLeadsResults.forEach(({ stageId, leads }) => {
+          leadsByStage[stageId] = leads.map((lead: any) => ({
             id: lead.id,
             name: lead.name,
             phone: "",
@@ -268,21 +276,11 @@ const PipelinePage = () => {
             createdAt: lead.created_at,
             lastActivity: lead.updated_at,
             timeline: [],
-          };
-          if (!lead.id_stage) {
-            unassignedLeads.push(mappedLead);
-            return;
-          }
-          if (!leadsByStage[lead.id_stage]) leadsByStage[lead.id_stage] = [];
-          leadsByStage[lead.id_stage].push(mappedLead);
+          }));
         });
         // Mapping ke struktur PipelineStage
         const mappedStages = stages.map((stage: any, idx: number) => {
-          let stageLeads = leadsByStage[stage.id] || [];
-          // Masukkan unassigned ke stage pertama
-          if (idx === 0) {
-            stageLeads = [...unassignedLeads, ...stageLeads];
-          }
+          const stageLeads = leadsByStage[stage.id] || [];
           return {
             id: stage.id,
             name: stage.name,
@@ -312,6 +310,9 @@ const PipelinePage = () => {
     };
 
     fetchPipelineData();
+    // Reset state jika pipelineId berubah
+    setPipelineData([]);
+    setSelectedLead(null);
   }, [pipelineId]);
 
   // Fetch agents for select
