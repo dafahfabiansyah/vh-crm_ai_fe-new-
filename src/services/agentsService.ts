@@ -36,7 +36,7 @@ export interface AgentSettings {
   message_limit: number;
   // RajaOngkir
   rajaongkir_enabled?: boolean;
-  rajaongkir_origin_city?: string;
+  rajaongkir_origin_district?: string;
   rajaongkir_couriers?: string;
   created_at: string;
   updated_at: string;
@@ -58,7 +58,7 @@ export interface UpdateAgentSettingsRequest {
   message_limit?: number;
   // RajaOngkir
   rajaongkir_enabled?: boolean;
-  rajaongkir_origin_city?: string;
+  rajaongkir_origin_district?: string;
   rajaongkir_couriers?: string;
 }
 

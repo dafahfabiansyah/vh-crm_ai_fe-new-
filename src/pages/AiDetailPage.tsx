@@ -100,7 +100,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
           messageAwait: settingsResponse.message_await,
           aiMessageLimit: settingsResponse.message_limit,
           rajaongkir_enabled: settingsResponse.rajaongkir_enabled,
-          rajaongkir_origin_city: settingsResponse.rajaongkir_origin_city,
+          rajaongkir_origin_district: settingsResponse.rajaongkir_origin_district,
           rajaongkir_couriers: settingsResponse.rajaongkir_couriers,
           // UI state (default values)
           isActive: true,
@@ -186,7 +186,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         message_await: agentData.messageAwait,
         message_limit: agentData.aiMessageLimit,
         rajaongkir_enabled: agentData.rajaongkir_enabled,
-        rajaongkir_origin_city: agentData.rajaongkir_origin_city,
+        rajaongkir_origin_district: agentData.rajaongkir_origin_district,
         rajaongkir_couriers: couriers.join(','), // Ensure string type
       });
 
