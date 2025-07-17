@@ -43,7 +43,7 @@ const ApiIntegrationPage = () => {
             {/* Add New API Tool Card */}
             <Card
               className="flex items-center justify-center h-40 cursor-pointer bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-blue-200 hover:shadow-lg transition"
-              onClick={() => navigate("/integration/api")}
+              onClick={() => navigate("/integration/api/create")}
             >
               <span className="text-lg font-semibold text-blue-700">Add New API Tool</span>
             </Card>

@@ -255,6 +255,28 @@ export class KnowledgeService {
   }
 
   /**
+   * Get website knowledge detail by website ID
+   */
+  static async getWebsiteKnowledgeByWebsiteId(websiteId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/scraped-pages/website/${websiteId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch website knowledge detail',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
    * Get knowledge source content by ID
    */
   static async getKnowledgeSourceContent(knowledgeId: string): Promise<KnowledgeSourceContent> {
