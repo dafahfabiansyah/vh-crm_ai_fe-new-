@@ -226,94 +226,95 @@ const PipelinePage = () => {
   const totalValue = pipelineData.reduce((sum, stage) => sum + stage.value, 0);
   const totalLeads = pipelineData.reduce((sum, stage) => sum + stage.count, 0);
 
+  // Refactor: extract fetchPipelineData so it can be called from anywhere
+  const fetchPipelineData = useCallback(async () => {
+    if (!pipelineId) {
+      console.log("No pipeline ID provided");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Fetch pipeline info by ID
+      const pipeline = await PipelineService.getPipelineById(
+        pipelineId
+      );
+      setPipelineInfo(pipeline);
+
+      // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
+      let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+      stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
+      console.log('Stages for pipeline', pipelineId, stages);
+
+      // Fetch leads per stage, filter manual juga
+      const leadsByStage: Record<string, any[]> = {};
+      const stageLeadsPromises = stages.map((stage: any) =>
+        PipelineService.getLeadsByStageId(stage.id).then((leads) => {
+          // Filter leads yang id_pipeline-nya sama
+          const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
+          console.log('Leads for stage', stage.id, filteredLeads);
+          return { stageId: stage.id, leads: filteredLeads };
+        })
+      );
+      const stageLeadsResults = await Promise.all(stageLeadsPromises);
+      stageLeadsResults.forEach(({ stageId, leads }) => {
+        leadsByStage[stageId] = leads.map((lead: any) => ({
+          id: lead.id,
+          name: lead.name,
+          phone: "",
+          value: lead.potential_value || 0,
+          source: lead.moved_by || "unknown",
+          daysAgo: 0,
+          status: lead.status || "unknown",
+          email: "",
+          company: "",
+          location: "",
+          notes: lead.notes || "",
+          createdAt: lead.created_at,
+          lastActivity: lead.updated_at,
+          timeline: [],
+        }));
+      });
+      // Mapping ke struktur PipelineStage
+      const mappedStages = stages.map((stage: any, idx: number) => {
+        const stageLeads = leadsByStage[stage.id] || [];
+        return {
+          id: stage.id,
+          name: stage.name,
+          description: stage.description,
+          color: [
+            "bg-blue-100 text-blue-800",
+            "bg-yellow-100 text-yellow-800",
+            "bg-orange-100 text-orange-800",
+            "bg-green-100 text-green-800",
+            "bg-purple-100 text-purple-800",
+            "bg-red-100 text-red-800",
+          ][idx % 6],
+          leads: stageLeads,
+          count: stageLeads.length,
+          value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
+          stage_order: stage.stage_order ?? idx,
+          agent_id: stage.id_agent || undefined,
+        };
+      });
+      setPipelineData(mappedStages);
+    } catch (error: any) {
+      console.error("Error fetching pipeline:", error);
+      setError(error.message || "Failed to load pipeline");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pipelineId]);
+
   // Fetch pipeline data when component mounts or pipeline ID changes
   useEffect(() => {
-    const fetchPipelineData = async () => {
-      if (!pipelineId) {
-        console.log("No pipeline ID provided");
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Fetch pipeline info by ID
-        const pipeline = await PipelineService.getPipelineById(
-          pipelineId
-        );
-        setPipelineInfo(pipeline);
-
-        // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
-        let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
-        stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
-        console.log('Stages for pipeline', pipelineId, stages);
-
-        // Fetch leads per stage, filter manual juga
-        const leadsByStage: Record<string, any[]> = {};
-        const stageLeadsPromises = stages.map((stage: any) =>
-          PipelineService.getLeadsByStageId(stage.id).then((leads) => {
-            // Filter leads yang id_pipeline-nya sama
-            const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
-            console.log('Leads for stage', stage.id, filteredLeads);
-            return { stageId: stage.id, leads: filteredLeads };
-          })
-        );
-        const stageLeadsResults = await Promise.all(stageLeadsPromises);
-        stageLeadsResults.forEach(({ stageId, leads }) => {
-          leadsByStage[stageId] = leads.map((lead: any) => ({
-            id: lead.id,
-            name: lead.name,
-            phone: "",
-            value: lead.potential_value || 0,
-            source: lead.moved_by || "unknown",
-            daysAgo: 0,
-            status: lead.status || "unknown",
-            email: "",
-            company: "",
-            location: "",
-            notes: lead.notes || "",
-            createdAt: lead.created_at,
-            lastActivity: lead.updated_at,
-            timeline: [],
-          }));
-        });
-        // Mapping ke struktur PipelineStage
-        const mappedStages = stages.map((stage: any, idx: number) => {
-          const stageLeads = leadsByStage[stage.id] || [];
-          return {
-            id: stage.id,
-            name: stage.name,
-            description: stage.description,
-            color: [
-              "bg-blue-100 text-blue-800",
-              "bg-yellow-100 text-yellow-800",
-              "bg-orange-100 text-orange-800",
-              "bg-green-100 text-green-800",
-              "bg-purple-100 text-purple-800",
-              "bg-red-100 text-red-800",
-            ][idx % 6],
-            leads: stageLeads,
-            count: stageLeads.length,
-            value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
-            stage_order: stage.stage_order ?? idx,
-            agent_id: stage.id_agent || undefined,
-          };
-        });
-        setPipelineData(mappedStages);
-      } catch (error: any) {
-        console.error("Error fetching pipeline:", error);
-        setError(error.message || "Failed to load pipeline");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchPipelineData();
     // Reset state jika pipelineId berubah
     setPipelineData([]);
     setSelectedLead(null);
-  }, [pipelineId]);
+  }, [pipelineId, fetchPipelineData]);
 
   // Fetch agents for select
   useEffect(() => {
@@ -370,7 +371,7 @@ const PipelinePage = () => {
         id_pipeline: pipelineId,
       });
       setIsAddStageOpen(false);
-      // TODO: refresh pipelineData jika sudah ada API-nya
+      await fetchPipelineData(); // Refresh data pipeline setelah tambah stage
     } catch (err: any) {
       setAddStageError(err.message || "Gagal menambah stage");
     } finally {

@@ -25,4 +25,10 @@ export async function createCustomIntegration(
   const baseGo = import.meta.env.VITE_API_BASE_URL || '';
   const url = `${baseGo}/v1/custom-integrations`;
   return axios.post(url, payload);
+}
+
+export async function getCustomIntegrations() {
+  const baseGo = import.meta.env.VITE_API_BASE_URL || '';
+  const url = `${baseGo}/v1/custom-integrations`;
+  return axios.get(url);
 } 

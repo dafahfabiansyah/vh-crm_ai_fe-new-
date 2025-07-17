@@ -13,6 +13,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 interface ExistingKnowledgeListProps {
   agentId: string;
@@ -29,6 +30,14 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   const [knowledgeContent, setKnowledgeContent] = useState<KnowledgeSourceContent | null>(null);
   const [loadingContent, setLoadingContent] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
+
+  // Website Knowledge State
+  const [websiteKnowledge, setWebsiteKnowledge] = useState<any[]>([]);
+  const [websiteLoading, setWebsiteLoading] = useState(false);
+  const [websiteError, setWebsiteError] = useState<string | null>(null);
+  const [websiteDeleteId, setWebsiteDeleteId] = useState<string | null>(null);
+  const [websiteDeleteLoading, setWebsiteDeleteLoading] = useState(false);
+  const [websiteDeleteError, setWebsiteDeleteError] = useState<string | null>(null);
 
   const loadKnowledgeList = async (isRefresh = false) => {
     try {
@@ -50,9 +59,23 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
     }
   };
 
+  const loadWebsiteKnowledge = async () => {
+    try {
+      setWebsiteLoading(true);
+      setWebsiteError(null);
+      const data = await KnowledgeService.getWebsiteKnowledge(agentId);
+      setWebsiteKnowledge(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setWebsiteError(err.message || 'Failed to load website knowledge');
+    } finally {
+      setWebsiteLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (agentId) {
       loadKnowledgeList();
+      loadWebsiteKnowledge();
     }
   }, [agentId]);
 
@@ -99,6 +122,21 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
       setContentError(err.message || 'Failed to load knowledge content');
     } finally {
       setLoadingContent(false);
+    }
+  };
+
+  const handleDeleteWebsiteKnowledge = async () => {
+    if (!websiteDeleteId) return;
+    setWebsiteDeleteLoading(true);
+    setWebsiteDeleteError(null);
+    try {
+      await KnowledgeService.deleteWebsiteKnowledge(websiteDeleteId);
+      setWebsiteKnowledge(prev => prev.filter(item => item.id !== websiteDeleteId));
+      setWebsiteDeleteId(null);
+    } catch (err: any) {
+      setWebsiteDeleteError(err.message || 'Failed to delete website knowledge');
+    } finally {
+      setWebsiteDeleteLoading(false);
     }
   };
 
@@ -242,6 +280,93 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Website Knowledge Section */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Website Knowledge</h3>
+        {websiteLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading website knowledge...</span>
+          </div>
+        ) : websiteError ? (
+          <div className="text-red-600 mb-4">
+            <Database className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="font-medium">Failed to load website knowledge</p>
+            <p className="text-sm text-muted-foreground mt-1">{websiteError}</p>
+            <Button onClick={loadWebsiteKnowledge} variant="outline" className="mt-2">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        ) : websiteKnowledge.length === 0 ? (
+          <div className="text-muted-foreground py-8 text-center">No website knowledge found.</div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {websiteKnowledge.map((item) => (
+              <Card key={item.id} className="overflow-x-auto relative">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base font-semibold text-foreground truncate">{item.title || 'No Title'}</CardTitle>
+                      <CardDescription className="text-xs mt-1">{item.url}</CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setWebsiteDeleteId(item.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-xs">
+                    <div><span className="font-medium">ID:</span> <span className="font-mono break-all">{item.id}</span></div>
+                    <div><span className="font-medium">Scrape Type:</span> {item.scrape_type}</div>
+                    <div><span className="font-medium">Scraping Status:</span> {item.scraping_status}</div>
+                    <div><span className="font-medium">Scraped Links Count:</span> {item.scraped_links_count}</div>
+                    <div><span className="font-medium">Created At:</span> {formatDate(item.created_at)}</div>
+                    <div><span className="font-medium">Updated At:</span> {formatDate(item.updated_at)}</div>
+                    <div><span className="font-medium">Metadata:</span> {Array.isArray(item.metadata) ? item.metadata.join(', ') : String(item.metadata)}</div>
+                    <div className="mt-2"><span className="font-medium">HTML:</span>
+                      <div className="bg-muted/50 rounded p-2 mt-1 max-h-32 overflow-y-auto text-xs" dangerouslySetInnerHTML={{ __html: item.html || '' }} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Modal Konfirmasi Hapus Website Knowledge */}
+        <Dialog open={!!websiteDeleteId} onOpenChange={open => !open && setWebsiteDeleteId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus Website Knowledge?</DialogTitle>
+              <DialogDescription>
+                Apakah Anda yakin ingin menghapus website knowledge ini? Tindakan ini tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            {websiteDeleteError && (
+              <div className="text-red-600 text-sm mb-2">{websiteDeleteError}</div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setWebsiteDeleteId(null)} disabled={websiteDeleteLoading}>
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteWebsiteKnowledge} disabled={websiteDeleteLoading}>
+                {websiteDeleteLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                Hapus
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Knowledge Detail Drawer */}

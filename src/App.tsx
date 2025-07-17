@@ -23,6 +23,8 @@ import FlowSettingsPage from "./pages/FlowSettingsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ShippingIntegrationPage from "./pages/ShippingIntegrationPage";
 import ApiIntegrationPage from "./pages/ApiIntegrationPage";
+import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
+// import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
@@ -35,7 +37,7 @@ export default function App() {
 
   // Initialize auth from cookies when app loads
   useEffect(() => {
-    console.log('🚀 App initializing - syncing with cookies...');
+    console.log("🚀 App initializing - syncing with cookies...");
     dispatch(syncWithCookies());
   }, [dispatch]);
 
@@ -100,6 +102,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApiIntegrationPage/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integration/api/create"
+          element={
+            <ProtectedRoute>
+              <CreateApiIntegrationPage />
             </ProtectedRoute>
           }
         />

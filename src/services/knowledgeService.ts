@@ -172,6 +172,45 @@ export class KnowledgeService {
   }
 
   /**
+   * Post website knowledge dengan format baru (tanpa content, langsung url, scrape_type, max_links di root)
+   */
+  static async postWebsiteKnowledge(
+    agentId: string,
+    name: string,
+    description: string,
+    url: string,
+    scrape_type: string,
+    max_links: number
+  ): Promise<any> {
+    try {
+      const response = await axiosInstance.post(
+        `/v1/ai/knowledge/agent/${agentId}/website`,
+        {
+          name,
+          description,
+          status: true,
+          url,
+          scrape_type,
+          max_links,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to post website knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
    * Get existing knowledge sources for an agent
    */
   static async getExistingKnowledge(agentId: string): Promise<ExistingKnowledge[]> {
@@ -182,6 +221,28 @@ export class KnowledgeService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch existing knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get website knowledge by agent ID
+   */
+  static async getWebsiteKnowledge(agentId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/knowledge/website/agent/${agentId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch website knowledge',
           status: error.response.status,
           errors: error.response.data.errors,
         };
@@ -250,6 +311,27 @@ export class KnowledgeService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to delete knowledge source',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Delete website knowledge by scraped pages ID
+   */
+  static async deleteWebsiteKnowledge(scrapedPagesId: string): Promise<void> {
+    try {
+      await axiosInstance.delete(`/v1/ai/scraped-pages/${scrapedPagesId}`);
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to delete website knowledge',
           status: error.response.status,
           errors: error.response.data.errors,
         };

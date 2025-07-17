@@ -160,7 +160,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         message_limit: agentData.aiMessageLimit,
         rajaongkir_enabled: agentData.rajaongkir_enabled,
         rajaongkir_origin_city: agentData.rajaongkir_origin_city,
-        rajaongkir_couriers: couriers,
+        rajaongkir_couriers: couriers.join(','), // Ensure string type
       });
 
       setHasChanges(false);

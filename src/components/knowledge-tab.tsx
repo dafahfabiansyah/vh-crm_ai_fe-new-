@@ -115,27 +115,12 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
   // Website Knowledge State
   const [websiteTab, setWebsiteTab] = useState('batch'); // 'batch' or 'single'
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [websiteName, setWebsiteName] = useState('');
+  const [websiteDescription, setWebsiteDescription] = useState('');
+  const [websiteLoading, setWebsiteLoading] = useState(false);
+  const [websiteSuccess, setWebsiteSuccess] = useState(false);
+  const [websiteError, setWebsiteError] = useState<string | null>(null);
   const [searchLink, setSearchLink] = useState('');
-
-  const [dummyLinks, setDummyLinks] = useState([
-    { url: "https://example.com/page1", characters: 1234, batch: "Batch A" },
-    { url: "https://example.com/page2", characters: 2345, batch: "Batch A" },
-    { url: "https://example.com/page3", characters: 3456, batch: "Batch B" },
-    { url: "https://example.com/page4", characters: 4567, batch: "Batch B" },
-    { url: "https://example.com/page5", characters: 5678, batch: "Batch A" },
-    { url: "https://example.com/page6", characters: 6789, batch: "Batch C" },
-    { url: "https://example.com/page7", characters: 7890, batch: "Batch A" },
-    { url: "https://example.com/page8", characters: 8901, batch: "Batch B" },
-    { url: "https://example.com/page9", characters: 9012, batch: "Batch A" },
-    { url: "https://example.com/page10", characters: 10123, batch: "Batch C" },
-  ]);
-
-  const handleCollectLink = () => {
-    if (!websiteUrl.trim()) return;
-    const newLink = { url: websiteUrl, characters: Math.floor(Math.random() * 1000) + 100, batch: "Batch A" };
-    setDummyLinks((prev: typeof dummyLinks) => [...prev, newLink]);
-    setWebsiteUrl('');
-  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -245,66 +230,117 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
             <Button variant={websiteTab === 'batch' ? 'default' : 'outline'} onClick={() => setWebsiteTab('batch')}>Batch Link</Button>
             <Button variant={websiteTab === 'single' ? 'default' : 'outline'} onClick={() => setWebsiteTab('single')}>Single Link</Button>
           </div>
-          <div className="mb-6">
+
+          {/* Website Knowledge Form */}
+          <div className="mb-6 max-w-md mx-auto border rounded-lg p-4 bg-background">
+            <h5 className="font-semibold mb-2 text-center">Add Website Knowledge</h5>
+            {websiteError && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md mb-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-700">{websiteError}</span>
+              </div>
+            )}
+            {websiteSuccess && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md mb-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm text-green-700">Website knowledge added successfully!</span>
+              </div>
+            )}
+            <div className="space-y-3">
+              <Label htmlFor="websiteName" className="text-sm font-medium">Name</Label>
+              <Input
+                id="websiteName"
+                placeholder="Enter knowledge name"
+                className="w-full"
+                value={websiteName}
+                onChange={e => setWebsiteName(e.target.value)}
+                disabled={websiteLoading}
+              />
+            </div>
+            <div className="space-y-3 mt-2">
+              <Label htmlFor="websiteDescription" className="text-sm font-medium">Description</Label>
+              <Input
+                id="websiteDescription"
+                placeholder="Enter knowledge description"
+                className="w-full"
+                value={websiteDescription}
+                onChange={e => setWebsiteDescription(e.target.value)}
+                disabled={websiteLoading}
+              />
+            </div>
+            <div className="space-y-3 mt-2">
+              <Label htmlFor="websiteUrl" className="text-sm font-medium">URL</Label>
+              <Input
+                id="websiteUrl"
+                placeholder="Enter website URL"
+                className="w-full"
+                value={websiteUrl}
+                onChange={e => setWebsiteUrl(e.target.value)}
+                disabled={websiteLoading}
+              />
+            </div>
+            <Button
+              className="bg-primary hover:bg-primary/90 mt-4 w-full"
+              onClick={async () => {
+                if (!websiteName.trim() || !websiteDescription.trim() || !websiteUrl.trim()) {
+                  setWebsiteError('Name, description, and URL are required');
+                  return;
+                }
+                setWebsiteLoading(true);
+                setWebsiteError(null);
+                setWebsiteSuccess(false);
+                try {
+                  // Auto title dari domain
+                  let title = '';
+                  try {
+                    const urlObj = new URL(websiteUrl);
+                    title = urlObj.hostname;
+                  } catch {
+                    title = websiteUrl;
+                  }
+                  // Format baru: hanya kirim name, description, status, url, scrape_type, max_links
+                  await KnowledgeService.postWebsiteKnowledge(
+                    agentId,
+                    websiteName,
+                    websiteDescription,
+                    websiteUrl,
+                    'batch', // scrape_type
+                    30 // max_links
+                  );
+                  setWebsiteSuccess(true);
+                  setWebsiteName('');
+                  setWebsiteDescription('');
+                  setWebsiteUrl('');
+                  setTimeout(() => setWebsiteSuccess(false), 3000);
+                } catch (error: any) {
+                  setWebsiteError(error.message || 'Failed to add website knowledge');
+                } finally {
+                  setWebsiteLoading(false);
+                }
+              }}
+              disabled={websiteLoading || !websiteName.trim() || !websiteDescription.trim() || !websiteUrl.trim()}
+            >
+              {websiteLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Website Knowledge'
+              )}
+            </Button>
+          </div>
+          {/* <div className="mb-6">
             <Label htmlFor="web-link-url" className="block mb-2">Web Link Collector</Label>
             <div className="flex gap-2">
               <Input id="web-link-url" placeholder="Link URL" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} />
-              <Button onClick={handleCollectLink} disabled={!websiteUrl.trim()}>Collect Link</Button>
+              <Button disabled>Collect Link</Button>
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <span>🔵</span>
               <span>Start with URL and this tool will gather up to <b>30 unique</b> links from the site, excluding any files</span>
             </div>
-          </div>
-          <div className="border rounded-lg p-4 bg-background">
-            <h5 className="font-semibold mb-2">Trained Link</h5>
-            <div className="flex items-center gap-2 mb-2">
-              <Input placeholder="Search Links" className="max-w-xs" value={searchLink} onChange={e => setSearchLink(e.target.value)} />
-            </div>
-            {/* Group links by parent domain */}
-            <Accordion type="multiple" className="w-full">
-              {Object.entries(
-                dummyLinks
-                  .filter(l => l.url.includes(searchLink))
-                  .reduce((acc, link) => {
-                    const urlObj = new URL(link.url);
-                    const domain = urlObj.origin;
-                    if (!acc[domain]) acc[domain] = [];
-                    acc[domain].push(link);
-                    return acc;
-                  }, {} as Record<string, typeof dummyLinks>)
-              ).map(([domain, links]) => (
-                <AccordionItem key={domain} value={domain}>
-                  <AccordionTrigger>
-                    <span className="font-medium text-blue-900">{domain}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">{links.length} link</span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <table className="min-w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="px-2 py-1 text-left"><input type="checkbox" /></th>
-                          <th className="px-2 py-1 text-left">Link</th>
-                          <th className="px-2 py-1 text-left">Characters</th>
-                          <th className="px-2 py-1 text-left">Batch</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {links.map(link => (
-                          <tr key={link.url} className="border-b hover:bg-accent/30">
-                            <td className="px-2 py-1"><input type="checkbox" /></td>
-                            <td className="px-2 py-1 text-blue-700 underline flex items-center gap-2"><span>🔗</span><a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a></td>
-                            <td className="px-2 py-1">{link.characters.toLocaleString()} characters</td>
-                            <td className="px-2 py-1">{link.batch}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
+          </div> */}
         </div>
       </TabsContent>
 
