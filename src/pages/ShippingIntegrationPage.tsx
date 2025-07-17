@@ -144,6 +144,14 @@ export default function ShippingIntegrationPage() {
     setSavingIntegration(true);
     
     try {
+      // First, get the agent details to retrieve the settings ID
+      const agentData = await AgentsService.getAgent(aiAgentId);
+      const settingsId = agentData.id_settings;
+      
+      if (!settingsId) {
+        throw new Error('Agent settings ID not found');
+      }
+      
       // Format couriers as lowercase colon-separated string
       const formattedCouriers = courier.map(c => c.toLowerCase()).join(':');
       
@@ -154,9 +162,10 @@ export default function ShippingIntegrationPage() {
       };
       
       console.log('Submitting integration data:', requestBody);
+      console.log('Using settings ID:', settingsId);
       
-      // Make API call to update agent settings
-      await AgentsService.updateAgentSettings(aiAgentId, requestBody);
+      // Make API call to update agent settings using the settings ID
+      await AgentsService.updateAgentSettings(settingsId, requestBody);
       
       alert('Integration data saved successfully!');
       
