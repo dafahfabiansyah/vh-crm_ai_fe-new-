@@ -106,7 +106,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
         ...templateSettings,
         rajaongkir_enabled: false,
         rajaongkir_origin_city: "23",
-        rajaongkir_couriers: ["jne"],
+        rajaongkir_couriers: `["jne"]`,
       };
       const newAgent = await AgentsService.createAgent({
         name: agentName,
