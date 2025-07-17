@@ -509,13 +509,15 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             onValueChange={(value) =>
                               handleInputChange("model", value)
                             }
-                            defaultValue="gpt-4.1"
+                            // defaultValue="gpt-4.1"
+                            defaultValue="gpt-4.1-nano"
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="gpt-4.1">
+                              {/* <SelectItem value="gpt-4.1"> */}
+                              <SelectItem value="gpt-4.1-nano">
                                 Very High Intelligence
                               </SelectItem>
                               {/* <SelectItem value="gpt-4.1">

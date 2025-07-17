@@ -32,7 +32,7 @@ const AGENT_TEMPLATES = {
         "Halo! Selamat datang di layanan pelanggan kami. Saya siap membantu Anda dengan pertanyaan atau keluhan. Ada yang bisa saya bantu hari ini?",
       transfer_condition:
         "Transfer to human agent when: customer requests to speak with human, has complex technical issues that require specialized knowledge, expresses strong dissatisfaction that requires human intervention, or asks for refund/cancellation beyond AI authority",
-      model: "gpt-4.1",
+      model: "gpt-4.1-nano",
       history_limit: 15,
       context_limit:10,
       message_await: 10,
@@ -50,7 +50,7 @@ const AGENT_TEMPLATES = {
         "Halo! Saya admin sales yang siap membantu Anda dengan pertanyaan produk dan pemesanan. Apakah Anda sedang mencari produk tertentu atau ingin informasi lebih lanjut tentang penawaran kami?",
       transfer_condition:
         "Transfer to human sales agent when: customer wants to negotiate prices for bulk orders, has complex customization requests, requests detailed product demonstrations, or asks for special payment terms that require approval",
-      model: "gpt-4.1",
+      model: "gpt-4.1-nano",
       history_limit: 15,
       context_limit:10,
       message_await: 10,
@@ -94,7 +94,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
         behaviour: "You are a helpful AI assistant",
         welcome_message: "Hello! How can I help you today?",
         transfer_condition: "Transfer when customer requests human assistance",
-        model: "gpt-4.1",
+        model: "gpt-4.1-nano",
         history_limit: 15,
         context_limit: 10,
         message_await: 10,
