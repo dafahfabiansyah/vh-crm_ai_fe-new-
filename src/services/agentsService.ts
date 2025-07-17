@@ -16,7 +16,7 @@ export interface CreateAgentRequest {
     // RajaOngkir
     rajaongkir_enabled?: boolean;
     rajaongkir_origin_city?: string;
-    rajaongkir_couriers?: string[];
+    rajaongkir_couriers?: string;
   };
 }
 
@@ -37,7 +37,7 @@ export interface AgentSettings {
   // RajaOngkir
   rajaongkir_enabled?: boolean;
   rajaongkir_origin_city?: string;
-  rajaongkir_couriers?: string[];
+  rajaongkir_couriers?: string;
   created_at: string;
   updated_at: string;
 }
@@ -59,7 +59,7 @@ export interface UpdateAgentSettingsRequest {
   // RajaOngkir
   rajaongkir_enabled?: boolean;
   rajaongkir_origin_city?: string;
-  rajaongkir_couriers?: string[];
+  rajaongkir_couriers?: string;
 }
 
 export class AgentsService {
