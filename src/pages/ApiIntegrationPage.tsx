@@ -28,7 +28,6 @@ const apiMethods = [
 
 const ApiIntegrationPage = () => {
   const [method, setMethod] = useState("POST");
-  const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [webhook, setWebhook] = useState("");
@@ -113,7 +112,7 @@ const ApiIntegrationPage = () => {
     setTestLoading(true)
     setTestResult('')
     try {
-      let url = address
+      let url = webhook
       let data: any = {}
       let params: any = {}
       aiInputs.forEach(input => {
@@ -390,39 +389,42 @@ const ApiIntegrationPage = () => {
             </Button>
           </div>
           {/* Right: Preview/Request */}
-          <div className="bg-gray-900 rounded-lg p-6 flex flex-col gap-4 border border-gray-800 min-h-[600px]">
+          <div className="bg-gray-900 rounded-lg p-6 flex flex-col gap-4 border border-gray-800 min-h-[300px]">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-blue-500 text-xs px-2 py-0.5 rounded">{method}</span>
               <Input
-                value={address}
-                onChange={e => setAddress(e.target.value)}
-                className="bg-gray-800 text-white font-mono border-none p-1 h-8"
+                value={webhook}
+                readOnly
+                className="bg-gray-800 text-white font-mono border-none p-1 h-8 opacity-80 cursor-not-allowed"
                 placeholder="Webhook address..."
               />
             </div>
-            <div className="text-xs text-gray-400 mb-1">Parameters</div>
-            <div className="flex flex-col gap-2 mb-2">
-              {aiInputs.length === 0 && <div className="text-gray-500 text-xs">No AI Inputs defined.</div>}
-              {aiInputs.map(input => (
-                <Input
-                  key={input.name}
-                  className="bg-gray-800 text-white font-mono border border-gray-700"
-                  placeholder={input.name}
-                  value={testParams[input.name] || ''}
-                  onChange={e => handleTestParamChange(input.name, e.target.value)}
-                />
-              ))}
+            <div className="text-xs text-gray-400 mb-1">POST Body</div>
+            <div className="bg-gray-800 rounded p-4 font-mono text-sm text-white mb-2 relative">
+              {'{'}
+              <br />
+              &nbsp;&nbsp;"kota": <input
+                type="text"
+                className="bg-gray-500 text-green-100 px-2 py-1 rounded border-none outline-none font-mono"
+                style={{ minWidth: 120, display: 'inline-block' }}
+                value={testParams['kota'] || ''}
+                onChange={e => handleTestParamChange('kota', e.target.value)}
+              />
+              <br />
+              <span className="text-gray-400 text-xs">&nbsp;&nbsp;nama kota atau nama kecamatan. jika client menjawab selain nama kota pastikan wilayah tersebut dari kota mana.</span>
+              <br />
+              {'}'}
             </div>
-            <Button
+            {/* <Button
               className="self-end bg-primary"
               onClick={handleSendTestRequest}
               disabled={!address || aiInputs.some(i => i.required && !testParams[i.name]) || testLoading}
             >
               {testLoading ? 'Testing...' : 'Send Request'}
-            </Button>
-            {testResult && (
+            </Button> */}
+            {/* {testResult && (
               <pre className="bg-gray-800 text-green-300 rounded p-4 mt-2 overflow-x-auto text-xs max-h-60">{testResult}</pre>
-            )}
+            )} */}
           </div>
         </div>
       </div>

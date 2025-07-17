@@ -22,7 +22,7 @@ export interface CustomIntegrationPayload {
 export async function createCustomIntegration(
   payload: CustomIntegrationPayload
 ) {
-  const baseGo = import.meta.env.VITE_API_BASE_GO || '';
+  const baseGo = import.meta.env.VITE_API_BASE_URL || '';
   const url = `${baseGo}/v1/custom-integrations`;
   return axios.post(url, payload);
 } 
