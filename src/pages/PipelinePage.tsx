@@ -29,6 +29,7 @@ import {
   Mail,
   MapPin,
   Trash,
+  Bot,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
@@ -251,7 +252,7 @@ const PipelinePage = () => {
       // Fetch leads per stage, filter manual juga
       const leadsByStage: Record<string, any[]> = {};
       const stageLeadsPromises = stages.map((stage: any) =>
-        PipelineService.getLeadsByStageId(stage.id).then((leads) => {
+        PipelineService.getLeads({ id_stage: stage.id }).then((leads: any[]) => {
           // Filter leads yang id_pipeline-nya sama
           const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
           console.log('Leads for stage', stage.id, filteredLeads);
@@ -259,7 +260,7 @@ const PipelinePage = () => {
         })
       );
       const stageLeadsResults = await Promise.all(stageLeadsPromises);
-      stageLeadsResults.forEach(({ stageId, leads }) => {
+      stageLeadsResults.forEach(({ stageId, leads }: { stageId: string; leads: any[] }) => {
         leadsByStage[stageId] = leads.map((lead: any) => ({
           id: lead.id,
           name: lead.name,
@@ -325,11 +326,13 @@ const PipelinePage = () => {
     setSelectedAgent("");
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
-      axiosInstance.get("/v1/agents?offset=0&limit=100")
+      axiosInstance.get("/v1/agents/details")
         .then((response) => {
-          const items = response.data.items || [];
+          const items = response.data?.items || response.data || [];
+          // Pastikan items adalah array
+          const agentsArray = Array.isArray(items) ? items : [];
           // Tampilkan SEMUA agent_type, tidak perlu filter
-          setAgents(items);
+          setAgents(agentsArray);
         })
         .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
     });
@@ -726,7 +729,17 @@ const PipelinePage = () => {
                         <SelectContent>
                           {agents.map(agent => (
                             <SelectItem key={agent.id} value={agent.id}>
-                              {(agent.name || agent.identifier)} ({agent.agent_type})
+                              <div className="flex items-center gap-2">
+                                {agent.agent_type === "AI" ? (
+                                  <Bot className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <User className="h-4 w-4 text-blue-600" />
+                                )}
+                                <span>{agent.name}</span>
+                                <span className="text-xs text-gray-500 ml-auto">
+                                  {agent.agent_type === "AI" ? "AI" : "Human"}
+                                </span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
