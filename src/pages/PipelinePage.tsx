@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
-
+  DrawerContent,
+  DrawerClose,
 } from "@/components/ui/drawer";
 import {
   ArrowLeft,
@@ -24,9 +25,8 @@ import { PipelineStageColumn } from "@/components/pipeline-stage";
 import PipelineService, {
   type PipelineListResponse,
 } from "@/services/pipelineService";
-import {
-  Dialog,
-} from "@/components/ui/dialog";
+
+import ChatConversation from "@/components/chat-conversation";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -35,7 +35,6 @@ const PipelinePage = () => {
 
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([]);
   const [, setSelectedLead] = useState<Lead | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pipelineInfo, setPipelineInfo] = useState<PipelineListResponse | null>(
@@ -51,11 +50,22 @@ const PipelinePage = () => {
   const [, setIsSubmittingStage] = useState(false);
   const [, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [selectedContact, setSelectedContact] = useState<any>(null);
 
-  const handleLeadClick = (lead: Lead) => {
-    setSelectedLead(lead);
-    setIsDrawerOpen(true);
+  const handleLeadClick = (lead: any) => {
+    // console.log('Lead clicked:', lead);
+    setSelectedContactId(lead.id_contact);
+    setSelectedContact({
+      push_name: lead.name || 'Unknown',
+      contact_identifier: lead.phone || '-',
+      lead_status: lead.status || 'unassigned',
+    });
   };
+
+  useEffect(() => {
+    // console.log('selectedContactId:', selectedContactId, 'selectedContact:', selectedContact);
+  }, [selectedContactId, selectedContact]);
 
   const handleDropLead = useCallback(
     async (leadId: string, targetStageId: string) => {
@@ -223,7 +233,7 @@ const PipelinePage = () => {
   // Refactor: extract fetchPipelineData so it can be called from anywhere
   const fetchPipelineData = useCallback(async () => {
     if (!pipelineId) {
-      console.log("No pipeline ID provided");
+      // console.log("No pipeline ID provided");
       return;
     }
 
@@ -238,7 +248,7 @@ const PipelinePage = () => {
       // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
       let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
       stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
-      console.log("Stages for pipeline", pipelineId, stages);
+      // console.log("Stages for pipeline", pipelineId, stages);
 
       // Fetch leads per stage, filter manual juga
       const leadsByStage: Record<string, any[]> = {};
@@ -249,7 +259,7 @@ const PipelinePage = () => {
             const filteredLeads = (leads || []).filter(
               (lead: any) => lead.id_pipeline === pipelineId
             );
-            console.log("Leads for stage", stage.id, filteredLeads);
+            // console.log("Leads for stage", stage.id, filteredLeads);
             return { stageId: stage.id, leads: filteredLeads };
           }
         )
@@ -275,29 +285,24 @@ const PipelinePage = () => {
           }));
         }
       );
-      // Mapping ke struktur PipelineStage
-      const mappedStages = stages.map((stage: any, idx: number) => {
-        const stageLeads = leadsByStage[stage.id] || [];
-        return {
-          id: stage.id,
-          name: stage.name,
-          description: stage.description,
-          color: [
-            "bg-blue-100 text-blue-800",
-            "bg-yellow-100 text-yellow-800",
-            "bg-orange-100 text-orange-800",
-            "bg-green-100 text-green-800",
-            "bg-purple-100 text-purple-800",
-            "bg-red-100 text-red-800",
-          ][idx % 6],
-          leads: stageLeads,
-          count: stageLeads.length,
-          value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
-          stage_order: stage.stage_order ?? idx,
-          agent_id: stage.id_agent || undefined,
-        };
-      });
-      setPipelineData(mappedStages);
+      // Setelah fetch leads dari API, langsung simpan ke state tanpa mapping
+      // Misal di fetchPipelineData:
+      const leads = await PipelineService.getLeads({ id_pipeline: pipelineId });
+      // console.log('Raw leads response:', leads);
+      // Simpan langsung ke pipelineData
+      setPipelineData([
+        {
+          id: 'default-stage', // atau gunakan id dari backend jika ada
+          name: 'Leads',
+          leads: leads, // langsung pakai array leads dari backend
+          count: leads.length,
+          value: leads.reduce((sum, l) => sum + (l.potential_value || 0), 0),
+          color: 'bg-blue-100 text-blue-800',
+          description: '',
+          stage_order: 0,
+          agent_id: undefined,
+        }
+      ]);
     } catch (error: any) {
       console.error("Error fetching pipeline:", error);
       setError(error.message || "Failed to load pipeline");
@@ -516,13 +521,60 @@ const PipelinePage = () => {
           )}
   
           {/* Drawer and Dialog components remain the same */}
-          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-            {/* ... rest of drawer content ... */}
+          <Drawer open={!!selectedContactId} onOpenChange={(open) => {
+            if (!open) {
+              setSelectedContactId(null);
+              setSelectedContact(null);
+            }
+          }} direction="right">
+            <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
+              <div className="flex h-[80vh]">
+                {/* Kiri: Data Lead */}
+                <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
+                  {selectedContact && (
+                    <div>
+                      <h2 className="font-bold text-xl mb-2">{selectedContact.push_name}</h2>
+                      <div className="mb-2 text-sm text-muted-foreground">Status: {selectedContact.lead_status}</div>
+                      <div className="mb-2 text-sm text-muted-foreground">Moved by: {selectedContact.moved_by || '-'}</div>
+                      {/* Tambahkan info lain sesuai kebutuhan */}
+                      <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div>
+                    </div>
+                  )}
+                  <DrawerClose asChild>
+                    <button className="mt-8 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">Tutup</button>
+                  </DrawerClose>
+                </div>
+                {/* Kanan: ChatConversation */}
+                <div className="flex-1 min-w-[500px] max-w-full">
+                  {selectedContactId && (
+                    <ChatConversation
+                      selectedContactId={selectedContactId}
+                      selectedContact={selectedContact}
+                      showBackButton={false}
+                    />
+                  )}
+                </div>
+              </div>
+            </DrawerContent>
           </Drawer>
   
-          <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
-            {/* ... rest of dialog content ... */}
-          </Dialog>
+          {/* Hapus/matikan Dialog lama yang menampilkan ChatConversation sebagai modal */}
+          {/* <Dialog open={!!selectedContactId} onOpenChange={(open) => {
+            if (!open) {
+              setSelectedContactId(null);
+              setSelectedContact(null);
+            }
+          }}>
+            <DialogContent className="max-w-2xl w-full">
+              {selectedContactId && (
+                <ChatConversation
+                  selectedContactId={selectedContactId}
+                  selectedContact={selectedContact}
+                  showBackButton={false}
+                />
+              )}
+            </DialogContent>
+          </Dialog> */}
         </div>
       </MainLayout>
     </DndProvider>

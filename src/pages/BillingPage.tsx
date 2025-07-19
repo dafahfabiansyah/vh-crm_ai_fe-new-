@@ -276,13 +276,13 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="text-xs sm:text-sm font-medium text-blue-100">
-                      AI Responses
+                      Token Tumbuhin
                     </CardTitle>
                     <h2 className="text-lg sm:text-xl font-bold mt-1">
                       {dashboardData.aiResponses.used.toLocaleString()} Used
                       <span className="text-xs sm:text-sm font-normal text-blue-200 ml-1 sm:ml-2 block sm:inline">
                         /{dashboardData.aiResponses.limit.toLocaleString()} AI
-                        Responses Limit
+                        Token Tumbuhin
                       </span>
                     </h2>
                   </div>

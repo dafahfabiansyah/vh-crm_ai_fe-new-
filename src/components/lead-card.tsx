@@ -93,7 +93,7 @@ export const LeadCard: React.FC<{
             </h4>
           )}
           <div className="text-xs text-gray-500 mt-1">
-            <span className="font-semibold">Moved by:</span> {lead.source}
+            <span className="font-semibold">Moved by:</span> {lead.moved_by}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             <span className="font-semibold">Status:</span> {lead.status}

@@ -128,6 +128,7 @@ export interface TimelineEvent {
 }
 
 export interface Lead {
+  moved_by: string;
   id: string
   name: string
   phone: string
