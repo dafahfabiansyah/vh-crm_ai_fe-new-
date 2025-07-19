@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Loader2, RefreshCw, Database, Trash2, Calendar, FileText } from "lucide-react";
+import { Loader2, RefreshCw, Database, Trash2, Calendar, FileText, Edit } from "lucide-react";
 import { KnowledgeService, type ExistingKnowledge, type KnowledgeSourceContent } from "@/services/knowledgeService";
 import {
   Drawer,
@@ -41,6 +41,42 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   const [websiteDeleteId, setWebsiteDeleteId] = useState<string | null>(null);
   const [websiteDeleteLoading, setWebsiteDeleteLoading] = useState(false);
   const [websiteDeleteError, setWebsiteDeleteError] = useState<string | null>(null);
+
+  // Q&A Knowledge State
+  const [qaList, setQaList] = useState<any[]>([]);
+  const [qaLoading, setQaLoading] = useState(false);
+  const [qaError, setQaError] = useState<string | null>(null);
+  const [qaDeleteId, setQaDeleteId] = useState<string | null>(null);
+  const [qaDeleteLoading, setQaDeleteLoading] = useState(false);
+  const [qaDeleteError, setQaDeleteError] = useState<string | null>(null);
+  // Edit Q&A State
+  const [qaEditItem, setQaEditItem] = useState<any | null>(null);
+  const [qaEditQuestion, setQaEditQuestion] = useState("");
+  const [qaEditAnswer, setQaEditAnswer] = useState("");
+  const [qaEditLoading, setQaEditLoading] = useState(false);
+  const [qaEditError, setQaEditError] = useState<string | null>(null);
+
+  const handleEditQAKnowledge = (item: any) => {
+    setQaEditItem(item);
+    setQaEditQuestion(item.question);
+    setQaEditAnswer(item.answer);
+    setQaEditError(null);
+  };
+
+  const handleUpdateQAKnowledge = async () => {
+    if (!qaEditItem) return;
+    setQaEditLoading(true);
+    setQaEditError(null);
+    try {
+      await KnowledgeService.updateQAKnowledge(qaEditItem.id, qaEditQuestion, qaEditAnswer);
+      setQaList(prev => prev.map(q => q.id === qaEditItem.id ? { ...q, question: qaEditQuestion, answer: qaEditAnswer, updated_at: new Date().toISOString() } : q));
+      setQaEditItem(null);
+    } catch (err: any) {
+      setQaEditError(err.message || 'Failed to update Q&A knowledge');
+    } finally {
+      setQaEditLoading(false);
+    }
+  };
 
   const loadKnowledgeList = async (isRefresh = false) => {
     try {
@@ -88,10 +124,39 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
     }
   };
 
+  const loadQAKnowledge = async () => {
+    try {
+      setQaLoading(true);
+      setQaError(null);
+      const data = await KnowledgeService.getAllQAKnowledge();
+      setQaList(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setQaError(err.message || 'Failed to load Q&A knowledge');
+    } finally {
+      setQaLoading(false);
+    }
+  };
+
+  const handleDeleteQAKnowledge = async () => {
+    if (!qaDeleteId) return;
+    setQaDeleteLoading(true);
+    setQaDeleteError(null);
+    try {
+      await KnowledgeService.deleteQAKnowledge(qaDeleteId);
+      setQaList(prev => prev.filter(item => item.id !== qaDeleteId));
+      setQaDeleteId(null);
+    } catch (err: any) {
+      setQaDeleteError(err.message || 'Failed to delete Q&A knowledge');
+    } finally {
+      setQaDeleteLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (agentId) {
       loadKnowledgeList();
       loadWebsiteKnowledge();
+      loadQAKnowledge();
     }
   }, [agentId]);
 
@@ -193,7 +258,11 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
     );
   }
 
-  if (!knowledgeList || knowledgeList.length === 0) {
+  if (
+    (!knowledgeList || knowledgeList.length === 0) &&
+    (!websiteKnowledge || websiteKnowledge.length === 0) &&
+    (!qaList || qaList.length === 0)
+  ) {
     return (
       <div className="text-center py-12">
         <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -392,6 +461,149 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Q&A Knowledge Section */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Q&amp;A Knowledge</h3>
+        {qaLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading Q&amp;A knowledge...</span>
+          </div>
+        ) : qaError ? (
+          <div className="text-red-600 mb-4">
+            <Database className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="font-medium">Failed to load Q&amp;A knowledge</p>
+            <p className="text-sm text-muted-foreground mt-1">{qaError}</p>
+            <Button onClick={loadQAKnowledge} variant="outline" className="mt-2">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        ) : qaList.length === 0 ? (
+          <div className="text-muted-foreground py-8 text-center">No Q&amp;A knowledge found.</div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {qaList.map((item) => (
+              <Card key={item.id} className="relative">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base font-semibold text-foreground truncate">
+                        {item.question}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-1">
+                        {item.answer}
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleEditQAKnowledge(item);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setQaDeleteId(item.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-xs">
+                    <div>
+                      <span className="font-medium">Created:</span> {formatDate(item.created_at)}
+                    </div>
+                    <div>
+                      <span className="font-medium">Updated:</span> {formatDate(item.updated_at)}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+        {/* Modal Konfirmasi Hapus Q&A Knowledge */}
+        <Dialog open={!!qaDeleteId} onOpenChange={open => !open && setQaDeleteId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus Q&amp;A Knowledge?</DialogTitle>
+              <DialogDescription>
+                Apakah Anda yakin ingin menghapus Q&amp;A knowledge ini? Tindakan ini tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            {qaDeleteError && (
+              <div className="text-red-600 text-sm mb-2">{qaDeleteError}</div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setQaDeleteId(null)} disabled={qaDeleteLoading}>
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteQAKnowledge} disabled={qaDeleteLoading}>
+                {qaDeleteLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                Hapus
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Edit Q&A Modal */}
+      <Dialog open={!!qaEditItem} onOpenChange={open => !open && setQaEditItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Q&amp;A Knowledge</DialogTitle>
+            <DialogDescription>
+              Ubah pertanyaan dan jawaban Q&amp;A knowledge.
+            </DialogDescription>
+          </DialogHeader>
+          {qaEditError && (
+            <div className="text-red-600 text-sm mb-2">{qaEditError}</div>
+          )}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Question</label>
+              <textarea
+                className="w-full border rounded p-2 min-h-[60px]"
+                value={qaEditQuestion}
+                onChange={e => setQaEditQuestion(e.target.value)}
+                disabled={qaEditLoading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Answer</label>
+              <textarea
+                className="w-full border rounded p-2 min-h-[80px]"
+                value={qaEditAnswer}
+                onChange={e => setQaEditAnswer(e.target.value)}
+                disabled={qaEditLoading}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQaEditItem(null)} disabled={qaEditLoading}>
+              Batal
+            </Button>
+            <Button variant="default" onClick={handleUpdateQAKnowledge} disabled={qaEditLoading || !qaEditQuestion.trim() || !qaEditAnswer.trim()}>
+              {qaEditLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Knowledge Detail Drawer */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>

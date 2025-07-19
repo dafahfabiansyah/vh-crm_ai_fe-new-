@@ -12,7 +12,7 @@ export const LeadCard: React.FC<{
   onLeadClick: (lead: Lead) => void;
 }> = ({ lead, index, stageId, onUpdateLead, onLeadClick }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(lead.name);
+  const [editName, ] = useState(lead.name);
 
   const [{ isDragging }, drag] = useDrag({
     type: ITEM_TYPE,
@@ -21,37 +21,6 @@ export const LeadCard: React.FC<{
       isDragging: monitor.isDragging(),
     }),
   });
-
-  const handleNameClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
-  };
-
-  const handleNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editName.trim() && editName !== lead.name) {
-      onUpdateLead(lead.id, editName.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleNameSubmit(e as any);
-    } else if (e.key === "Escape") {
-      setEditName(lead.name);
-      setIsEditing(false);
-    }
-  };
-
-  const handleBlur = () => {
-    if (editName.trim() && editName !== lead.name) {
-      onUpdateLead(lead.id, editName.trim());
-    } else {
-      setEditName(lead.name);
-    }
-    setIsEditing(false);
-  };
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!isEditing) {
@@ -70,29 +39,10 @@ export const LeadCard: React.FC<{
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          {isEditing ? (
-            <form onSubmit={handleNameSubmit} className="mb-1">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-              />
-            </form>
-          ) : (
-            <h4
-              className="font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={handleNameClick}
-              title="Click to edit name"
-            >
+          <div className="text-xs text-gray-500 mt-1">
+            <h4 className="font-medium text-gray-900 truncate cursor-pointer hover:text-primary transition-colors">
               {lead.name}
             </h4>
-          )}
-          <div className="text-xs text-gray-500 mt-1">
             <span className="font-semibold">Moved by:</span> {lead.moved_by}
           </div>
           <div className="text-xs text-gray-500 mt-1">

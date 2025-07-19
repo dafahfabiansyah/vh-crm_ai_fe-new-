@@ -281,7 +281,7 @@ export default function BillingPage() {
                     <h2 className="text-lg sm:text-xl font-bold mt-1">
                       {dashboardData.aiResponses.used.toLocaleString()} Used
                       <span className="text-xs sm:text-sm font-normal text-blue-200 ml-1 sm:ml-2 block sm:inline">
-                        /{dashboardData.aiResponses.limit.toLocaleString()} AI
+                        /{dashboardData.aiResponses.limit.toLocaleString()} {''}
                         Token Tumbuhin
                       </span>
                     </h2>
@@ -539,7 +539,7 @@ export default function BillingPage() {
                                 <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
                               </div>
                               <span className="text-xs sm:text-sm text-foreground">
-                                AI Responses:{" "}
+                                Token Tumbuhin:{" "}
                                 {plan.limits.ai_response === -1
                                   ? "Unlimited"
                                   : plan.limits.ai_response}

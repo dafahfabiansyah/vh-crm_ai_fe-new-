@@ -7,17 +7,8 @@ import MainLayout from "@/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Drawer,
-  DrawerContent,
-} from "@/components/ui/drawer";
-import {
-  ArrowLeft,
-  Plus,
-  TrendingUp,
-  Users,
-  Trash,
-} from "lucide-react";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { ArrowLeft, Plus, TrendingUp, Users, Trash } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
 import { PipelineStageColumn } from "@/components/pipeline-stage";
@@ -26,10 +17,21 @@ import PipelineService, {
 } from "@/services/pipelineService";
 
 import ChatConversation from "@/components/chat-conversation";
-import { Dialog, DialogContent, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { ContactsService } from "@/services/contactsService";
 
 const PipelinePage = () => {
@@ -54,7 +56,9 @@ const PipelinePage = () => {
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    null
+  );
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [contacts, setContacts] = useState<any[]>([]);
 
@@ -66,11 +70,11 @@ const PipelinePage = () => {
       setSelectedContact(contact);
     } else {
       setSelectedContact({
-        push_name: lead.name || 'Unknown',
-        contact_identifier: '-', // fallback
-        lead_status: lead.status || 'unassigned',
+        push_name: lead.name || "Unknown",
+        contact_identifier: "-", // fallback
+        lead_status: lead.status || "unassigned",
       });
-      alert('Contact untuk lead ini tidak ditemukan!');
+      alert("Contact untuk lead ini tidak ditemukan!");
     }
   };
 
@@ -259,7 +263,9 @@ const PipelinePage = () => {
       setPipelineInfo(pipeline);
 
       // Fetch stages dari backend
-      const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+      const stages = await PipelineService.getStages({
+        id_pipeline: pipelineId,
+      });
 
       // Untuk setiap stage, fetch leads-nya
       const stageLeadsPromises = stages.map(async (stage: any, idx: number) => {
@@ -278,7 +284,10 @@ const PipelinePage = () => {
           ][idx % 6],
           leads: leads,
           count: leads.length,
-          value: leads.reduce((sum: number, l: any) => sum + (l.potential_value || 0), 0),
+          value: leads.reduce(
+            (sum: number, l: any) => sum + (l.potential_value || 0),
+            0
+          ),
           stage_order: stage.stage_order ?? idx,
           agent_id: stage.id_agent || undefined,
         };
@@ -349,7 +358,12 @@ const PipelinePage = () => {
 
   const handleSubmitAddStage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stageName.trim() || !stageDescription.trim() || !selectedAgent || !pipelineId) {
+    if (
+      !stageName.trim() ||
+      !stageDescription.trim() ||
+      !selectedAgent ||
+      !pipelineId
+    ) {
       setAddStageError("Semua field wajib diisi.");
       return;
     }
@@ -375,7 +389,6 @@ const PipelinePage = () => {
     }
   };
 
-
   return (
     <DndProvider backend={HTML5Backend}>
       <MainLayout>
@@ -389,7 +402,7 @@ const PipelinePage = () => {
               </div>
             </div>
           )}
-  
+
           {/* Error State */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -404,7 +417,7 @@ const PipelinePage = () => {
               </Button>
             </div>
           )}
-  
+
           {/* No Pipeline ID */}
           {!pipelineId && !isLoading && (
             <div className="text-center py-12">
@@ -414,7 +427,7 @@ const PipelinePage = () => {
               </Button>
             </div>
           )}
-  
+
           {/* Main Content - Only show when we have pipeline ID and not loading */}
           {pipelineId && !isLoading && !error && (
             <div className="space-y-6">
@@ -432,7 +445,7 @@ const PipelinePage = () => {
                       </span>
                     </Link>
                   </div>
-  
+
                   <div className="flex items-center gap-3">
                     <Button size="sm" onClick={handleOpenAddStage}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -449,7 +462,7 @@ const PipelinePage = () => {
                     </Button>
                   </div>
                 </div>
-  
+
                 <div className="flex items-center gap-2 mb-4">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {pipelineInfo?.name || "Pipeline"}
@@ -459,7 +472,7 @@ const PipelinePage = () => {
                   </Badge>
                 </div>
               </div>
-  
+
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <Card>
@@ -479,7 +492,7 @@ const PipelinePage = () => {
                     </div>
                   </CardContent>
                 </Card>
-  
+
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
@@ -496,19 +509,19 @@ const PipelinePage = () => {
                   </CardContent>
                 </Card>
               </div>
-  
+
               {/* Pipeline Stages - FIXED VERSION */}
               {pipelineData.length > 0 && (
                 <div className="space-y-4">
                   <h2 className="text-lg font-semibold text-gray-900">
                     Pipeline Stages
                   </h2>
-                  
+
                   {/* Container dengan fixed width dan scroll */}
                   <div className="relative">
-                    <div 
+                    <div
                       className="overflow-x-auto overflow-y-hidden pb-4"
-                      style={{ maxWidth: 'calc(100vw - 3rem)' }}
+                      style={{ maxWidth: "calc(100vw - 3rem)" }}
                     >
                       <div className="flex gap-6 w-max min-w-full">
                         {pipelineData.map((stage) => (
@@ -530,43 +543,47 @@ const PipelinePage = () => {
               )}
             </div>
           )}
-  
+
           {/* Drawer and Dialog components remain the same */}
-          <Drawer open={!!selectedContactId} onOpenChange={(open) => {
-            if (!open) {
-              setSelectedContactId(null);
-              setSelectedContact(null);
-            }
-          }} direction="right">
+          <Drawer
+            open={!!selectedContactId}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedContactId(null);
+                setSelectedContact(null);
+              }
+            }}
+            direction="right"
+          >
             <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
               <div className="flex">
                 {/* Kiri: Data Lead */}
                 <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
                   {selectedContact && (
                     <div>
-                      <h2 className="font-bold text-xl mb-2">{selectedContact.push_name}</h2>
-                      <div className="mb-2 text-sm text-muted-foreground">Status: {selectedContact.lead_status}</div>
-                      <div className="mb-2 text-sm text-muted-foreground">Moved by: {selectedContact.moved_by}</div>
+                      <h2 className="font-bold text-xl mb-2">
+                        {selectedContact.push_name}
+                      </h2>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        Status: {selectedContact.lead_status}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        Moved by: {selectedContact.moved_by}
+                      </div>
                       {/* Tambahkan info lain sesuai kebutuhan */}
                       {/* <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div> */}
                     </div>
                   )}
                 </div>
-                {/* Kanan: ChatConversation */}
+                {/* ChatConversation */}
                 <div className="flex-1 min-w-[500px] max-w-full h-[100vh] overflow-y-auto">
                   {selectedContactId && (
-                    // <ChatConversation
-                    //   selectedContactId={selectedContactId}
-                    //   selectedContact={selectedContact}
-                    //   showBackButton={false}
-                    // />
                     <ChatConversation
-                    selectedContactId={selectedContactId}
-                    selectedContact={selectedContact}
-                    onToggleInfo={() => { }} // No-op for desktop since info is always visible
-                    showInfo={false} // Don't show active state on desktop
-                    // onSwitchToAssignedTab={handleSwitchToAssignedTab}
-                  />
+                      selectedContactId={selectedContactId}
+                      selectedContact={selectedContact}
+                      onToggleInfo={() => {}}
+                      showInfo={false}
+                    />
                   )}
                 </div>
               </div>
@@ -580,34 +597,64 @@ const PipelinePage = () => {
                 <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
                 <div className="space-y-2">
                   <Label htmlFor="stage-name">Nama Stage</Label>
-                  <Input id="stage-name" value={stageName} onChange={e => setStageName(e.target.value)} required disabled={isSubmittingStage} />
+                  <Input
+                    id="stage-name"
+                    value={stageName}
+                    onChange={(e) => setStageName(e.target.value)}
+                    required
+                    disabled={isSubmittingStage}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stage-desc">Deskripsi</Label>
-                  <Input id="stage-desc" value={stageDescription} onChange={e => setStageDescription(e.target.value)} required disabled={isSubmittingStage} />
+                  <Input
+                    id="stage-desc"
+                    value={stageDescription}
+                    onChange={(e) => setStageDescription(e.target.value)}
+                    required
+                    disabled={isSubmittingStage}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stage-agent">Pilih Agent</Label>
-                  <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                  <Select
+                    value={selectedAgent}
+                    onValueChange={setSelectedAgent}
+                    disabled={isSubmittingStage || agents.length === 0}
+                  >
                     <SelectTrigger className="w-full" id="stage-agent">
-                      <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                      <SelectValue
+                        placeholder={
+                          agents.length === 0
+                            ? "Memuat agent..."
+                            : "Pilih agent"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {agents.map(agent => (
+                      {agents.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
-                          {(agent.name || agent.identifier)} ({agent.agent_type})
+                          {agent.name || agent.identifier} ({agent.agent_type})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {addStageError && <div className="text-red-600 text-sm">{addStageError}</div>}
+                {addStageError && (
+                  <div className="text-red-600 text-sm">{addStageError}</div>
+                )}
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmittingStage}>
                     {isSubmittingStage ? "Menyimpan..." : "Simpan"}
                   </Button>
                   <DialogClose asChild>
-                    <Button type="button" variant="outline" disabled={isSubmittingStage}>Batal</Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmittingStage}
+                    >
+                      Batal
+                    </Button>
                   </DialogClose>
                 </DialogFooter>
               </form>
