@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
   DrawerContent,
-  DrawerClose,
 } from "@/components/ui/drawer";
 import {
   ArrowLeft,
@@ -27,6 +26,11 @@ import PipelineService, {
 } from "@/services/pipelineService";
 
 import ChatConversation from "@/components/chat-conversation";
+import { Dialog, DialogContent, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { ContactsService } from "@/services/contactsService";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -43,29 +47,41 @@ const PipelinePage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [isAddStageOpen, setIsAddStageOpen] = useState(false);
-  const [, setStageName] = useState("");
-  const [, setStageDescription] = useState("");
-  const [, setSelectedAgent] = useState<string>("");
-  const [, setAgents] = useState<any[]>([]);
-  const [, setIsSubmittingStage] = useState(false);
-  const [, setAddStageError] = useState<string | null>(null);
+  const [stageName, setStageName] = useState("");
+  const [stageDescription, setStageDescription] = useState("");
+  const [selectedAgent, setSelectedAgent] = useState("");
+  const [agents, setAgents] = useState<any[]>([]);
+  const [isSubmittingStage, setIsSubmittingStage] = useState(false);
+  const [addStageError, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [contacts, setContacts] = useState<any[]>([]);
 
   const handleLeadClick = (lead: any) => {
-    // console.log('Lead clicked:', lead);
     setSelectedContactId(lead.id_contact);
-    setSelectedContact({
-      push_name: lead.name || 'Unknown',
-      contact_identifier: lead.phone || '-',
-      lead_status: lead.status || 'unassigned',
-    });
+    // Cari contact yang id-nya sama dengan lead.id_contact
+    const contact = contacts.find((c: any) => c.id === lead.id_contact);
+    if (contact) {
+      setSelectedContact(contact);
+    } else {
+      setSelectedContact({
+        push_name: lead.name || 'Unknown',
+        contact_identifier: '-', // fallback
+        lead_status: lead.status || 'unassigned',
+      });
+      alert('Contact untuk lead ini tidak ditemukan!');
+    }
   };
 
   useEffect(() => {
     // console.log('selectedContactId:', selectedContactId, 'selectedContact:', selectedContact);
   }, [selectedContactId, selectedContact]);
+
+  useEffect(() => {
+    // Fetch all contacts once
+    ContactsService.getContacts().then((res: any) => setContacts(res.items));
+  }, []);
 
   const handleDropLead = useCallback(
     async (leadId: string, targetStageId: string) => {
@@ -233,76 +249,42 @@ const PipelinePage = () => {
   // Refactor: extract fetchPipelineData so it can be called from anywhere
   const fetchPipelineData = useCallback(async () => {
     if (!pipelineId) {
-      // console.log("No pipeline ID provided");
       return;
     }
-
     setIsLoading(true);
     setError(null);
-
     try {
       // Fetch pipeline info by ID
       const pipeline = await PipelineService.getPipelineById(pipelineId);
       setPipelineInfo(pipeline);
 
-      // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
-      let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
-      stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
-      // console.log("Stages for pipeline", pipelineId, stages);
+      // Fetch stages dari backend
+      const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
 
-      // Fetch leads per stage, filter manual juga
-      const leadsByStage: Record<string, any[]> = {};
-      const stageLeadsPromises = stages.map((stage: any) =>
-        PipelineService.getLeads({ id_stage: stage.id }).then(
-          (leads: any[]) => {
-            // Filter leads yang id_pipeline-nya sama
-            const filteredLeads = (leads || []).filter(
-              (lead: any) => lead.id_pipeline === pipelineId
-            );
-            // console.log("Leads for stage", stage.id, filteredLeads);
-            return { stageId: stage.id, leads: filteredLeads };
-          }
-        )
-      );
-      const stageLeadsResults = await Promise.all(stageLeadsPromises);
-      stageLeadsResults.forEach(
-        ({ stageId, leads }: { stageId: string; leads: any[] }) => {
-          leadsByStage[stageId] = leads.map((lead: any) => ({
-            id: lead.id,
-            name: lead.name,
-            phone: "",
-            value: lead.potential_value || 0,
-            source: lead.moved_by || "unknown",
-            daysAgo: 0,
-            status: lead.status || "unknown",
-            email: "",
-            company: "",
-            location: "",
-            notes: lead.notes || "",
-            createdAt: lead.created_at,
-            lastActivity: lead.updated_at,
-            timeline: [],
-          }));
-        }
-      );
-      // Setelah fetch leads dari API, langsung simpan ke state tanpa mapping
-      // Misal di fetchPipelineData:
-      const leads = await PipelineService.getLeads({ id_pipeline: pipelineId });
-      // console.log('Raw leads response:', leads);
-      // Simpan langsung ke pipelineData
-      setPipelineData([
-        {
-          id: 'default-stage', // atau gunakan id dari backend jika ada
-          name: 'Leads',
-          leads: leads, // langsung pakai array leads dari backend
+      // Untuk setiap stage, fetch leads-nya
+      const stageLeadsPromises = stages.map(async (stage: any, idx: number) => {
+        const leads = await PipelineService.getLeadsByStageId(stage.id);
+        return {
+          id: stage.id,
+          name: stage.name,
+          description: stage.description,
+          color: [
+            "bg-blue-100 text-blue-800",
+            "bg-yellow-100 text-yellow-800",
+            "bg-orange-100 text-orange-800",
+            "bg-green-100 text-green-800",
+            "bg-purple-100 text-purple-800",
+            "bg-red-100 text-red-800",
+          ][idx % 6],
+          leads: leads,
           count: leads.length,
-          value: leads.reduce((sum, l) => sum + (l.potential_value || 0), 0),
-          color: 'bg-blue-100 text-blue-800',
-          description: '',
-          stage_order: 0,
-          agent_id: undefined,
-        }
-      ]);
+          value: leads.reduce((sum: number, l: any) => sum + (l.potential_value || 0), 0),
+          stage_order: stage.stage_order ?? idx,
+          agent_id: stage.id_agent || undefined,
+        };
+      });
+      const mappedStages = await Promise.all(stageLeadsPromises);
+      setPipelineData(mappedStages);
     } catch (error: any) {
       console.error("Error fetching pipeline:", error);
       setError(error.message || "Failed to load pipeline");
@@ -364,6 +346,35 @@ const PipelinePage = () => {
     setAddStageError(null);
     setIsAddStageOpen(true);
   };
+
+  const handleSubmitAddStage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stageName.trim() || !stageDescription.trim() || !selectedAgent || !pipelineId) {
+      setAddStageError("Semua field wajib diisi.");
+      return;
+    }
+    setIsSubmittingStage(true);
+    setAddStageError(null);
+    try {
+      await PipelineService.createStage({
+        name: stageName.trim(),
+        description: stageDescription.trim(),
+        id_agent: selectedAgent,
+        id_pipeline: pipelineId,
+      });
+      setIsAddStageOpen(false);
+      setStageName("");
+      setStageDescription("");
+      setSelectedAgent("");
+      setAddStageError(null);
+      fetchPipelineData(); // Refresh data pipeline setelah tambah stage
+    } catch (err: any) {
+      setAddStageError(err.message || "Gagal menambah stage");
+    } finally {
+      setIsSubmittingStage(false);
+    }
+  };
+
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -542,36 +553,66 @@ const PipelinePage = () => {
                   )}
                 </div>
                 {/* Kanan: ChatConversation */}
-                <div className="flex-1 min-w-[500px] max-w-full">
+                <div className="flex-1 min-w-[500px] max-w-full h-[100vh] overflow-y-auto">
                   {selectedContactId && (
+                    // <ChatConversation
+                    //   selectedContactId={selectedContactId}
+                    //   selectedContact={selectedContact}
+                    //   showBackButton={false}
+                    // />
                     <ChatConversation
-                      selectedContactId={selectedContactId}
-                      selectedContact={selectedContact}
-                      showBackButton={false}
-                    />
+                    selectedContactId={selectedContactId}
+                    selectedContact={selectedContact}
+                    onToggleInfo={() => { }} // No-op for desktop since info is always visible
+                    showInfo={false} // Don't show active state on desktop
+                    // onSwitchToAssignedTab={handleSwitchToAssignedTab}
+                  />
                   )}
                 </div>
               </div>
             </DrawerContent>
           </Drawer>
-  
-          {/* Hapus/matikan Dialog lama yang menampilkan ChatConversation sebagai modal */}
-          {/* <Dialog open={!!selectedContactId} onOpenChange={(open) => {
-            if (!open) {
-              setSelectedContactId(null);
-              setSelectedContact(null);
-            }
-          }}>
-            <DialogContent className="max-w-2xl w-full">
-              {selectedContactId && (
-                <ChatConversation
-                  selectedContactId={selectedContactId}
-                  selectedContact={selectedContact}
-                  showBackButton={false}
-                />
-              )}
+
+          {/* Dialog untuk tambah stage baru */}
+          <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
+            <DialogContent>
+              <form onSubmit={handleSubmitAddStage} className="space-y-4">
+                <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
+                <div className="space-y-2">
+                  <Label htmlFor="stage-name">Nama Stage</Label>
+                  <Input id="stage-name" value={stageName} onChange={e => setStageName(e.target.value)} required disabled={isSubmittingStage} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="stage-desc">Deskripsi</Label>
+                  <Input id="stage-desc" value={stageDescription} onChange={e => setStageDescription(e.target.value)} required disabled={isSubmittingStage} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="stage-agent">Pilih Agent</Label>
+                  <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                    <SelectTrigger className="w-full" id="stage-agent">
+                      <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map(agent => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          {(agent.name || agent.identifier)} ({agent.agent_type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {addStageError && <div className="text-red-600 text-sm">{addStageError}</div>}
+                <DialogFooter>
+                  <Button type="submit" disabled={isSubmittingStage}>
+                    {isSubmittingStage ? "Menyimpan..." : "Simpan"}
+                  </Button>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline" disabled={isSubmittingStage}>Batal</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </form>
             </DialogContent>
-          </Dialog> */}
+          </Dialog>
         </div>
       </MainLayout>
     </DndProvider>
