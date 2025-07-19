@@ -528,21 +528,18 @@ const PipelinePage = () => {
             }
           }} direction="right">
             <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
-              <div className="flex h-[80vh]">
+              <div className="flex">
                 {/* Kiri: Data Lead */}
                 <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
                   {selectedContact && (
                     <div>
                       <h2 className="font-bold text-xl mb-2">{selectedContact.push_name}</h2>
                       <div className="mb-2 text-sm text-muted-foreground">Status: {selectedContact.lead_status}</div>
-                      <div className="mb-2 text-sm text-muted-foreground">Moved by: {selectedContact.moved_by || '-'}</div>
+                      <div className="mb-2 text-sm text-muted-foreground">Moved by: {selectedContact.moved_by}</div>
                       {/* Tambahkan info lain sesuai kebutuhan */}
-                      <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div>
+                      {/* <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div> */}
                     </div>
                   )}
-                  <DrawerClose asChild>
-                    <button className="mt-8 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">Tutup</button>
-                  </DrawerClose>
                 </div>
                 {/* Kanan: ChatConversation */}
                 <div className="flex-1 min-w-[500px] max-w-full">
