@@ -9,27 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
+
 } from "@/components/ui/drawer";
 import {
   ArrowLeft,
   Plus,
   TrendingUp,
   Users,
-  Phone,
-  MoreHorizontal,
-  Clock,
-  User,
-  MessageCircle,
-  Mail,
-  MapPin,
   Trash,
-  Bot,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
@@ -39,22 +26,7 @@ import PipelineService, {
 } from "@/services/pipelineService";
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -62,7 +34,7 @@ const PipelinePage = () => {
   const pipelineId = searchParams.get("id");
 
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [, setSelectedLead] = useState<Lead | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,12 +44,12 @@ const PipelinePage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [isAddStageOpen, setIsAddStageOpen] = useState(false);
-  const [stageName, setStageName] = useState("");
-  const [stageDescription, setStageDescription] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState<string>("");
-  const [agents, setAgents] = useState<any[]>([]);
-  const [isSubmittingStage, setIsSubmittingStage] = useState(false);
-  const [addStageError, setAddStageError] = useState<string | null>(null);
+  const [, setStageName] = useState("");
+  const [, setStageDescription] = useState("");
+  const [, setSelectedAgent] = useState<string>("");
+  const [, setAgents] = useState<any[]>([]);
+  const [, setIsSubmittingStage] = useState(false);
+  const [, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
 
   const handleLeadClick = (lead: Lead) => {
@@ -386,35 +358,6 @@ const PipelinePage = () => {
     setSelectedAgent("");
     setAddStageError(null);
     setIsAddStageOpen(true);
-  };
-
-  const handleSubmitAddStage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      !stageName.trim() ||
-      !stageDescription.trim() ||
-      !selectedAgent ||
-      !pipelineId
-    ) {
-      setAddStageError("Semua field wajib diisi.");
-      return;
-    }
-    setIsSubmittingStage(true);
-    setAddStageError(null);
-    try {
-      await PipelineService.createStage({
-        name: stageName.trim(),
-        description: stageDescription.trim(),
-        id_agent: selectedAgent,
-        id_pipeline: pipelineId,
-      });
-      setIsAddStageOpen(false);
-      await fetchPipelineData(); // Refresh data pipeline setelah tambah stage
-    } catch (err: any) {
-      setAddStageError(err.message || "Gagal menambah stage");
-    } finally {
-      setIsSubmittingStage(false);
-    }
   };
 
   return (
