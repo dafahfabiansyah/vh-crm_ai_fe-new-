@@ -28,7 +28,7 @@ const ApiIntegrationPage = () => {
     <MainLayout>
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Tools</h1>
+          <h1 className="text-2xl font-bold">Custom Integrations</h1>
           <Button onClick={() => navigate("/integration/api")}>+ Create New Tool</Button>
         </div>
         <p className="text-gray-500 mb-4">Don't forget to activate tools in AI Agent → Integrations → API Tools.</p>
@@ -42,7 +42,7 @@ const ApiIntegrationPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Add New API Tool Card */}
             <Card
-              className="flex items-center justify-center h-40 cursor-pointer bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-blue-200 hover:shadow-lg transition"
+              className="flex items-center justify-center cursor-pointer bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-blue-200 hover:shadow-lg transition"
               onClick={() => navigate("/integration/api/create")}
             >
               <span className="text-lg font-semibold text-blue-700">Add New API Tool</span>

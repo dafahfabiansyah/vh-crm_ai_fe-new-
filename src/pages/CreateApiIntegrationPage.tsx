@@ -33,9 +33,9 @@ const CreateApiIntegrationPage = () => {
   const [webhook, setWebhook] = useState("");
   const [maxCalls, setMaxCalls] = useState("30");
   const [apiKey, setApiKey] = useState("");
-  const [payloadType, setPayloadType] = useState("text");
-  const [payloadKey, setPayloadKey] = useState("");
-  const [payloadValue, setPayloadValue] = useState("");
+  // const [payloadType, setPayloadType] = useState("text");
+  // const [payloadKey, setPayloadKey] = useState("");
+  // const [payloadValue, setPayloadValue] = useState("");
   const [aiInputs, setAiInputs] = useState<AiInput[]>([]);
   const [triggerCondition, setTriggerCondition] = useState("");
   const [loading, setLoading] = useState(false);
@@ -153,19 +153,15 @@ const CreateApiIntegrationPage = () => {
           {/* Left: Form */}
           <div className="bg-white rounded-lg p-6 flex flex-col gap-4 border border-gray-200">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-semibold">Create Tool</h2>
-              <div className="flex gap-2">
-                <Button variant="secondary">Cancel</Button>
-                <Button className="bg-primary text-white">Save</Button>
-              </div>
+              <h2 className="text-xl font-semibold">Create Custom Integration</h2>
             </div>
             <div className="flex flex-col gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Name</label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
-              <div className="flex gap-4">
-                <div className="w-1/2">
+              <div className="flex">
+                <div className="w-full">
                   <label className="block text-sm font-medium mb-1">
                     HTTP Method
                   </label>
@@ -344,7 +340,7 @@ const CreateApiIntegrationPage = () => {
                   Add Inputs
                 </Button>
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium mb-1">
                   Additional Payload
                 </label>
@@ -376,7 +372,7 @@ const CreateApiIntegrationPage = () => {
                   value={payloadValue}
                   onChange={(e) => setPayloadValue(e.target.value)}
                 />
-              </div>
+              </div> */}
             </div>
             <Button
               className="w-full mt-4 bg-primary text-white"

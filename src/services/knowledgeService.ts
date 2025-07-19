@@ -152,24 +152,7 @@ export class KnowledgeService {
     });
   }
 
-  /**
-   * Create Q&A knowledge
-   */
-  static async createQAKnowledge(agentId: string, question: string, answer: string, keywords?: string): Promise<KnowledgeResponse> {
-    return this.createKnowledge(agentId, {
-      name: `Q&A - ${question.substring(0, 50)}...`,
-      description: `Q&A Knowledge Base`,
-      status: true,
-      content: {
-        type: 'QA',
-        qa: {
-          question,
-          answer,
-          keywords,
-        },
-      },
-    });
-  }
+
 
   /**
    * Post website knowledge dengan format baru (tanpa content, langsung url, scrape_type, max_links di root)
@@ -354,6 +337,123 @@ export class KnowledgeService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to delete website knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  // Q&A Knowledge CRUD Methods
+
+  /**
+   * Create Q&A knowledge
+   */
+  static async createQAKnowledge(question: string, answer: string): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/v1/ai/knowledge/qa`, {
+        question,
+        answer
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to create Q&A knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get all Q&A knowledge
+   */
+  static async getAllQAKnowledge(): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/knowledge/qa`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch Q&A knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get Q&A knowledge by ID
+   */
+  static async getQAKnowledgeById(idQnaKnowledge: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/knowledge/qa/${idQnaKnowledge}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch Q&A knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Update Q&A knowledge
+   */
+  static async updateQAKnowledge(idQnaKnowledge: string, question: string, answer: string): Promise<any> {
+    try {
+      const response = await axiosInstance.put(`/v1/ai/knowledge/qa/${idQnaKnowledge}`, {
+        question,
+        answer
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to update Q&A knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Delete Q&A knowledge
+   */
+  static async deleteQAKnowledge(idQnaKnowledge: string): Promise<void> {
+    try {
+      await axiosInstance.delete(`/v1/ai/knowledge/qa/${idQnaKnowledge}`);
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to delete Q&A knowledge',
           status: error.response.status,
           errors: error.response.data.errors,
         };

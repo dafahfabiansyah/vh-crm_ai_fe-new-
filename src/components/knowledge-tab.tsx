@@ -120,8 +120,40 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
   const [websiteSuccess, setWebsiteSuccess] = useState(false);
   const [websiteError, setWebsiteError] = useState<string | null>(null);
 
+  // Q&A Knowledge State
+  const [qaQuestion, setQaQuestion] = useState('');
+  const [qaAnswer, setQaAnswer] = useState('');
+  const [qaLoading, setQaLoading] = useState(false);
+  const [qaSuccess, setQaSuccess] = useState(false);
+  const [qaError, setQaError] = useState<string | null>(null);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddQAKnowledge = async () => {
+    if (!qaQuestion.trim() || !qaAnswer.trim()) {
+      setQaError("Question and answer are required");
+      return;
+    }
+
+    setQaLoading(true);
+    setQaError(null);
+    setQaSuccess(false);
+
+    try {
+      await KnowledgeService.createQAKnowledge(qaQuestion, qaAnswer);
+      setQaSuccess(true);
+      setQaQuestion("");
+      setQaAnswer("");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setQaSuccess(false), 3000);
+    } catch (error: any) {
+      setQaError(error.message || "Failed to add Q&A knowledge");
+    } finally {
+      setQaLoading(false);
+    }
+  };
 
   return (
     <>
@@ -502,15 +534,79 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
 
       {/* Q&A knowledge */}
       <TabsContent value="qa" className="mt-0">
-        <div className="text-center py-12">
-          <h4 className="text-lg font-semibold text-foreground mb-2">
-            Coming Soon
-          </h4>
-          <p className="text-muted-foreground">
-            Q&A knowledge feature is coming soon
-          </p>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-lg font-semibold text-foreground mb-2">
+              Q&A Knowledge Source
+            </h4>
+            <p className="text-muted-foreground mb-4">
+              Tambahkan pengetahuan berbasis pertanyaan dan jawaban ke AI Anda.
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {qaError && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <span className="text-sm text-red-700">{qaError}</span>
+            </div>
+          )}
+
+          {/* Success Display */}
+          {qaSuccess && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm text-green-700">
+                Q&A knowledge added successfully!
+              </span>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <Label htmlFor="qaQuestion" className="text-sm font-medium">
+              Question
+            </Label>
+            <Textarea
+              id="qaQuestion"
+              placeholder="Enter your question here..."
+              className="min-h-[100px] resize-none"
+              value={qaQuestion}
+              onChange={(e) => setQaQuestion(e.target.value)}
+              disabled={qaLoading}
+            />
+          </div>
+          <div className="space-y-3">
+            <Label htmlFor="qaAnswer" className="text-sm font-medium">
+              Answer
+            </Label>
+            <Textarea
+              id="qaAnswer"
+              placeholder="Enter your answer here..."
+              className="min-h-[150px] resize-none"
+              value={qaAnswer}
+              onChange={(e) => setQaAnswer(e.target.value)}
+              disabled={qaLoading}
+            />
+          </div>
+          <Button
+            className="bg-primary hover:bg-primary/90"
+            onClick={handleAddQAKnowledge}
+            disabled={
+              qaLoading ||
+              !qaQuestion.trim() ||
+              !qaAnswer.trim()
+            }
+          >
+            {qaLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              "Add Q&A Knowledge"
+            )}
+          </Button>
         </div>
-       
       </TabsContent>
     </>
   );
