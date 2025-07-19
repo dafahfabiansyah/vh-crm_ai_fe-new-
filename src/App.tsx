@@ -24,6 +24,8 @@ import SettingsPage from "./pages/SettingsPage";
 import ShippingIntegrationPage from "./pages/ShippingIntegrationPage";
 import ApiIntegrationPage from "./pages/ApiIntegrationPage";
 import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
+import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
+import EditCustomIntegration from "./pages/EditCustomIntegration";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -110,6 +112,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CreateApiIntegrationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integration/api/:id"
+          element={
+            <ProtectedRoute>
+              <CustomIntegrationDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integration/api/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditCustomIntegration />
             </ProtectedRoute>
           }
         />

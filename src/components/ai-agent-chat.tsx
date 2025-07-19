@@ -158,11 +158,11 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
               ) : (
                 <div className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                    className={`max-w-[80%] p-3 rounded-lg text-sm break-words ${
                       msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                     }`}
                   >
-                    <div className="mb-1">
+                    <div className="mb-1 whitespace-pre-wrap">
                       {msg.content}
                     </div>
                     {msg.tokens_used > 0 && (

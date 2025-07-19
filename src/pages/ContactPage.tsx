@@ -612,7 +612,11 @@ export default function ContactsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {contact.last_message || "-"}
+                        {contact.last_message 
+                          ? (contact.last_message.length > 30 
+                              ? `${contact.last_message.substring(0, 30)}...` 
+                              : contact.last_message)
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-sm">
                         {contact.unread_messages > 0 ? (

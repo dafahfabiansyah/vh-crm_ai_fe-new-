@@ -64,6 +64,7 @@ export const PipelineStageColumn: React.FC<{
         isOver && canDrop ? "bg-blue-50 border-blue-200" : ""
       }`}
     >
+      <div className="">
       <div className="bg-white border border-gray-200 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4 w-full">
           <div className="flex items-center gap-2 w-full min-w-0">
@@ -196,6 +197,7 @@ export const PipelineStageColumn: React.FC<{
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

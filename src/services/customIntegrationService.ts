@@ -31,4 +31,22 @@ export async function getCustomIntegrations() {
   const baseGo = import.meta.env.VITE_API_BASE_URL || '';
   const url = `${baseGo}/v1/custom-integrations`;
   return axios.get(url);
+}
+
+export async function getCustomIntegrationById(id: string) {
+  const baseGo = import.meta.env.VITE_API_BASE_URL || '';
+  const url = `${baseGo}/v1/custom-integrations/${id}`;
+  return axios.get(url);
+}
+
+export async function editCustomIntegration(id: string, payload: CustomIntegrationPayload) {
+  const baseGo = import.meta.env.VITE_API_BASE_URL || '';
+  const url = `${baseGo}/v1/custom-integrations/${id}`;
+  return axios.put(url, payload);
+}
+
+export async function deleteCustomIntegration(id: string) {
+  const baseGo = import.meta.env.VITE_API_BASE_URL || '';
+  const url = `${baseGo}/v1/custom-integrations/${id}`;
+  return axios.delete(url);
 } 

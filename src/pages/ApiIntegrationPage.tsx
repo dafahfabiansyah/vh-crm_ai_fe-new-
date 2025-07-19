@@ -53,7 +53,14 @@ const ApiIntegrationPage = () => {
                 <div className="mb-2 text-xs text-gray-400 font-semibold uppercase tracking-wider">Tool</div>
                 <div className="font-semibold text-lg mb-1">{tool.name}</div>
                 <div className="text-gray-600 text-sm mb-8 line-clamp-2">{tool.description}</div>
-                <Button size="sm" variant="outline" className="absolute bottom-4 left-4">Settings</Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="absolute bottom-4 left-4"
+                  onClick={() => navigate(`/integration/api/${tool.id}`)}
+                >
+                  Detail
+                </Button>
               </Card>
             ))}
           </div>
