@@ -312,7 +312,7 @@ const EditCustomIntegration = () => {
                       type="password"
                     />
                   </div>
-                  <div>
+                  {/* <div>
                     <Label htmlFor="trigger_condition">Trigger Condition</Label>
                     <Textarea
                       id="trigger_condition"
@@ -322,7 +322,7 @@ const EditCustomIntegration = () => {
                       }
                       placeholder="Enter trigger condition"
                     />
-                  </div>
+                  </div> */}
                 </div>
               </form>
             </Card>

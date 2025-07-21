@@ -913,7 +913,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
               <Checkbox id="is_enabled" checked={isEnabled} onCheckedChange={v => setIsEnabled(!!v)} />
               <label htmlFor="is_enabled" className="ml-2">Aktifkan Integration</label>
             </div>
-            <div>
+            {/* <div>
               <label htmlFor="trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
               <Input
                 id="trigger_condition"
@@ -921,7 +921,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 onChange={e => setTriggerCondition(e.target.value)}
                 placeholder="Masukkan trigger condition"
               />
-            </div>
+            </div> */}
           </div>
           <DialogFooter>
             <Button

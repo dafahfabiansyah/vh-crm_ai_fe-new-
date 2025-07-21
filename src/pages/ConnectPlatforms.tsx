@@ -73,7 +73,7 @@ export default function ConnectedPlatformsPage() {
   // const [humanAgents] = useState(mockHumanAgents);
   const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
   const [humanAgentsLoading, setHumanAgentsLoading] = useState(false);
-  const [humanAgentsError, setHumanAgentsError] = useState<string | null>(null);
+  const [, setHumanAgentsError] = useState<string | null>(null);
   const [agentsLoading, setAgentsLoading] = useState(false);
 
   const [pipelines, setPipelines] = useState<PipelineListResponse[]>([]);
@@ -726,7 +726,7 @@ export default function ConnectedPlatformsPage() {
                       >
                         {platform.humanAgentsSelected && platform.humanAgentsSelected.length > 0
                           ? humanAgents
-                              .filter((agent) => platform.humanAgentsSelected.includes(agent.id))
+                              .filter((agent) => platform.humanAgentsSelected?.includes(agent.id))
                               .map((agent) => agent.name)
                               .join(", ")
                           : "Select human agents"}
@@ -1274,7 +1274,7 @@ export default function ConnectedPlatformsPage() {
                               >
                                 {selectedPlatform.humanAgentsSelected && selectedPlatform.humanAgentsSelected.length > 0
                                   ? humanAgents
-                                      .filter((agent) => selectedPlatform.humanAgentsSelected.includes(agent.id))
+                                      .filter((agent) => selectedPlatform.humanAgentsSelected?.includes(agent.id))
                                       .map((agent) => agent.name)
                                       .join(", ")
                                   : "Select human agents"}

@@ -37,7 +37,7 @@ const CreateApiIntegrationPage = () => {
   // const [payloadKey, setPayloadKey] = useState("");
   // const [payloadValue, setPayloadValue] = useState("");
   const [aiInputs, setAiInputs] = useState<AiInput[]>([]);
-  const [triggerCondition, setTriggerCondition] = useState("");
+  const [triggerCondition, ] = useState("");
   const [loading, setLoading] = useState(false);
   const [testParams, setTestParams] = useState<Record<string, string>>({})
 
@@ -198,7 +198,7 @@ const CreateApiIntegrationPage = () => {
                   onChange={(e) => setWebhook(e.target.value)}
                 />
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium mb-1">
                   Trigger Condition <span className="text-gray-400">?</span>
                 </label>
@@ -207,7 +207,7 @@ const CreateApiIntegrationPage = () => {
                   onChange={(e) => setTriggerCondition(e.target.value)}
                   placeholder="When customer asks about..."
                 />
-              </div>
+              </div> */}
               <div className="flex flex-col gap-4">
                 <div className="w-1/2">
                   <label className="block text-sm font-medium mb-1">

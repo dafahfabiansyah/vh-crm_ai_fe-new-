@@ -10,9 +10,9 @@ export const LeadCard: React.FC<{
   stageId: string;
   onUpdateLead: (leadId: string, newName: string) => void;
   onLeadClick: (lead: Lead) => void;
-}> = ({ lead, index, stageId, onUpdateLead, onLeadClick }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, ] = useState(lead.name);
+}> = ({ lead, index, stageId,  onLeadClick }) => {
+  const [isEditing,] = useState(false);
+
 
   const [{ isDragging }, drag] = useDrag({
     type: ITEM_TYPE,

@@ -63,12 +63,12 @@ export const PipelineStageColumn: React.FC<{
           const details = Array.isArray(response)
             ? response
             : (response as any)?.items || [];
-          console.log("📋 Details array:", details);
+          // console.log("📋 Details array:", details);
 
           if (Array.isArray(details) && details.length > 0) {
             // Filter berdasarkan agent ID yang kita butuhkan
             const agent = details.find((agent) => agent.id === agentId);
-            console.log("🎯 Found Agent:", agent);
+            // console.log("🎯 Found Agent:", agent);
             if (agent) {
               const name = agent.name || agent.user?.name || "";
               // console.log("👤 Setting Agent Name:", name);
