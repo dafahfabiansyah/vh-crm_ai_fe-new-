@@ -97,8 +97,7 @@ export class HumanAgentsService {
         name: agentData.name,
         email: agentData.email,
         password: agentData.password,
-        // department: agentData.department ?? null,
-        department: null,
+        department: agentData.department, // kirim dari form
         phone_number: agentData.phone_number,
         agent_type: agentData.agent_type,
         is_active: true,

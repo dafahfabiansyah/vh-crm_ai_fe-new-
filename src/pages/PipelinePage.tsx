@@ -42,8 +42,7 @@ const PipelinePage = () => {
   const pipelineId = searchParams.get("id");
 
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [, setSelectedLead] = useState<Lead | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pipelineInfo, setPipelineInfo] = useState<PipelineListResponse | null>(

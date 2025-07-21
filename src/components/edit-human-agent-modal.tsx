@@ -17,15 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services";
+import { DepartmentService } from "@/services/departmentService";
 
-// Dummy UUID mapping for departments
-const DEPARTMENT_OPTIONS = [
-  { label: "Customer Support", value: "customer-support" },
-  { label: "Technical Support", value: "technical-support" },
-  { label: "Management", value: "management" },
-  { label: "Sales", value: "sales" },
-  { label: "Marketing", value: "marketing" },
-];
 
 interface EditHumanAgentModalProps {
   isOpen: boolean;
@@ -49,10 +42,12 @@ export default function EditHumanAgentModal({
   const [formData, setFormData] = useState<EditHumanAgentFormData>({
     department: "",
     active: true,
-    role: "",
+    role: "Human",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
 
   // Populate form when agent data is available
   useEffect(() => {
@@ -64,6 +59,15 @@ export default function EditHumanAgentModal({
       });
     }
   }, [agent]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingDepartments(true);
+      DepartmentService.getDepartments()
+        .then((data) => setDepartments(data))
+        .finally(() => setLoadingDepartments(false));
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +84,9 @@ export default function EditHumanAgentModal({
       if (formData.department) {
         payload.department = formData.department;
       }
-      if (formData.role) {
-        payload.agent_type = formData.role;
-      }
+      // if (formData.role) {
+      //   payload.agent_type = formData.role;
+      // }
       await HumanAgentsService.patchAgent(agent.id, payload);
 
       onClose();
@@ -124,7 +128,7 @@ export default function EditHumanAgentModal({
           )}
 
           <div className="flex flex-row justify-between space-x-4">
-            <div className="space-y-2 w-full">
+            {/* <div className="space-y-2 w-full">
               <Label htmlFor="role" className="text-sm text-gray-600">
                 Agent Type
               </Label>
@@ -141,7 +145,7 @@ export default function EditHumanAgentModal({
                   <SelectItem value="agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="space-y-2 w-full">
               <Label htmlFor="department" className="text-sm text-gray-600">
@@ -150,17 +154,23 @@ export default function EditHumanAgentModal({
               <Select
                 value={formData.department}
                 onValueChange={(value) => handleInputChange("department", value)}
-                disabled={isLoading}
+                disabled={isLoading || loadingDepartments}
               >
                 <SelectTrigger className="bg-gray-50">
-                  <SelectValue placeholder="Select department" />
+                  <SelectValue placeholder={loadingDepartments ? "Loading..." : "Select department"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {DEPARTMENT_OPTIONS.map((dept) => (
-                    <SelectItem key={dept.value} value={dept.value}>
-                      {dept.label}
+                  {departments.length === 0 && !loadingDepartments ? (
+                    <SelectItem value="" disabled>
+                      No departments found
                     </SelectItem>
-                  ))}
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

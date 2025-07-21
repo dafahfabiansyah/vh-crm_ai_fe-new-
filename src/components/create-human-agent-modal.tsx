@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services/humanAgentsService";
+import { DepartmentService } from "@/services/departmentService";
+import React from "react";
 
 interface CreateHumanAgentModalProps {
   isOpen: boolean;
@@ -52,6 +54,17 @@ export default function CreateHumanAgentModal({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setLoadingDepartments(true);
+      DepartmentService.getDepartments()
+        .then((data) => setDepartments(data))
+        .finally(() => setLoadingDepartments(false));
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,10 +77,9 @@ export default function CreateHumanAgentModal({
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        // department: formData.department || null, // endpoint sekarang hardcode null
-        department: null,
+        department: formData.department,
         phone_number: formData.phone_number,
-        agent_type: ""
+        agent_type: "Human"
       });
       // Reset form
       setFormData({
@@ -187,7 +199,7 @@ export default function CreateHumanAgentModal({
             </div>
           </div>{" "}
           <div className="flex flex-row justify-between space-x-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="role" className="text-sm text-gray-600">
                 Role *
               </Label>
@@ -204,7 +216,7 @@ export default function CreateHumanAgentModal({
                   <SelectItem value="agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="department" className="text-sm text-gray-600">
@@ -215,21 +227,23 @@ export default function CreateHumanAgentModal({
                 onValueChange={(value) =>
                   handleInputChange("department", value)
                 }
-                disabled={isLoading}
+                disabled={isLoading || loadingDepartments}
               >
                 <SelectTrigger className="bg-gray-50">
-                  <SelectValue placeholder="Select department" />
+                  <SelectValue placeholder={loadingDepartments ? "Loading..." : "Select department"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="customer_support">
-                    Customer Support
-                  </SelectItem>
-                  <SelectItem value="technical_support">
-                    Technical Support
-                  </SelectItem>
-                  <SelectItem value="management">Management</SelectItem>
-                  <SelectItem value="sales">Sales</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
+                  {departments.length === 0 && !loadingDepartments ? (
+                    <SelectItem value="" disabled>
+                      No departments found
+                    </SelectItem>
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

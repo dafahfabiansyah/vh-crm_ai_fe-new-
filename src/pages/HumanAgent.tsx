@@ -17,6 +17,10 @@ import CreateHumanAgentModal from "@/components/create-human-agent-modal";
 import EditHumanAgentModal from "@/components/edit-human-agent-modal";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import React from "react";
+import { DepartmentService } from "@/services/departmentService";
+import CreateDepartmentModal from "@/components/create-department-modal";
+import EditDepartmentModal from "@/components/edit-department-modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Hapus mock data untuk human agents
 export default function HumanAgentsPage() {
@@ -28,6 +32,21 @@ export default function HumanAgentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all-roles");
   const [, setError] = useState<string | null>(null);
+
+  // Departments state
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [searchDepartment, setSearchDepartment] = useState("");
+
+  // Department modal state
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
+  const [isEditDeptModalOpen, setIsEditDeptModalOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<"agent"|"department"|null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // Fetch agents from API
   const fetchHumanAgents = async () => {
@@ -44,30 +63,48 @@ export default function HumanAgentsPage() {
     }
   };
 
-  // Fetch on mount
-  React.useEffect(() => {
-    fetchHumanAgents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Mock delete function
-  const handleDeleteAgent = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this agent?")) {
-      setLoading(true);
-      setError(null);
-      try {
-        await HumanAgentsService.deleteHumanAgent(id);
-        await fetchHumanAgents();
-        // Optional: tampilkan notifikasi sukses
-        // alert("Agent deleted successfully!");
-      } catch (err: any) {
-        setError(err.message || "Failed to delete agent");
-      } finally {
-        setLoading(false);
-      }
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    setLoadingDepartments(true);
+    try {
+      const data = await DepartmentService.getDepartments();
+      setDepartments(data);
+    } catch (err) {
+      // Optionally handle error
+    } finally {
+      setLoadingDepartments(false);
     }
   };
 
+  // Fetch agents for department head display
+  const [agents, setAgents] = useState<any[]>([]);
+  const [, setLoadingAgents] = useState(false);
+
+  const fetchAgents = async () => {
+    setLoadingAgents(true);
+    try {
+      const data = await HumanAgentsService.getHumanAgents();
+      setAgents(data);
+    } catch (err) {
+      // Optionally handle error
+    } finally {
+      setLoadingAgents(false);
+    }
+  };
+
+  // Fetch on mount
+  React.useEffect(() => {
+    fetchHumanAgents();
+    fetchDepartments();
+    fetchAgents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDeleteAgent = (id: string) => {
+    setDeleteType("agent");
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
   const handleEditAgent = (agent: any) => {
     setSelectedAgent(agent);
     setIsEditModalOpen(true);
@@ -86,6 +123,53 @@ export default function HumanAgentsPage() {
     return matchesSearch && matchesRole;
   });
 
+  // Filtered departments
+  const filteredDepartments = departments.filter((dept) => {
+    const name = String(dept.name || "");
+    return (
+      name.toLowerCase().includes(searchDepartment.toLowerCase()) 
+    );
+  });
+
+  // Department CRUD handlers
+  const handleEditDepartment = (dept: any) => {
+    setSelectedDepartment(dept);
+    setIsEditDeptModalOpen(true);
+  };
+  const handleDeleteDepartment = (id: string) => {
+    setDeleteType("department");
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+  const confirmDelete = async () => {
+    if (!deleteTargetId || !deleteType) return;
+    if (deleteType === "agent") {
+      setLoading(true);
+      setError(null);
+      try {
+        await HumanAgentsService.deleteHumanAgent(deleteTargetId);
+        await fetchHumanAgents();
+      } catch (err: any) {
+        setError(err.message || "Failed to delete agent");
+      } finally {
+        setLoading(false);
+      }
+    } else if (deleteType === "department") {
+      setLoadingDepartments(true);
+      try {
+        await DepartmentService.deleteDepartment(deleteTargetId);
+        await fetchDepartments();
+      } catch (err) {
+        // Optionally handle error
+      } finally {
+        setLoadingDepartments(false);
+      }
+    }
+    setDeleteDialogOpen(false);
+    setDeleteTargetId(null);
+    setDeleteType(null);
+  };
+
   return (
     <MainLayout>
       <div className="p-3 sm:p-6">
@@ -99,8 +183,8 @@ export default function HumanAgentsPage() {
               <TabsTrigger value="human-agent" className="text-sm">
                 Human Agent
               </TabsTrigger>
-              <TabsTrigger value="teams" className="text-sm">
-                Teams
+              <TabsTrigger value="department" className="text-sm">
+                Department
               </TabsTrigger>
             </TabsList>
 
@@ -221,7 +305,7 @@ export default function HumanAgentsPage() {
                                     </span>
                                   </td>
                                   <td className="p-4 text-sm">
-                                    {String(agent.department || "")}
+                                  {departments.find((d) => d.id === agent.department)?.name || ""}
                                   </td>
                                   <td className="p-4">
                                     <div className="flex items-center gap-2">
@@ -253,9 +337,7 @@ export default function HumanAgentsPage() {
                                         variant="ghost"
                                         size="sm"
                                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                        onClick={() =>
-                                          handleDeleteAgent(agent.id)
-                                        }
+                                        onClick={() => handleDeleteAgent(agent.id)}
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
@@ -315,9 +397,7 @@ export default function HumanAgentsPage() {
                                       variant="ghost"
                                       size="sm"
                                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                      onClick={() =>
-                                        handleDeleteAgent(agent.id)
-                                      }
+                                      onClick={() => handleDeleteAgent(agent.id)}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -362,16 +442,170 @@ export default function HumanAgentsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="teams" className="mt-4 sm:mt-6">
-              <div className="text-center py-8 sm:py-12">
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Teams content will be implemented here.
-                </p>
+            <TabsContent value="department" className="mt-4 sm:mt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Cari berdasarkan nama"
+                      className="pl-8 w-full sm:w-64"
+                      value={searchDepartment}
+                      onChange={(e) => setSearchDepartment(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={fetchDepartments}
+                    disabled={loadingDepartments}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loadingDepartments ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </Button>
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                    onClick={() => setIsDeptModalOpen(true)}
+                  >
+                    <span className="hidden sm:inline">Create Department</span>
+                    <span className="sm:hidden">Create</span>
+                  </Button>
+                </div>
               </div>
+              <Card>
+                <CardContent className="p-0">
+                  {loadingDepartments ? (
+                    <div className="flex items-center justify-center p-8">
+                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                      <span>Loading departments...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Desktop Table View */}
+                      <div className="hidden sm:block overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b bg-muted/50">
+                              <th className="text-left p-4 font-medium text-muted-foreground text-sm">Department Name</th>
+                              <th className="text-left p-4 font-medium text-muted-foreground text-sm">Description</th>
+                              <th className="text-left p-4 font-medium text-muted-foreground text-sm">Head of Department</th>
+                              <th className="text-left p-4 font-medium text-muted-foreground text-sm">Active</th>
+                              <th className="text-left p-4 font-medium text-muted-foreground text-sm">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredDepartments.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">
+                                  No departments found
+                                </td>
+                              </tr>
+                            ) : (
+                              filteredDepartments.map((dept) => {
+                                const headName = agents.find((a) => a.id === dept.head_id)?.user?.name || "";
+                                return (
+                                  <tr key={dept.id} className="border-b hover:bg-muted/25">
+                                    <td className="p-4 font-medium text-sm">{dept.name}</td>
+                                    <td className="p-4 text-muted-foreground text-sm">{dept.description}</td>
+                                    <td className="p-4 text-muted-foreground text-sm">{headName}</td>
+                                    <td className="p-4">
+                                      <span className={`px-2 py-1 text-xs rounded-full ${dept.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                        {dept.is_active ? "Active" : "Inactive"}
+                                      </span>
+                                    </td>
+                                    <td className="p-4">
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0"
+                                          onClick={() => handleEditDepartment(dept)}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                          onClick={() => handleDeleteDepartment(dept.id)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Mobile Card View */}
+                      <div className="sm:hidden">
+                        {filteredDepartments.length === 0 ? (
+                          <div className="p-8 text-center text-muted-foreground text-sm">
+                            No departments found
+                          </div>
+                        ) : (
+                          <div className="divide-y">
+                            {filteredDepartments.map((dept) => {
+                              const headName = agents.find((a) => a.id === dept.head_id)?.user?.name || "";
+                              return (
+                                <div key={dept.id} className="p-4 hover:bg-muted/25">
+                                  <div className="font-medium text-sm text-foreground">{dept.name}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">{dept.description}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">{headName}</div>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className={`px-2 py-1 text-xs rounded-full ${dept.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                      {dept.is_active ? "Active" : "Inactive"}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => handleEditDepartment(dept)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteDepartment(dept.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              <CreateDepartmentModal
+                isOpen={isDeptModalOpen}
+                onClose={() => setIsDeptModalOpen(false)}
+                onDepartmentCreated={fetchDepartments}
+              />
+              <EditDepartmentModal
+                isOpen={isEditDeptModalOpen}
+                onClose={() => {
+                  setIsEditDeptModalOpen(false);
+                  setSelectedDepartment(null);
+                }}
+                department={selectedDepartment}
+                onDepartmentUpdated={fetchDepartments}
+              />
             </TabsContent>
           </Tabs>
         </div>
-      </div>{" "}
+      </div>
       <CreateHumanAgentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -386,6 +620,27 @@ export default function HumanAgentsPage() {
         agent={selectedAgent}
         onAgentUpdated={fetchHumanAgents}
       />
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm">
+            {/* Are you sure you want to delete this {deleteType === "agent" ? "agent" : "department"}?
+            This action cannot be undone. */}
+            Apa kamu yakin mau hapus {deleteType === "agent" ? "agent" : "department"}?
+           Aksi ini tidak bisa dibatalkan.
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
