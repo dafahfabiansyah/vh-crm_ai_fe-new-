@@ -115,6 +115,8 @@ export interface PlatformInbox {
   csatEnabled?: boolean;
   // Raw platform mappings data from API
   platformMappings?: PlatformMapping[];
+  // Multi-select human agents
+  humanAgentsSelected?: string[];
 }
 
 // lead card interface

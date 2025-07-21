@@ -56,6 +56,10 @@ import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { AgentsService } from "@/services/agentsService";
 import PipelineService from "@/services/pipelineService";
 import type { PipelineListResponse } from "@/services/pipelineService";
+import { HumanAgentsService } from "@/services/humanAgentsService";
+import type { HumanAgent } from "@/services/humanAgentsService";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ConnectedPlatformsPage() {
   const navigate = useNavigate();
@@ -67,10 +71,10 @@ export default function ConnectedPlatformsPage() {
 
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   // const [humanAgents] = useState(mockHumanAgents);
-  const [humanAgents] = useState([]);
+  const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
+  const [humanAgentsLoading, setHumanAgentsLoading] = useState(false);
+  const [humanAgentsError, setHumanAgentsError] = useState<string | null>(null);
   const [agentsLoading, setAgentsLoading] = useState(false);
-  const [, setAgentsError] = useState<string | null>(null);
-  const [humanAgentsLoading] = useState(false);
 
   const [pipelines, setPipelines] = useState<PipelineListResponse[]>([]);
   const [pipelinesLoading , setPipelinesLoading] = useState(false);
@@ -134,7 +138,8 @@ export default function ConnectedPlatformsPage() {
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
-            platformMappings: item.platform_mappings || []
+            platformMappings: item.platform_mappings || [],
+            humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
           };
         });
         setPlatformInboxs(mapped);
@@ -148,11 +153,10 @@ export default function ConnectedPlatformsPage() {
   // Fetch AI agents from API
   useEffect(() => {
     setAgentsLoading(true);
-    setAgentsError(null);
     AgentsService.getAgents()
       .then((data) => setAiAgents(data))
       .catch((err) => {
-        setAgentsError(err.message || "Failed to fetch AI agents");
+        console.error("Failed to fetch AI agents:", err);
         setAiAgents([]);
       })
       .finally(() => setAgentsLoading(false));
@@ -169,6 +173,19 @@ export default function ConnectedPlatformsPage() {
         setPipelines([]);
       })
       .finally(() => setPipelinesLoading(false));
+  }, []);
+
+  // Fetch human agents from API
+  useEffect(() => {
+    setHumanAgentsLoading(true);
+    setHumanAgentsError(null);
+    HumanAgentsService.getHumanAgents()
+      .then((data: HumanAgent[]) => setHumanAgents(data))
+      .catch((err) => {
+        setHumanAgentsError(err.message || "Failed to fetch human agents");
+        setHumanAgents([]);
+      })
+      .finally(() => setHumanAgentsLoading(false));
   }, []);
 
   // Toast notification state
@@ -223,7 +240,8 @@ export default function ConnectedPlatformsPage() {
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
-            platformMappings: item.platform_mappings || []
+            platformMappings: item.platform_mappings || [],
+            humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
           };
         });
         setPlatformInboxs(mapped);
@@ -356,7 +374,8 @@ export default function ConnectedPlatformsPage() {
           aiAgent: activeMapping?.agent_name || undefined,
           teams: activeMapping ? [activeMapping.agent_type] : undefined,
           pipeline: item.id_pipeline || undefined,
-          platformMappings: item.platform_mappings || []
+          platformMappings: item.platform_mappings || [],
+          humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
         };
         // Log if this is the platform we just updated
         if (item.id === currentPlatform.id) {
@@ -496,7 +515,7 @@ export default function ConnectedPlatformsPage() {
     setToast: (toast: any) => void;
     aiAgents: AIAgent[];
     pipelines: PipelineListResponse[];
-    humanAgents: any[];
+    humanAgents: HumanAgent[];
     agentsLoading: boolean;
     pipelinesLoading: boolean;
     humanAgentsLoading: boolean;
@@ -699,41 +718,46 @@ export default function ConnectedPlatformsPage() {
                   <Label className="text-sm font-medium text-foreground">
                     Human Agent
                   </Label>
-                  <Select
-                    value={platform.humanAgent}
-                    onValueChange={(value) =>
-                      updateSelectedPlatform({ humanAgent: value })
-                    }
-                    disabled={humanAgentsLoading}
-                  >
-                    <SelectTrigger className="text-sm">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-green-600" />
-                        <SelectValue
-                          placeholder={
-                            humanAgentsLoading
-                              ? "Loading human agents..."
-                              : "Select human agent"
-                          }
-                        />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left"
+                      >
+                        {platform.humanAgentsSelected && platform.humanAgentsSelected.length > 0
+                          ? humanAgents
+                              .filter((agent) => platform.humanAgentsSelected.includes(agent.id))
+                              .map((agent) => agent.name)
+                              .join(", ")
+                          : "Select human agents"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-2">
+                      <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                        {humanAgents.map((agent) => (
+                          <label key={agent.id} className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={platform.humanAgentsSelected?.includes(agent.id) || false}
+                              onCheckedChange={(checked) => {
+                                let updated: string[] = platform.humanAgentsSelected ? [...platform.humanAgentsSelected] : [];
+                                if (checked) {
+                                  if (!updated.includes(agent.id)) updated.push(agent.id);
+                                } else {
+                                  updated = updated.filter((id) => id !== agent.id);
+                                }
+                                updateSelectedPlatform({ humanAgentsSelected: updated });
+                              }}
+                              id={`human-agent-checkbox-${agent.id}`}
+                            />
+                            <span className="text-sm">{agent.name}</span>
+                          </label>
+                        ))}
+                        {humanAgents.length === 0 && !humanAgentsLoading && (
+                          <span className="text-muted-foreground text-sm">No human agents available</span>
+                        )}
                       </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* {humanAgents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.name}>
-                          {agent.name}
-                        </SelectItem>
-                      ))} */}
-                      {/* {humanAgents.length === 0 && !humanAgentsLoading && (
-                        <SelectItem value="no-human-agents" disabled>
-                          No human agents available
-                        </SelectItem>
-                      )} */}
-                      <SelectItem value="no-human-agents" disabled>
-                          No human agents available
-                        </SelectItem>
-                    </SelectContent>
-                  </Select>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Chat Distribution Method */}
@@ -1242,45 +1266,46 @@ export default function ConnectedPlatformsPage() {
                           <Label className="text-sm font-medium text-foreground">
                             Human Agent
                           </Label>
-                          <Select
-                            value={selectedPlatform.humanAgent}
-                            onValueChange={(value) =>
-                              updateSelectedPlatform({ humanAgent: value })
-                            }
-                            disabled={humanAgentsLoading}
-                          >
-                            <SelectTrigger className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-green-600" />
-                                <SelectValue
-                                  placeholder={
-                                    humanAgentsLoading
-                                      ? "Loading human agents..."
-                                      : "Select human agent"
-                                  }
-                                />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-between text-left"
+                              >
+                                {selectedPlatform.humanAgentsSelected && selectedPlatform.humanAgentsSelected.length > 0
+                                  ? humanAgents
+                                      .filter((agent) => selectedPlatform.humanAgentsSelected.includes(agent.id))
+                                      .map((agent) => agent.name)
+                                      .join(", ")
+                                  : "Select human agents"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-72 p-2">
+                              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                                {humanAgents.map((agent) => (
+                                  <label key={agent.id} className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      checked={selectedPlatform.humanAgentsSelected?.includes(agent.id) || false}
+                                      onCheckedChange={(checked) => {
+                                        let updated: string[] = selectedPlatform.humanAgentsSelected ? [...selectedPlatform.humanAgentsSelected] : [];
+                                        if (checked) {
+                                          if (!updated.includes(agent.id)) updated.push(agent.id);
+                                        } else {
+                                          updated = updated.filter((id) => id !== agent.id);
+                                        }
+                                        updateSelectedPlatform({ humanAgentsSelected: updated });
+                                      }}
+                                      id={`human-agent-checkbox-${agent.id}`}
+                                    />
+                                    <span className="text-sm">{agent.name}</span>
+                                  </label>
+                                ))}
+                                {humanAgents.length === 0 && !humanAgentsLoading && (
+                                  <span className="text-muted-foreground text-sm">No human agents available</span>
+                                )}
                               </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {/* {humanAgents.map((agent) => (
-                                <SelectItem key={agent.id} value={agent.name}>
-                                  <div className="flex items-center gap-2">
-                                    {agent.name}
-                                  </div>
-                                </SelectItem>
-                              ))} */}
-                              {/* {humanAgents.length === 0 &&
-                                !humanAgentsLoading && (
-                                  <SelectItem value="no-human-agents" disabled>
-                                    No human agents available (Count:{" "}
-                                    {humanAgents.length})
-                                  </SelectItem>
-                                )} */}
-                                <SelectItem value="no-human-agents" disabled>
-                                    Belum ada human agent
-                                  </SelectItem>
-                            </SelectContent>
-                          </Select>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         {/* Teams */}
                         <div className="space-y-2">

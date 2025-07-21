@@ -125,5 +125,25 @@ export const platformsInboxService = {
       console.error('Error response:', err.response?.data);
       throw new Error(err.response?.data?.message || err.message || 'Failed to map pipeline to platform');
     }
+  },
+
+  /**
+   * Mapping Human Agent ke Platform
+   */
+  async mapHumanAgentToPlatform(id_agent: string, id_platform: string) {
+    try {
+      const response = await axiosInstance.post('/v1/platform_mappings', {
+        id_agent,
+        id_platform,
+        agent_type: 'HUMAN',
+      });
+      console.log('Mapping Human Agent to Platform:', { id_agent, id_platform, agent_type: 'HUMAN' }, response.data);
+      return response.data;
+    } catch (error) {
+      const err = error as any;
+      console.error('Error mapping human agent to platform:', err);
+      console.error('Error response:', err.response?.data);
+      throw new Error(err.response?.data?.message || err.message || 'Failed to map human agent to platform');
+    }
   }
 };
