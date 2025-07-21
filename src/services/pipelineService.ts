@@ -1,4 +1,5 @@
 import axiosInstance from './axios';
+import type { LeadTransferHistoryResponse } from '../types/interface';
 
 export interface CreatePipelineRequest {
   name: string;
@@ -31,6 +32,8 @@ export interface PipelineListApiResponse {
 }
 
 export class PipelineService {
+
+  // pipeline service start
   /**
    * Create a new pipeline
    */
@@ -140,6 +143,7 @@ export class PipelineService {
     }
   }
 
+  // pipeline service end
   /**
    * Create a new stage in a pipeline
    */
@@ -309,6 +313,43 @@ export class PipelineService {
         throw new Error(error.message);
       } else {
         throw new Error('Failed to fetch leads by stage. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Get all lead transfer history
+   */
+  static async getLeadTransferHistory(): Promise<any[]> {
+    try {
+      const response = await axiosInstance.get('/v1/lead-transfer-history');
+      // Assuming the response is an array or has an items array
+      return response.data.items || response.data || [];
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch lead transfer history. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Get lead transfer history by lead ID
+   */
+  static async getLeadTransferHistoryByLeadId(leadId: string): Promise<LeadTransferHistoryResponse> {
+    try {
+      const response = await axiosInstance.get(`/v1/lead-transfer-history/lead/${leadId}`);
+      return response.data as LeadTransferHistoryResponse;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Failed to fetch lead transfer history by lead ID. Please try again.');
       }
     }
   }

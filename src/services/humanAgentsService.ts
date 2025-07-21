@@ -179,7 +179,7 @@ export class HumanAgentsService {
    */ static async getHumanAgent(id: string): Promise<HumanAgent> {
     try {
       const response = await axiosInstance.get<ApiSuccessResponse<HumanAgent>>(
-        `/tenant/human-agents/${id}`
+        `/v1/agents/human/${id}`
       );
       return response.data.data || response.data;
     } catch (error: any) {

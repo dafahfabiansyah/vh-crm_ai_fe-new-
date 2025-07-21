@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { ArrowLeft, Plus, TrendingUp, Users, Trash } from "lucide-react";
+import { ArrowLeft, Plus, TrendingUp, Users, Trash, Bot, User } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
 import { PipelineStageColumn } from "@/components/pipeline-stage";
@@ -33,6 +33,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { ContactsService } from "@/services/contactsService";
+import type { LeadTransferHistoryItem, LeadTransferHistoryResponse } from "@/types/interface";
+import { HumanAgentsService } from "@/services/humanAgentsService";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -61,9 +63,15 @@ const PipelinePage = () => {
   );
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [contacts, setContacts] = useState<any[]>([]);
+  const [leadTransferHistory, setLeadTransferHistory] = useState<LeadTransferHistoryItem[]>([]);
+  const [agentNames, setAgentNames] = useState<{ [id: string]: string }>({});
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const handleLeadClick = (lead: any) => {
     setSelectedContactId(lead.id_contact);
+    setSelectedLeadId(lead.id); // <-- simpan lead id
     // Cari contact yang id-nya sama dengan lead.id_contact
     const contact = contacts.find((c: any) => c.id === lead.id_contact);
     if (contact) {
@@ -253,6 +261,7 @@ const PipelinePage = () => {
   // Refactor: extract fetchPipelineData so it can be called from anywhere
   const fetchPipelineData = useCallback(async () => {
     if (!pipelineId) {
+      console.log("No pipeline ID provided");
       return;
     }
     setIsLoading(true);
@@ -262,14 +271,49 @@ const PipelinePage = () => {
       const pipeline = await PipelineService.getPipelineById(pipelineId);
       setPipelineInfo(pipeline);
 
-      // Fetch stages dari backend
-      const stages = await PipelineService.getStages({
-        id_pipeline: pipelineId,
-      });
+      // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
+      let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+      stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
 
-      // Untuk setiap stage, fetch leads-nya
-      const stageLeadsPromises = stages.map(async (stage: any, idx: number) => {
-        const leads = await PipelineService.getLeadsByStageId(stage.id);
+      // Fetch leads per stage, filter manual juga
+      const leadsByStage = {} as Record<string, any[]>;
+      const stageLeadsResults = await Promise.all(
+        stages.map((stage: any) =>
+          PipelineService.getLeadsByStageId
+            ? PipelineService.getLeadsByStageId(stage.id).then((leads: any[]) => {
+                // Filter leads yang id_pipeline-nya sama
+                const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
+                return { stageId: stage.id, leads: filteredLeads };
+              })
+            : PipelineService.getLeads({ id_stage: stage.id }).then((leads: any[]) => {
+                // Filter leads yang id_pipeline-nya sama
+                const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
+                return { stageId: stage.id, leads: filteredLeads };
+              })
+        )
+      );
+      stageLeadsResults.forEach(({ stageId, leads }: { stageId: string; leads: any[] }) => {
+        leadsByStage[stageId] = leads.map((lead: any) => ({
+          id: lead.id,
+          name: lead.name,
+          phone: lead.phone || "",
+          value: lead.potential_value || 0,
+          source: lead.moved_by || "unknown",
+          daysAgo: 0,
+          status: lead.status || "unknown",
+          email: lead.email || "",
+          company: lead.company || "",
+          location: lead.location || "",
+          notes: lead.notes || "",
+          createdAt: lead.created_at,
+          lastActivity: lead.updated_at,
+          timeline: lead.timeline || [],
+          id_contact: lead.id_contact,
+        }));
+      });
+      // Mapping ke struktur PipelineStage
+      const mappedStagesFinal = stages.map((stage: any, idx: number) => {
+        const stageLeads = leadsByStage[stage.id] || [];
         return {
           id: stage.id,
           name: stage.name,
@@ -282,18 +326,14 @@ const PipelinePage = () => {
             "bg-purple-100 text-purple-800",
             "bg-red-100 text-red-800",
           ][idx % 6],
-          leads: leads,
-          count: leads.length,
-          value: leads.reduce(
-            (sum: number, l: any) => sum + (l.potential_value || 0),
-            0
-          ),
+          leads: stageLeads,
+          count: stageLeads.length,
+          value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
           stage_order: stage.stage_order ?? idx,
           agent_id: stage.id_agent || undefined,
         };
       });
-      const mappedStages = await Promise.all(stageLeadsPromises);
-      setPipelineData(mappedStages);
+      setPipelineData(mappedStagesFinal);
     } catch (error: any) {
       console.error("Error fetching pipeline:", error);
       setError(error.message || "Failed to load pipeline");
@@ -347,6 +387,68 @@ const PipelinePage = () => {
         .catch(() => setAiAgents([]));
     });
   }, []);
+
+  useEffect(() => {
+    if (!selectedLeadId) {
+      setLeadTransferHistory([]);
+      setHistoryError(null);
+      return;
+    }
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+    PipelineService.getLeadTransferHistoryByLeadId(selectedLeadId)
+      .then((res: LeadTransferHistoryResponse) => {
+        setLeadTransferHistory(res.items || []);
+      })
+      .catch((err: any) => {
+        setHistoryError(err.message || "Gagal memuat riwayat transfer lead");
+        setLeadTransferHistory([]);
+      })
+      .finally(() => setIsLoadingHistory(false));
+  }, [selectedLeadId]);
+
+  const fetchAgentName = async (agentId: string) => {
+    if (!agentId || agentNames[agentId]) return;
+    try {
+      const agent = await HumanAgentsService.getHumanAgent(agentId);
+      setAgentNames((prev) => ({ ...prev, [agentId]: agent.name || agent.identifier || agentId }));
+    } catch {
+      setAgentNames((prev) => ({ ...prev, [agentId]: agentId }));
+    }
+  };
+
+  function LeadTransferTimeline({ history }: { history: LeadTransferHistoryItem[] }) {
+    return (
+      <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
+        {history
+          .slice()
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .map((item) => {
+            if (item.moved_by_agent_id && !agentNames[item.moved_by_agent_id]) {
+              fetchAgentName(item.moved_by_agent_id);
+            }
+            return (
+              <li className="mb-6 ml-4" key={item.id}>
+                <div className="absolute w-3 h-3 bg-emerald-200 border-2 border-emerald-500 rounded-full -left-1.5 mt-1.5"></div>
+                <div className="text-xs text-gray-500 mb-1">{new Date(item.created_at).toLocaleString()}</div>
+                <div className="text-sm font-medium text-gray-900 mb-1">
+                  {item.from_stage_name} ➔ {item.to_stage_name}
+                </div>
+                <div className="text-xs text-gray-700 mb-1">
+                  Pipeline: {item.from_pipeline_name} ➔ {item.to_pipeline_name}
+                </div>
+                <div className="text-xs text-gray-700 mb-1">
+                  Agent: {item.from_agent_name} ➔ {item.to_agent_name}
+                </div>
+                <div className="text-xs text-gray-700">
+                  Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${agentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
+                </div>
+              </li>
+            );
+          })}
+      </ol>
+    );
+  }
 
   const handleOpenAddStage = () => {
     setStageName("");
@@ -551,6 +653,7 @@ const PipelinePage = () => {
               if (!open) {
                 setSelectedContactId(null);
                 setSelectedContact(null);
+                setSelectedLeadId(null); // reset lead id juga
               }
             }}
             direction="right"
@@ -567,11 +670,36 @@ const PipelinePage = () => {
                       <div className="mb-2 text-sm text-muted-foreground">
                         Status: {selectedContact.lead_status}
                       </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        Moved by: {selectedContact.moved_by}
+
+                      {/* Timeline Lead Transfer History */}
+                      <div className="mt-6">
+                        <h3 className="font-semibold text-base mb-2">
+                          Riwayat Transfer Lead
+                        </h3>
+                        {isLoadingHistory ? (
+                          <div className="text-xs text-gray-400">
+                            Memuat riwayat...
+                          </div>
+                        ) : historyError ? (
+                          <div className="text-xs text-red-500">
+                            {historyError}
+                          </div>
+                        ) : leadTransferHistory.length === 0 ? (
+                          <div className="text-xs text-gray-400">
+                            Belum ada riwayat transfer.
+                          </div>
+                        ) : (
+                          <LeadTransferTimeline history={leadTransferHistory} />
+                        )}
                       </div>
-                      {/* Tambahkan info lain sesuai kebutuhan */}
-                      {/* <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div> */}
+                      {selectedContact && selectedContact.notes && (
+                        <div className="space-y-2 mt-4">
+                          <h3 className="font-semibold text-gray-900">Notes</h3>
+                          <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                            {selectedContact.notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -617,24 +745,24 @@ const PipelinePage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="stage-agent">Pilih Agent</Label>
-                  <Select
-                    value={selectedAgent}
-                    onValueChange={setSelectedAgent}
-                    disabled={isSubmittingStage || agents.length === 0}
-                  >
+                  <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
                     <SelectTrigger className="w-full" id="stage-agent">
-                      <SelectValue
-                        placeholder={
-                          agents.length === 0
-                            ? "Memuat agent..."
-                            : "Pilih agent"
-                        }
-                      />
+                      <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {agents.map((agent) => (
+                      {agents.map(agent => (
                         <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name || agent.identifier} ({agent.agent_type})
+                          <div className="flex items-center gap-2">
+                            {agent.agent_type === "AI" ? (
+                              <Bot className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <User className="h-4 w-4 text-blue-600" />
+                            )}
+                            <span>{agent.name}</span>
+                            <span className="text-xs text-gray-500 ml-auto">
+                              {agent.agent_type === "AI" ? "AI" : "Human"}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

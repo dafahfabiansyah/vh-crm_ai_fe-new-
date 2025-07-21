@@ -251,3 +251,32 @@ export interface CategoryFormData {
   description: string;
   attributes: CategoryAttribute[];
 }
+
+export interface LeadTransferHistoryItem {
+  id: string;
+  lead_id: string;
+  lead_name: string;
+  from_stage_id: string;
+  from_stage_name: string;
+  to_stage_id: string;
+  to_stage_name: string;
+  from_pipeline_id: string;
+  from_pipeline_name: string;
+  to_pipeline_id: string;
+  to_pipeline_name: string;
+  from_agent_id: string;
+  from_agent_name: string;
+  to_agent_id: string;
+  to_agent_name: string;
+  moved_by: string;
+  moved_by_agent_id: string;
+  created_at: string;
+}
+
+export interface LeadTransferHistoryResponse {
+  page: number;
+  per_page: number;
+  page_count: number;
+  total_count: number;
+  items: LeadTransferHistoryItem[];
+}
