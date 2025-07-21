@@ -280,7 +280,7 @@ export class PipelineService {
    */
   static async getLeadsByPipeline(pipelineId: string): Promise<any[]> {
     try {
-      const response = await axiosInstance.get(`v1/leads/pipeline/${pipelineId}`);
+      const response = await axiosInstance.get(`/v1/leads/pipeline/${pipelineId}`);
       console.log('Leads by pipeline:', response.data);
       return response.data.items || [];
     } catch (error: any) {
