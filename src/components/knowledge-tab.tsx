@@ -335,7 +335,7 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                     websiteName,
                     websiteDescription,
                     websiteUrl,
-                    'batch', // scrape_type
+                    websiteTab, // scrape_type
                     30 // max_links
                   );
                   setWebsiteSuccess(true);

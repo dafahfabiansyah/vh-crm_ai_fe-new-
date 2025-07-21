@@ -303,7 +303,7 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="text-xs sm:text-sm font-medium text-indigo-100">
-                      Additional AI Responses
+                      Token Tumbuhin AI Responses
                     </CardTitle>
                     <h2 className="text-lg sm:text-xl font-bold mt-1">
                       {dashboardData.additionalResponses.count} Responses
@@ -795,7 +795,7 @@ export default function BillingPage() {
                   <p className="text-foreground mb-2">
                     Masukkan jumlah MAU tambahan yang ingin Anda beli.
                   </p>
-                  <Input placeholder="Jumlah MAU" type="number" min={1} />
+                  <Input placeholder="Jumlah MAU" type="number" min={1000} step={1000}  />
                 </div>
               )}
               {topUpType === "responses" && (
@@ -803,7 +803,7 @@ export default function BillingPage() {
                   <p className="text-foreground mb-2">
                     Masukkan jumlah AI Responses tambahan yang ingin Anda beli.
                   </p>
-                  <Input placeholder="Jumlah Responses" type="number" min={1} />
+                  <Input placeholder="Jumlah Responses" type="number" min={5000} step={5000}  />
                 </div>
               )}
               <div className="flex gap-3">
