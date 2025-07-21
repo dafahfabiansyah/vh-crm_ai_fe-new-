@@ -72,6 +72,14 @@ button:focus-visible {
   }
 } */
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* Paksa tidak bisa scroll di body/html */
+}
+#root {
+  height: 100%;
+}
+
 @theme inline {
 
   --radius-sm: calc(var(--radius) - 4px);

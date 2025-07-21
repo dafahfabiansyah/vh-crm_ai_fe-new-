@@ -65,6 +65,7 @@ const PipelinePage = () => {
   const [contacts, setContacts] = useState<any[]>([]);
   const [leadTransferHistory, setLeadTransferHistory] = useState<LeadTransferHistoryItem[]>([]);
   const [agentNames, setAgentNames] = useState<{ [id: string]: string }>({});
+  const [humanAgentNames, setHumanAgentNames] = useState<{ [id: string]: string }>({});
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -381,6 +382,23 @@ const PipelinePage = () => {
     });
   }, []);
 
+  // Fetch all human agents for mapping id to name
+  useEffect(() => {
+    import("@/services/axios").then((axiosInstanceModule) => {
+      const axiosInstance = axiosInstanceModule.default;
+      axiosInstance.get("/v1/agents/human")
+        .then((response) => {
+          const items = response.data?.items || [];
+          const mapping: { [id: string]: string } = {};
+          items.forEach((agent: any) => {
+            mapping[agent.id] = agent.user?.name || agent.identifier || agent.id;
+          });
+          setHumanAgentNames(mapping);
+        })
+        .catch(() => setHumanAgentNames({}));
+    });
+  }, []);
+
   useEffect(() => {
     if (!selectedLeadId) {
       setLeadTransferHistory([]);
@@ -434,7 +452,7 @@ const PipelinePage = () => {
                   Agent: {item.from_agent_name} ➔ {item.to_agent_name}
                 </div>
                 <div className="text-xs text-gray-700">
-                  Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${agentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
+                  Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${humanAgentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
                 </div>
               </li>
             );

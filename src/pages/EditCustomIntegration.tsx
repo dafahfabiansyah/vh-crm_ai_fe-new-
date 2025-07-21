@@ -96,7 +96,7 @@ const EditCustomIntegration = () => {
               is_required: boolean;
             }) => ({
               field_name: field.field_name,
-              field_type: field.field_type as any,
+              field_type: field.field_type,
               description: field.description,
               enum_values: field.enum_values,
               is_required: field.is_required,
@@ -215,126 +215,117 @@ const EditCustomIntegration = () => {
             Back to Details
           </Button>
         </div>
-
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Edit Integration
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Update your custom integration settings
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content (Form) */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Integration Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Enter integration name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      handleInputChange("description", e.target.value)
-                    }
-                    placeholder="Enter description"
-                    required
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* Webhook Configuration */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Webhook Configuration
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="webhook_url">Webhook URL</Label>
-                  <Input
-                    id="webhook_url"
-                    value={formData.webhook_url}
-                    onChange={(e) =>
-                      handleInputChange("webhook_url", e.target.value)
-                    }
-                    placeholder="https://example.com/webhook"
-                    required
-                  />
-                </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="http_method">HTTP Method</Label>
-                    <Select
-                      value={formData.http_method}
-                      onValueChange={(value) =>
-                        handleInputChange("http_method", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="POST">POST</SelectItem>
-                        <SelectItem value="GET">GET</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="name">Integration Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      placeholder="Enter integration name"
+                      required
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="max_tool_calls">Max Tool Calls</Label>
-                    <Input
-                      id="max_tool_calls"
-                      type="number"
-                      value={formData.max_tool_calls}
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
                       onChange={(e) =>
-                        handleInputChange(
-                          "max_tool_calls",
-                          parseInt(e.target.value)
-                        )
+                        handleInputChange("description", e.target.value)
                       }
-                      min="1"
+                      placeholder="Enter description"
                       required
                     />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="api_key">API Key</Label>
-                  <Input
-                    id="api_key"
-                    value={formData.api_key}
-                    onChange={(e) =>
-                      handleInputChange("api_key", e.target.value)
-                    }
-                    placeholder="Enter API key"
-                    type="password"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="trigger_condition">Trigger Condition</Label>
-                  <Textarea
-                    id="trigger_condition"
-                    value={formData.trigger_condition}
-                    onChange={(e) =>
-                      handleInputChange("trigger_condition", e.target.value)
-                    }
-                    placeholder="Enter trigger condition"
-                  />
-                </div>
-              </div>
+              </form>
             </Card>
-
+            {/* Webhook Configuration */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Webhook Configuration</h2>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="webhook_url">Webhook URL</Label>
+                    <Input
+                      id="webhook_url"
+                      value={formData.webhook_url}
+                      onChange={(e) =>
+                        handleInputChange("webhook_url", e.target.value)
+                      }
+                      placeholder="https://example.com/webhook"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="http_method">HTTP Method</Label>
+                      <Select
+                        value={formData.http_method}
+                        onValueChange={(value) =>
+                          handleInputChange("http_method", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="POST">POST</SelectItem>
+                          <SelectItem value="GET">GET</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="max_tool_calls">Max Tool Calls</Label>
+                      <Input
+                        id="max_tool_calls"
+                        type="number"
+                        value={formData.max_tool_calls}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "max_tool_calls",
+                            parseInt(e.target.value)
+                          )
+                        }
+                        min="1"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="api_key">API Key</Label>
+                    <Input
+                      id="api_key"
+                      value={formData.api_key}
+                      onChange={(e) =>
+                        handleInputChange("api_key", e.target.value)
+                      }
+                      placeholder="Enter API key"
+                      type="password"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="trigger_condition">Trigger Condition</Label>
+                    <Textarea
+                      id="trigger_condition"
+                      value={formData.trigger_condition}
+                      onChange={(e) =>
+                        handleInputChange("trigger_condition", e.target.value)
+                      }
+                      placeholder="Enter trigger condition"
+                    />
+                  </div>
+                </div>
+              </form>
+            </Card>
             {/* Fields Configuration */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -349,128 +340,167 @@ const EditCustomIntegration = () => {
                   Add Field
                 </Button>
               </div>
-              <div className="space-y-4">
-                {formData.fields.map((field, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium">Field {index + 1}</h3>
-                      <Button
-                        type="button"
-                        onClick={() => removeField(index)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Field Name</Label>
-                        <Input
-                          value={field.field_name}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  {formData.fields.map((field, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-medium">Field {index + 1}</h3>
+                        <Button
+                          type="button"
+                          onClick={() => removeField(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Field Name</Label>
+                          <Input
+                            value={field.field_name}
+                            onChange={(e) =>
+                              handleFieldChange(
+                                index,
+                                "field_name",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter field name"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Field Type</Label>
+                          <Select
+                            value={field.field_type}
+                            onValueChange={(value) =>
+                              handleFieldChange(index, "field_type", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Text</SelectItem>
+                              <SelectItem value="number">Number</SelectItem>
+                              <SelectItem value="boolean">Boolean</SelectItem>
+                              <SelectItem value="email">Email</SelectItem>
+                              <SelectItem value="url">URL</SelectItem>
+                              <SelectItem value="date">Date</SelectItem>
+                              <SelectItem value="enum">Enum</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={field.description}
                           onChange={(e) =>
                             handleFieldChange(
                               index,
-                              "field_name",
+                              "description",
                               e.target.value
                             )
                           }
-                          placeholder="Enter field name"
+                          placeholder="Enter field description"
                           required
                         />
                       </div>
-                      <div>
-                        <Label>Field Type</Label>
-                        <Select
-                          value={field.field_type}
-                          onValueChange={(value) =>
-                            handleFieldChange(index, "field_type", value)
+                      {field.field_type === "enum" && (
+                        <div className="mt-4">
+                          <Label>Enum Values (comma-separated)</Label>
+                          <Textarea
+                            value={field.enum_values}
+                            onChange={(e) =>
+                              handleFieldChange(
+                                index,
+                                "enum_values",
+                                e.target.value
+                              )
+                            }
+                            placeholder="value1,value2,value3"
+                          />
+                        </div>
+                      )}
+                      <div className="mt-4 flex items-center space-x-2">
+                        <Switch
+                          id={`required-${index}`}
+                          checked={field.is_required}
+                          onCheckedChange={(checked) =>
+                            handleFieldChange(index, "is_required", checked)
                           }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Text</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="boolean">Boolean</SelectItem>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="url">URL</SelectItem>
-                            <SelectItem value="date">Date</SelectItem>
-                            <SelectItem value="enum">Enum</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={field.description}
-                        onChange={(e) =>
-                          handleFieldChange(
-                            index,
-                            "description",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Enter field description"
-                        required
-                      />
-                    </div>
-                    {field.field_type === "enum" && (
-                      <div className="mt-4">
-                        <Label>Enum Values (comma-separated)</Label>
-                        <Textarea
-                          value={field.enum_values}
-                          onChange={(e) =>
-                            handleFieldChange(
-                              index,
-                              "enum_values",
-                              e.target.value
-                            )
-                          }
-                          placeholder="value1,value2,value3"
                         />
+                        <Label htmlFor={`required-${index}`}>
+                          Required field
+                        </Label>
                       </div>
-                    )}
-                    <div className="mt-4 flex items-center space-x-2">
-                      <Switch
-                        id={`required-${index}`}
-                        checked={field.is_required}
-                        onCheckedChange={(checked) =>
-                          handleFieldChange(index, "is_required", checked)
-                        }
-                      />
-                      <Label htmlFor={`required-${index}`}>
-                        Required field
-                      </Label>
                     </div>
+                  ))}
+                  {formData.fields.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No fields configured. Click "Add Field" to get started.
+                    </div>
+                  )}
+                </div>
+              </form>
+            </Card>
+          </div>
+          {/* Sidebar (Info & Actions) */}
+          <div className="space-y-6">
+            {/* Integration Info */}
+            {integration && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Integration Info</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Integration ID</label>
+                    <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded mt-1 font-mono break-all">
+                      {integration.id}
+                    </p>
                   </div>
-                ))}
-                {formData.fields.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No fields configured. Click "Add Field" to get started.
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Created</label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {new Date(integration.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                )}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Last Updated</label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {new Date(integration.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+            {/* Actions */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Actions</h3>
+              <div className="space-y-3">
+                <Button
+                  className="w-full"
+                  type="submit"
+                  onClick={handleSubmit}
+                  disabled={saving}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  type="button"
+                  onClick={() => navigate(`/integration/api/${id}`)}
+                >
+                  Cancel
+                </Button>
               </div>
             </Card>
-
-            {/* Submit Buttons */}
-            <div className="flex items-center justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(`/integration/api/${id}`)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </MainLayout>

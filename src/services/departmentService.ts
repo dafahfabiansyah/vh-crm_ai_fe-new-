@@ -6,7 +6,7 @@ export const DepartmentService = {
    * @param {Object} data - Department data { name: string, description: string }
    * @returns {Promise<any>} - The created department response
    */
-  async createDepartment(data: { name: string; description: string }) {
+  async createDepartment(data: { name: string; description: string ; head_id : string }) {
     const response = await axiosInstance.post('/v1/departments', data);
     return response.data;
   },

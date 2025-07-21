@@ -123,7 +123,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
 
   const [customIntegrations, setCustomIntegrations] = useState<any[]>([]);
   const [customIntegrationsLoading, setCustomIntegrationsLoading] = useState(false);
-  const [customIntegrationsError, setCustomIntegrationsError] = useState<string | null>(null);
+  const [, setCustomIntegrationsError] = useState<string | null>(null);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [activateIntegration, setActivateIntegration] = useState<any>(null);
   const [activateLoading, setActivateLoading] = useState(false);
@@ -772,7 +772,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       </div>
                       {/* Section 2: Custom Integration */}
                       <div>
-                        <h2 className="text-lg font-semibold mb-4">Custom Integration</h2>
+                        {/* <h2 className="text-lg font-semibold mb-4">Custom Integration</h2>
                         <div className="w-full max-w-sm mb-6">
                           <Card>
                             <CardHeader className="flex flex-row items-center gap-3 pb-2">
@@ -791,19 +791,33 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                 className="w-full" variant="outline">Aktifkan</Button>
                             </CardFooter>
                           </Card>
-                        </div>
+                        </div> */}
                         {/* List Custom Integrations */}
-                        <div className="w-full max-w-2xl">
-                          <h3 className="text-base font-semibold mb-2">Daftar Custom Integration</h3>
+                        <div className="w-full max-w-sm">
+                          <h3 className="text-lg font-semibold mb-4">List Custom Integrations</h3>
                           {customIntegrationsLoading ? (
                             <div className="flex items-center gap-2 text-muted-foreground py-4">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>Loading custom integrations...</span>
                             </div>
-                          ) : customIntegrationsError ? (
-                            <div className="text-red-600 text-sm mb-2">{customIntegrationsError}</div>
-                          ) : customIntegrations.length === 0 ? (
-                            <div className="text-muted-foreground py-4">Belum ada custom integration.</div>
+                          )  : customIntegrations.length === 0 ? (
+                            <Card>
+                            <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                              <div className="p-3 bg-blue-100 rounded-lg">
+                                <Webhook className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <CardTitle className="text-lg">API Integration</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <CardDescription>
+                                Integrasi dengan API eksternal untuk memperluas kemampuan AI Agent Anda
+                              </CardDescription>
+                            </CardContent>
+                            <CardFooter>
+                              <Button onClick={() => navigate("/integration/api")}
+                                className="w-full" variant="outline">Aktifkan</Button>
+                            </CardFooter>
+                          </Card>
                           ) : (
                             <div className="space-y-3">
                               {customIntegrations.map((integration: any) => (

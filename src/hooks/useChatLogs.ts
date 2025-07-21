@@ -12,6 +12,11 @@ export const useChatLogs = (contactId: string | null) => {
   const handleChatlogUpdate = useCallback((message: ChatlogUpdateMessage) => {
     const messageData = message.data;
 
+    // Only update if the message is for the current contactId
+    if (!contactId || messageData.contact_id !== contactId) {
+      return;
+    }
+
     // Transform WebSocket message data to ChatLog format
     const newChatLog: ChatLog = {
       id: messageData.id,
@@ -37,7 +42,7 @@ export const useChatLogs = (contactId: string | null) => {
         return [...prevChatLogs, newChatLog];
       }
     });
-  }, []);
+  }, [contactId]);
 
   // Initialize WebSocket connection
   const { subscribeToContact, unsubscribeFromContact } = useWebSocket({
