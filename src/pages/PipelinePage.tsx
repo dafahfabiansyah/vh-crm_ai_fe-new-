@@ -9,14 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
 } from "@/components/ui/drawer";
 import {
   ArrowLeft,
   Plus,
   TrendingUp,
   Users,
+  Phone,
+  MoreHorizontal,
+  Clock,
+  User,
+  MessageCircle,
+  Mail,
+  MapPin,
   Trash,
+  Bot,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
@@ -24,13 +37,10 @@ import { PipelineStageColumn } from "@/components/pipeline-stage";
 import PipelineService, {
   type PipelineListResponse,
 } from "@/services/pipelineService";
-
-import ChatConversation from "@/components/chat-conversation";
-import { Dialog, DialogContent, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ContactsService } from "@/services/contactsService";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -38,7 +48,8 @@ const PipelinePage = () => {
   const pipelineId = searchParams.get("id");
 
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([]);
-  const [, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pipelineInfo, setPipelineInfo] = useState<PipelineListResponse | null>(
@@ -49,39 +60,16 @@ const PipelinePage = () => {
   const [isAddStageOpen, setIsAddStageOpen] = useState(false);
   const [stageName, setStageName] = useState("");
   const [stageDescription, setStageDescription] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState("");
+  const [selectedAgent, setSelectedAgent] = useState<string>("");
   const [agents, setAgents] = useState<any[]>([]);
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
   const [, setAiAgents] = useState<any[]>([]);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
-  const [contacts, setContacts] = useState<any[]>([]);
 
-  const handleLeadClick = (lead: any) => {
-    setSelectedContactId(lead.id_contact);
-    // Cari contact yang id-nya sama dengan lead.id_contact
-    const contact = contacts.find((c: any) => c.id === lead.id_contact);
-    if (contact) {
-      setSelectedContact(contact);
-    } else {
-      setSelectedContact({
-        push_name: lead.name || 'Unknown',
-        contact_identifier: '-', // fallback
-        lead_status: lead.status || 'unassigned',
-      });
-      alert('Contact untuk lead ini tidak ditemukan!');
-    }
+  const handleLeadClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsDrawerOpen(true);
   };
-
-  useEffect(() => {
-    // console.log('selectedContactId:', selectedContactId, 'selectedContact:', selectedContact);
-  }, [selectedContactId, selectedContact]);
-
-  useEffect(() => {
-    // Fetch all contacts once
-    ContactsService.getContacts().then((res: any) => setContacts(res.items));
-  }, []);
 
   const handleDropLead = useCallback(
     async (leadId: string, targetStageId: string) => {
@@ -104,7 +92,7 @@ const PipelinePage = () => {
         // Add to target stage
         if (leadToMove) {
           // Update moved_by/source to 'human' di state lokal
-          const updatedLead = { ...leadToMove, source: "human" };
+          const updatedLead = { ...leadToMove, source: 'human' };
           const targetStage = newData.find(
             (stage) => stage.id === targetStageId
           );
@@ -119,18 +107,16 @@ const PipelinePage = () => {
       // PATCH ke backend
       try {
         // Cari agent_id dari stage tujuan
-        const targetStage = pipelineData.find(
-          (stage) => stage.id === targetStageId
-        );
+        const targetStage = pipelineData.find((stage) => stage.id === targetStageId);
         const assigned_to = targetStage?.agent_id || null;
         await PipelineService.moveLeadCard(leadId, {
           id_stage: targetStageId,
-          moved_by: "Human",
+          moved_by: 'Human',
           assigned_to: assigned_to,
         });
       } catch (err) {
         // TODO: tampilkan error jika perlu
-        console.error("Failed to move lead card:", err);
+        console.error('Failed to move lead card:', err);
       }
     },
     [pipelineData]
@@ -156,36 +142,33 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback(
-    async (stageId: string, newName: string, newDescription?: string) => {
-      setPipelineData((prev) => {
-        const newData = [...prev];
-        const stageIndex = newData.findIndex((stage) => stage.id === stageId);
-        if (stageIndex >= 0) {
-          newData[stageIndex] = {
-            ...newData[stageIndex],
-            name: newName,
-            description: newDescription ?? newData[stageIndex].description,
-          };
-        }
-        return newData;
-      });
-      // Update ke backend
-      const stage = pipelineData.find((s) => s.id === stageId);
-      if (stage) {
-        try {
-          await PipelineService.updateStage(stageId, {
-            name: newName,
-            description: stage.description ?? "",
-            stage_order: stage.stage_order ?? 0,
-          });
-        } catch (err) {
-          // TODO: tampilkan error jika perlu
-        }
+  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string) => {
+    setPipelineData((prev) => {
+      const newData = [...prev];
+      const stageIndex = newData.findIndex((stage) => stage.id === stageId);
+      if (stageIndex >= 0) {
+        newData[stageIndex] = {
+          ...newData[stageIndex],
+          name: newName,
+          description: newDescription ?? newData[stageIndex].description,
+        };
       }
-    },
-    [pipelineData]
-  );
+      return newData;
+    });
+    // Update ke backend
+    const stage = pipelineData.find((s) => s.id === stageId);
+    if (stage) {
+      try {
+        await PipelineService.updateStage(stageId, {
+          name: newName,
+          description:  stage.description ?? "",
+          stage_order: stage.stage_order ?? 0,
+        });
+      } catch (err) {
+        // TODO: tampilkan error jika perlu
+      }
+    }
+  }, [pipelineData]);
 
   const handleDeletePipeline = async () => {
     if (!pipelineId || !pipelineInfo) return;
@@ -200,7 +183,7 @@ const PipelinePage = () => {
 
     try {
       await PipelineService.deletePipeline(pipelineId);
-
+      
       // Redirect to dashboard after successful deletion
       navigate("/dashboard");
     } catch (error: any) {
@@ -216,9 +199,7 @@ const PipelinePage = () => {
       await PipelineService.deleteStage(stageId);
       // Refresh stages
       if (pipelineId) {
-        const stages = await PipelineService.getStages({
-          id_pipeline: pipelineId,
-        });
+        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
         const mappedStages = stages.map((stage: any, idx: number) => ({
           id: stage.id,
           name: stage.name,
@@ -249,21 +230,57 @@ const PipelinePage = () => {
   // Refactor: extract fetchPipelineData so it can be called from anywhere
   const fetchPipelineData = useCallback(async () => {
     if (!pipelineId) {
+      console.log("No pipeline ID provided");
       return;
     }
+
     setIsLoading(true);
     setError(null);
+
     try {
       // Fetch pipeline info by ID
-      const pipeline = await PipelineService.getPipelineById(pipelineId);
+      const pipeline = await PipelineService.getPipelineById(
+        pipelineId
+      );
       setPipelineInfo(pipeline);
 
-      // Fetch stages dari backend
-      const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+      // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
+      let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
+      stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
+      console.log('Stages for pipeline', pipelineId, stages);
 
-      // Untuk setiap stage, fetch leads-nya
-      const stageLeadsPromises = stages.map(async (stage: any, idx: number) => {
-        const leads = await PipelineService.getLeadsByStageId(stage.id);
+      // Fetch leads per stage, filter manual juga
+      const leadsByStage: Record<string, any[]> = {};
+      const stageLeadsPromises = stages.map((stage: any) =>
+        PipelineService.getLeads({ id_stage: stage.id }).then((leads: any[]) => {
+          // Filter leads yang id_pipeline-nya sama
+          const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
+          console.log('Leads for stage', stage.id, filteredLeads);
+          return { stageId: stage.id, leads: filteredLeads };
+        })
+      );
+      const stageLeadsResults = await Promise.all(stageLeadsPromises);
+      stageLeadsResults.forEach(({ stageId, leads }: { stageId: string; leads: any[] }) => {
+        leadsByStage[stageId] = leads.map((lead: any) => ({
+          id: lead.id,
+          name: lead.name,
+          phone: "",
+          value: lead.potential_value || 0,
+          source: lead.moved_by || "unknown",
+          daysAgo: 0,
+          status: lead.status || "unknown",
+          email: "",
+          company: "",
+          location: "",
+          notes: lead.notes || "",
+          createdAt: lead.created_at,
+          lastActivity: lead.updated_at,
+          timeline: [],
+        }));
+      });
+      // Mapping ke struktur PipelineStage
+      const mappedStages = stages.map((stage: any, idx: number) => {
+        const stageLeads = leadsByStage[stage.id] || [];
         return {
           id: stage.id,
           name: stage.name,
@@ -276,14 +293,13 @@ const PipelinePage = () => {
             "bg-purple-100 text-purple-800",
             "bg-red-100 text-red-800",
           ][idx % 6],
-          leads: leads,
-          count: leads.length,
-          value: leads.reduce((sum: number, l: any) => sum + (l.potential_value || 0), 0),
+          leads: stageLeads,
+          count: stageLeads.length,
+          value: stageLeads.reduce((sum, l) => sum + (l.value || 0), 0),
           stage_order: stage.stage_order ?? idx,
           agent_id: stage.id_agent || undefined,
         };
       });
-      const mappedStages = await Promise.all(stageLeadsPromises);
       setPipelineData(mappedStages);
     } catch (error: any) {
       console.error("Error fetching pipeline:", error);
@@ -310,8 +326,7 @@ const PipelinePage = () => {
     setSelectedAgent("");
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
-      axiosInstance
-        .get("/v1/agents/details")
+      axiosInstance.get("/v1/agents/details")
         .then((response) => {
           const items = response.data?.items || response.data || [];
           // Pastikan items adalah array
@@ -319,9 +334,7 @@ const PipelinePage = () => {
           // Tampilkan SEMUA agent_type, tidak perlu filter
           setAgents(agentsArray);
         })
-        .catch((err) =>
-          setAddStageError(err.message || "Gagal memuat data agent")
-        );
+        .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
     });
   }, [isAddStageOpen]);
 
@@ -330,9 +343,7 @@ const PipelinePage = () => {
     import("@/services/humanAgentsService").then(({ HumanAgentsService }) => {
       HumanAgentsService.getHumanAgents()
         .then((allAgents) => {
-          const aiAgents = allAgents.filter(
-            (agent) => agent.agent_type === "AI"
-          );
+          const aiAgents = allAgents.filter(agent => agent.agent_type === "AI");
           setAiAgents(aiAgents);
         })
         .catch(() => setAiAgents([]));
@@ -363,11 +374,7 @@ const PipelinePage = () => {
         id_pipeline: pipelineId,
       });
       setIsAddStageOpen(false);
-      setStageName("");
-      setStageDescription("");
-      setSelectedAgent("");
-      setAddStageError(null);
-      fetchPipelineData(); // Refresh data pipeline setelah tambah stage
+      await fetchPipelineData(); // Refresh data pipeline setelah tambah stage
     } catch (err: any) {
       setAddStageError(err.message || "Gagal menambah stage");
     } finally {
@@ -375,11 +382,10 @@ const PipelinePage = () => {
     }
   };
 
-
   return (
     <DndProvider backend={HTML5Backend}>
       <MainLayout>
-        <div className="p-6 max-w-full overflow-x-hidden">
+        <div className="p-6">
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
@@ -389,7 +395,7 @@ const PipelinePage = () => {
               </div>
             </div>
           )}
-  
+
           {/* Error State */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -404,7 +410,7 @@ const PipelinePage = () => {
               </Button>
             </div>
           )}
-  
+
           {/* No Pipeline ID */}
           {!pipelineId && !isLoading && (
             <div className="text-center py-12">
@@ -414,10 +420,10 @@ const PipelinePage = () => {
               </Button>
             </div>
           )}
-  
+
           {/* Main Content - Only show when we have pipeline ID and not loading */}
           {pipelineId && !isLoading && !error && (
-            <div className="space-y-6">
+            <>
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -432,14 +438,18 @@ const PipelinePage = () => {
                       </span>
                     </Link>
                   </div>
-  
+
                   <div className="flex items-center gap-3">
+                    {/* <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Import Dari WhatsApp
+                    </Button> */}
                     <Button size="sm" onClick={handleOpenAddStage}>
                       <Plus className="h-4 w-4 mr-2" />
                       Tambah Stage Baru
                     </Button>
-                    <Button
-                      variant="destructive"
+                    <Button 
+                      variant="destructive" 
                       size="sm"
                       onClick={handleDeletePipeline}
                       disabled={isDeleting}
@@ -449,7 +459,7 @@ const PipelinePage = () => {
                     </Button>
                   </div>
                 </div>
-  
+
                 <div className="flex items-center gap-2 mb-4">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {pipelineInfo?.name || "Pipeline"}
@@ -459,7 +469,6 @@ const PipelinePage = () => {
                   </Badge>
                 </div>
               </div>
-  
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <Card>
@@ -475,11 +484,14 @@ const PipelinePage = () => {
                         <p className="text-2xl font-bold text-gray-900">
                           Rp {totalValue.toLocaleString()}
                         </p>
+                        {/* <p className="text-xs text-gray-500">
+                          • Belum ada data perbandingan
+                        </p> */}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-  
+
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
@@ -491,128 +503,262 @@ const PipelinePage = () => {
                         <p className="text-2xl font-bold text-gray-900">
                           {totalLeads} Lead
                         </p>
+                        {/* <p className="text-xs text-blue-600">
+                          • {totalLeads} lead baru hari ini
+                        </p> */}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-  
-              {/* Pipeline Stages - FIXED VERSION */}
+
+              {/* Pipeline Stages */}
               {pipelineData.length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Pipeline Stages
-                  </h2>
-                  
-                  {/* Container dengan fixed width dan scroll */}
-                  <div className="relative">
-                    <div 
-                      className="overflow-x-auto overflow-y-hidden pb-4"
-                      style={{ maxWidth: 'calc(100vw - 3rem)' }}
-                    >
-                      <div className="flex gap-6 w-max min-w-full">
-                        {pipelineData.map((stage) => (
-                          <div key={stage.id} className="flex-shrink-0">
-                            <PipelineStageColumn
-                              stage={stage}
-                              onDropLead={handleDropLead}
-                              onUpdateLead={handleUpdateLead}
-                              onUpdateStage={handleUpdateStage}
-                              onDeleteStage={handleDeleteStage}
-                              onLeadClick={handleLeadClick}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Pipeline Stages
+                    </h2>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-6 overflow-x-auto pb-4">
+                    {pipelineData.map((stage) => (
+                      <PipelineStageColumn
+                        
+                        key={stage.id}
+                        stage={stage}
+                        onDropLead={handleDropLead}
+                        onUpdateLead={handleUpdateLead}
+                        onUpdateStage={handleUpdateStage}
+                        onDeleteStage={handleDeleteStage}
+                        onLeadClick={handleLeadClick}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
-            </div>
-          )}
-  
-          {/* Drawer and Dialog components remain the same */}
-          <Drawer open={!!selectedContactId} onOpenChange={(open) => {
-            if (!open) {
-              setSelectedContactId(null);
-              setSelectedContact(null);
-            }
-          }} direction="right">
-            <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
-              <div className="flex">
-                {/* Kiri: Data Lead */}
-                <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
-                  {selectedContact && (
-                    <div>
-                      <h2 className="font-bold text-xl mb-2">{selectedContact.push_name}</h2>
-                      <div className="mb-2 text-sm text-muted-foreground">Status: {selectedContact.lead_status}</div>
-                      <div className="mb-2 text-sm text-muted-foreground">Moved by: {selectedContact.moved_by}</div>
-                      {/* Tambahkan info lain sesuai kebutuhan */}
-                      {/* <div className="mb-2 text-xs text-gray-500">ID: {selectedContactId}</div> */}
+
+              {/* Lead Detail Drawer */}
+              <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                <DrawerContent className="max-h-[90vh]">
+                  <DrawerHeader>
+                    <DrawerTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      {selectedLead?.name || "Lead Detail"}
+                    </DrawerTitle>
+                    <DrawerDescription>
+                      Detailed information and timeline for this lead
+                    </DrawerDescription>
+                  </DrawerHeader>
+
+                  {selectedLead && (
+                    <div className="px-6 pb-6 space-y-6 overflow-y-auto">
+                      {/* Lead Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-gray-900">
+                            Contact Information
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Phone className="h-4 w-4 text-green-600" />
+                              <span className="text-sm">
+                                {selectedLead.phone}
+                              </span>
+                            </div>
+                            {selectedLead.email && (
+                              <div className="flex items-center gap-3">
+                                <Mail className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm">
+                                  {selectedLead.email}
+                                </span>
+                              </div>
+                            )}
+                            {selectedLead.location && (
+                              <div className="flex items-center gap-3">
+                                <MapPin className="h-4 w-4 text-red-600" />
+                                <span className="text-sm">
+                                  {selectedLead.location}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-gray-900">
+                            Business Information
+                          </h3>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-sm text-gray-600">Company</p>
+                              <p className="text-sm font-medium">
+                                {selectedLead.company || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Source</p>
+                              <p className="text-sm font-medium">
+                                {selectedLead.source}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Potential Value
+                              </p>
+                              <p className="text-sm font-medium">
+                                Rp {selectedLead.value.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      {selectedLead.notes && (
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-gray-900">Notes</h3>
+                          <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                            {selectedLead.notes}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Timeline */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-gray-900">
+                          Timeline
+                        </h3>
+                        <div className="space-y-4">
+                          {selectedLead.timeline.map((event) => (
+                            <div key={event.id} className="flex gap-3">
+                              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                {event.type === "created" && (
+                                  <User className="h-4 w-4 text-blue-600" />
+                                )}
+                                {event.type === "contacted" && (
+                                  <MessageCircle className="h-4 w-4 text-green-600" />
+                                )}
+                                {event.type === "call" && (
+                                  <Phone className="h-4 w-4 text-orange-600" />
+                                )}
+                                {event.type === "email" && (
+                                  <Mail className="h-4 w-4 text-purple-600" />
+                                )}
+                                {event.type === "note" && (
+                                  <Clock className="h-4 w-4 text-gray-600" />
+                                )}
+                                {event.type === "moved" && (
+                                  <Users className="h-4 w-4 text-indigo-600" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-medium text-gray-900">
+                                    {event.title}
+                                  </h4>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(event.timestamp).toLocaleString(
+                                      "id-ID",
+                                      {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      }
+                                    )}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {event.description}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  by {event.user}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
-                {/* Kanan: ChatConversation */}
-                <div className="flex-1 min-w-[500px] max-w-full h-[100vh] overflow-y-auto">
-                  {selectedContactId && (
-                    // <ChatConversation
-                    //   selectedContactId={selectedContactId}
-                    //   selectedContact={selectedContact}
-                    //   showBackButton={false}
-                    // />
-                    <ChatConversation
-                    selectedContactId={selectedContactId}
-                    selectedContact={selectedContact}
-                    onToggleInfo={() => { }} // No-op for desktop since info is always visible
-                    showInfo={false} // Don't show active state on desktop
-                    // onSwitchToAssignedTab={handleSwitchToAssignedTab}
-                  />
-                  )}
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
 
-          {/* Dialog untuk tambah stage baru */}
-          <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
-            <DialogContent>
-              <form onSubmit={handleSubmitAddStage} className="space-y-4">
-                <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-name">Nama Stage</Label>
-                  <Input id="stage-name" value={stageName} onChange={e => setStageName(e.target.value)} required disabled={isSubmittingStage} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-desc">Deskripsi</Label>
-                  <Input id="stage-desc" value={stageDescription} onChange={e => setStageDescription(e.target.value)} required disabled={isSubmittingStage} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-agent">Pilih Agent</Label>
-                  <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
-                    <SelectTrigger className="w-full" id="stage-agent">
-                      <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agents.map(agent => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {(agent.name || agent.identifier)} ({agent.agent_type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {addStageError && <div className="text-red-600 text-sm">{addStageError}</div>}
-                <DialogFooter>
-                  <Button type="submit" disabled={isSubmittingStage}>
-                    {isSubmittingStage ? "Menyimpan..." : "Simpan"}
-                  </Button>
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline" disabled={isSubmittingStage}>Batal</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DrawerFooter>
+                    <div className="flex gap-2">
+                      <Button className="flex-1">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call
+                      </Button>
+                    </div>
+                    <DrawerClose asChild>
+                      <Button variant="outline">Close</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+
+              <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
+                <DialogContent>
+                  <form onSubmit={handleSubmitAddStage} className="space-y-4">
+                    <DialogHeader>
+                      <DialogTitle>Tambah Stage Baru</DialogTitle>
+                      <DialogDescription>Isi detail stage yang ingin ditambahkan ke pipeline ini.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-name">Nama Stage</Label>
+                      <Input id="stage-name" value={stageName} onChange={e => setStageName(e.target.value)} required disabled={isSubmittingStage} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-desc">Deskripsi</Label>
+                      <Input id="stage-desc" value={stageDescription} onChange={e => setStageDescription(e.target.value)} required disabled={isSubmittingStage} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-agent">Pilih Agent</Label>
+                      <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                        <SelectTrigger className="w-full" id="stage-agent">
+                          <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {agents.map(agent => (
+                            <SelectItem key={agent.id} value={agent.id}>
+                              <div className="flex items-center gap-2">
+                                {agent.agent_type === "AI" ? (
+                                  <Bot className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <User className="h-4 w-4 text-blue-600" />
+                                )}
+                                <span>{agent.name}</span>
+                                <span className="text-xs text-gray-500 ml-auto">
+                                  {agent.agent_type === "AI" ? "AI" : "Human"}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {addStageError && <div className="text-red-600 text-sm">{addStageError}</div>}
+                    <DialogFooter>
+                      <Button type="submit" disabled={isSubmittingStage}>
+                        {isSubmittingStage ? "Menyimpan..." : "Simpan"}
+                      </Button>
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline" disabled={isSubmittingStage}>Batal</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </MainLayout>
     </DndProvider>
