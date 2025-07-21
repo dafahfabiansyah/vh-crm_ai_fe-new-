@@ -42,7 +42,8 @@ const PipelinePage = () => {
   const pipelineId = searchParams.get("id");
 
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([]);
-  const [, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pipelineInfo, setPipelineInfo] = useState<PipelineListResponse | null>(
@@ -53,7 +54,7 @@ const PipelinePage = () => {
   const [isAddStageOpen, setIsAddStageOpen] = useState(false);
   const [stageName, setStageName] = useState("");
   const [stageDescription, setStageDescription] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState("");
+  const [selectedAgent, setSelectedAgent] = useState<string>("");
   const [agents, setAgents] = useState<any[]>([]);
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
@@ -116,7 +117,7 @@ const PipelinePage = () => {
         // Add to target stage
         if (leadToMove) {
           // Update moved_by/source to 'human' di state lokal
-          const updatedLead = { ...leadToMove, source: "human" };
+          const updatedLead = { ...leadToMove, source: 'human' };
           const targetStage = newData.find(
             (stage) => stage.id === targetStageId
           );
@@ -131,18 +132,16 @@ const PipelinePage = () => {
       // PATCH ke backend
       try {
         // Cari agent_id dari stage tujuan
-        const targetStage = pipelineData.find(
-          (stage) => stage.id === targetStageId
-        );
+        const targetStage = pipelineData.find((stage) => stage.id === targetStageId);
         const assigned_to = targetStage?.agent_id || null;
         await PipelineService.moveLeadCard(leadId, {
           id_stage: targetStageId,
-          moved_by: "Human",
+          moved_by: 'Human',
           assigned_to: assigned_to,
         });
       } catch (err) {
         // TODO: tampilkan error jika perlu
-        console.error("Failed to move lead card:", err);
+        console.error('Failed to move lead card:', err);
       }
     },
     [pipelineData]
@@ -168,36 +167,33 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback(
-    async (stageId: string, newName: string, newDescription?: string) => {
-      setPipelineData((prev) => {
-        const newData = [...prev];
-        const stageIndex = newData.findIndex((stage) => stage.id === stageId);
-        if (stageIndex >= 0) {
-          newData[stageIndex] = {
-            ...newData[stageIndex],
-            name: newName,
-            description: newDescription ?? newData[stageIndex].description,
-          };
-        }
-        return newData;
-      });
-      // Update ke backend
-      const stage = pipelineData.find((s) => s.id === stageId);
-      if (stage) {
-        try {
-          await PipelineService.updateStage(stageId, {
-            name: newName,
-            description: stage.description ?? "",
-            stage_order: stage.stage_order ?? 0,
-          });
-        } catch (err) {
-          // TODO: tampilkan error jika perlu
-        }
+  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string) => {
+    setPipelineData((prev) => {
+      const newData = [...prev];
+      const stageIndex = newData.findIndex((stage) => stage.id === stageId);
+      if (stageIndex >= 0) {
+        newData[stageIndex] = {
+          ...newData[stageIndex],
+          name: newName,
+          description: newDescription ?? newData[stageIndex].description,
+        };
       }
-    },
-    [pipelineData]
-  );
+      return newData;
+    });
+    // Update ke backend
+    const stage = pipelineData.find((s) => s.id === stageId);
+    if (stage) {
+      try {
+        await PipelineService.updateStage(stageId, {
+          name: newName,
+          description:  stage.description ?? "",
+          stage_order: stage.stage_order ?? 0,
+        });
+      } catch (err) {
+        // TODO: tampilkan error jika perlu
+      }
+    }
+  }, [pipelineData]);
 
   const handleDeletePipeline = async () => {
     if (!pipelineId || !pipelineInfo) return;
@@ -212,7 +208,7 @@ const PipelinePage = () => {
 
     try {
       await PipelineService.deletePipeline(pipelineId);
-
+      
       // Redirect to dashboard after successful deletion
       navigate("/dashboard");
     } catch (error: any) {
@@ -228,9 +224,7 @@ const PipelinePage = () => {
       await PipelineService.deleteStage(stageId);
       // Refresh stages
       if (pipelineId) {
-        const stages = await PipelineService.getStages({
-          id_pipeline: pipelineId,
-        });
+        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
         const mappedStages = stages.map((stage: any, idx: number) => ({
           id: stage.id,
           name: stage.name,
@@ -262,13 +256,18 @@ const PipelinePage = () => {
   const fetchPipelineData = useCallback(async () => {
     if (!pipelineId) {
       console.log("No pipeline ID provided");
+      console.log("No pipeline ID provided");
       return;
     }
+
     setIsLoading(true);
     setError(null);
+
     try {
       // Fetch pipeline info by ID
-      const pipeline = await PipelineService.getPipelineById(pipelineId);
+      const pipeline = await PipelineService.getPipelineById(
+        pipelineId
+      );
       setPipelineInfo(pipeline);
 
       // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
@@ -359,8 +358,7 @@ const PipelinePage = () => {
     setSelectedAgent("");
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
-      axiosInstance
-        .get("/v1/agents/details")
+      axiosInstance.get("/v1/agents/details")
         .then((response) => {
           const items = response.data?.items || response.data || [];
           // Pastikan items adalah array
@@ -368,9 +366,7 @@ const PipelinePage = () => {
           // Tampilkan SEMUA agent_type, tidak perlu filter
           setAgents(agentsArray);
         })
-        .catch((err) =>
-          setAddStageError(err.message || "Gagal memuat data agent")
-        );
+        .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
     });
   }, [isAddStageOpen]);
 
@@ -379,9 +375,7 @@ const PipelinePage = () => {
     import("@/services/humanAgentsService").then(({ HumanAgentsService }) => {
       HumanAgentsService.getHumanAgents()
         .then((allAgents) => {
-          const aiAgents = allAgents.filter(
-            (agent) => agent.agent_type === "AI"
-          );
+          const aiAgents = allAgents.filter(agent => agent.agent_type === "AI");
           setAiAgents(aiAgents);
         })
         .catch(() => setAiAgents([]));
@@ -479,11 +473,7 @@ const PipelinePage = () => {
         id_pipeline: pipelineId,
       });
       setIsAddStageOpen(false);
-      setStageName("");
-      setStageDescription("");
-      setSelectedAgent("");
-      setAddStageError(null);
-      fetchPipelineData(); // Refresh data pipeline setelah tambah stage
+      await fetchPipelineData(); // Refresh data pipeline setelah tambah stage
     } catch (err: any) {
       setAddStageError(err.message || "Gagal menambah stage");
     } finally {
@@ -494,7 +484,7 @@ const PipelinePage = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <MainLayout>
-        <div className="p-6 max-w-full overflow-x-hidden">
+        <div className="p-6">
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
@@ -532,7 +522,7 @@ const PipelinePage = () => {
 
           {/* Main Content - Only show when we have pipeline ID and not loading */}
           {pipelineId && !isLoading && !error && (
-            <div className="space-y-6">
+            <>
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -547,7 +537,6 @@ const PipelinePage = () => {
                       </span>
                     </Link>
                   </div>
-
                   <div className="flex items-center gap-3">
                     <Button size="sm" onClick={handleOpenAddStage}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -564,7 +553,6 @@ const PipelinePage = () => {
                     </Button>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-2 mb-4">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {pipelineInfo?.name || "Pipeline"}
@@ -574,7 +562,6 @@ const PipelinePage = () => {
                   </Badge>
                 </div>
               </div>
-
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <Card>
@@ -594,7 +581,6 @@ const PipelinePage = () => {
                     </div>
                   </CardContent>
                 </Card>
-
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
@@ -611,14 +597,12 @@ const PipelinePage = () => {
                   </CardContent>
                 </Card>
               </div>
-
               {/* Pipeline Stages - FIXED VERSION */}
               {pipelineData.length > 0 && (
                 <div className="space-y-4">
                   <h2 className="text-lg font-semibold text-gray-900">
                     Pipeline Stages
                   </h2>
-
                   {/* Container dengan fixed width dan scroll */}
                   <div className="relative">
                     <div
@@ -643,151 +627,148 @@ const PipelinePage = () => {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Drawer and Dialog components remain the same */}
-          <Drawer
-            open={!!selectedContactId}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedContactId(null);
-                setSelectedContact(null);
-                setSelectedLeadId(null); // reset lead id juga
-              }
-            }}
-            direction="right"
-          >
-            <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
-              <div className="flex">
-                {/* Kiri: Data Lead */}
-                <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
-                  {selectedContact && (
-                    <div>
-                      <h2 className="font-bold text-xl mb-2">
-                        {selectedContact.push_name}
-                      </h2>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        Status: {selectedContact.lead_status}
-                      </div>
-
-                      {/* Timeline Lead Transfer History */}
-                      <div className="mt-6">
-                        <h3 className="font-semibold text-base mb-2">
-                          Riwayat Transfer Lead
-                        </h3>
-                        {isLoadingHistory ? (
-                          <div className="text-xs text-gray-400">
-                            Memuat riwayat...
+              {/* Drawer and Dialog components remain the same */}
+              <Drawer
+                open={!!selectedContactId}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setSelectedContactId(null);
+                    setSelectedContact(null);
+                    setSelectedLeadId(null); // reset lead id juga
+                  }
+                }}
+                direction="right"
+              >
+                <DrawerContent className="!w-[60vw] !max-w-[99vw] p-0">
+                  <div className="flex">
+                    {/* Kiri: Data Lead */}
+                    <div className="w-1/3 min-w-[220px] max-w-sm border-r p-6 flex flex-col justify-between">
+                      {selectedContact && (
+                        <div>
+                          <h2 className="font-bold text-xl mb-2">
+                            {selectedContact.push_name}
+                          </h2>
+                          <div className="mb-2 text-sm text-muted-foreground">
+                            Status: {selectedContact.lead_status}
                           </div>
-                        ) : historyError ? (
-                          <div className="text-xs text-red-500">
-                            {historyError}
+                          {/* Timeline Lead Transfer History */}
+                          <div className="mt-6">
+                            <h3 className="font-semibold text-base mb-2">
+                              Riwayat Transfer Lead
+                            </h3>
+                            {isLoadingHistory ? (
+                              <div className="text-xs text-gray-400">
+                                Memuat riwayat...
+                              </div>
+                            ) : historyError ? (
+                              <div className="text-xs text-red-500">
+                                {historyError}
+                              </div>
+                            ) : leadTransferHistory.length === 0 ? (
+                              <div className="text-xs text-gray-400">
+                                Belum ada riwayat transfer.
+                              </div>
+                            ) : (
+                              <LeadTransferTimeline history={leadTransferHistory} />
+                            )}
                           </div>
-                        ) : leadTransferHistory.length === 0 ? (
-                          <div className="text-xs text-gray-400">
-                            Belum ada riwayat transfer.
-                          </div>
-                        ) : (
-                          <LeadTransferTimeline history={leadTransferHistory} />
-                        )}
-                      </div>
-                      {selectedContact && selectedContact.notes && (
-                        <div className="space-y-2 mt-4">
-                          <h3 className="font-semibold text-gray-900">Notes</h3>
-                          <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
-                            {selectedContact.notes}
-                          </p>
+                          {selectedContact && selectedContact.notes && (
+                            <div className="space-y-2 mt-4">
+                              <h3 className="font-semibold text-gray-900">Notes</h3>
+                              <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                                {selectedContact.notes}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-                {/* ChatConversation */}
-                <div className="flex-1 min-w-[500px] max-w-full h-[100vh] overflow-y-auto">
-                  {selectedContactId && (
-                    <ChatConversation
-                      selectedContactId={selectedContactId}
-                      selectedContact={selectedContact}
-                      onToggleInfo={() => {}}
-                      showInfo={false}
-                    />
-                  )}
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-
-          {/* Dialog untuk tambah stage baru */}
-          <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
-            <DialogContent>
-              <form onSubmit={handleSubmitAddStage} className="space-y-4">
-                <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-name">Nama Stage</Label>
-                  <Input
-                    id="stage-name"
-                    value={stageName}
-                    onChange={(e) => setStageName(e.target.value)}
-                    required
-                    disabled={isSubmittingStage}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-desc">Deskripsi</Label>
-                  <Input
-                    id="stage-desc"
-                    value={stageDescription}
-                    onChange={(e) => setStageDescription(e.target.value)}
-                    required
-                    disabled={isSubmittingStage}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stage-agent">Pilih Agent</Label>
-                  <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
-                    <SelectTrigger className="w-full" id="stage-agent">
-                      <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agents.map(agent => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          <div className="flex items-center gap-2">
-                            {agent.agent_type === "AI" ? (
-                              <Bot className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <User className="h-4 w-4 text-blue-600" />
-                            )}
-                            <span>{agent.name}</span>
-                            <span className="text-xs text-gray-500 ml-auto">
-                              {agent.agent_type === "AI" ? "AI" : "Human"}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {addStageError && (
-                  <div className="text-red-600 text-sm">{addStageError}</div>
-                )}
-                <DialogFooter>
-                  <Button type="submit" disabled={isSubmittingStage}>
-                    {isSubmittingStage ? "Menyimpan..." : "Simpan"}
-                  </Button>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isSubmittingStage}
-                    >
-                      Batal
-                    </Button>
-                  </DialogClose>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                    {/* ChatConversation */}
+                    <div className="flex-1 min-w-[500px] max-w-full h-[100vh] overflow-y-auto">
+                      {selectedContactId && (
+                        <ChatConversation
+                          selectedContactId={selectedContactId}
+                          selectedContact={selectedContact}
+                          onToggleInfo={() => {}}
+                          showInfo={false}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+              {/* Dialog untuk tambah stage baru */}
+              <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
+                <DialogContent>
+                  <form onSubmit={handleSubmitAddStage} className="space-y-4">
+                    <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-name">Nama Stage</Label>
+                      <Input
+                        id="stage-name"
+                        value={stageName}
+                        onChange={(e) => setStageName(e.target.value)}
+                        required
+                        disabled={isSubmittingStage}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-desc">Deskripsi</Label>
+                      <Input
+                        id="stage-desc"
+                        value={stageDescription}
+                        onChange={(e) => setStageDescription(e.target.value)}
+                        required
+                        disabled={isSubmittingStage}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stage-agent">Pilih Agent</Label>
+                      <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                        <SelectTrigger className="w-full" id="stage-agent">
+                          <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {agents.map(agent => (
+                            <SelectItem key={agent.id} value={agent.id}>
+                              <div className="flex items-center gap-2">
+                                {agent.agent_type === "AI" ? (
+                                  <Bot className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <User className="h-4 w-4 text-blue-600" />
+                                )}
+                                <span>{agent.name}</span>
+                                <span className="text-xs text-gray-500 ml-auto">
+                                  {agent.agent_type === "AI" ? "AI" : "Human"}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {addStageError && (
+                      <div className="text-red-600 text-sm">{addStageError}</div>
+                    )}
+                    <DialogFooter>
+                      <Button type="submit" disabled={isSubmittingStage}>
+                        {isSubmittingStage ? "Menyimpan..." : "Simpan"}
+                      </Button>
+                      <DialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isSubmittingStage}
+                        >
+                          Batal
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </MainLayout>
     </DndProvider>
