@@ -218,4 +218,29 @@ export class AgentsService {
       };
     }
   }
+
+  /**
+   * Get agent details by array of agent IDs
+   */
+  static async getAgentDetails(): Promise<any[]> {
+    try {
+      const response = await axiosInstance.get<any>(
+        '/v1/agents/details',
+        
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch agent details',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
 }

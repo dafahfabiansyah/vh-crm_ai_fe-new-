@@ -173,6 +173,7 @@ export interface PipelineStage {
   color: string
   description?: string
   stage_order?: number
+  id_agent?: string
   agent_id?: string // AI agent id yang handle stage (optional)
 }
 

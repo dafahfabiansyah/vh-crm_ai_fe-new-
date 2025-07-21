@@ -35,9 +35,6 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   const [websiteKnowledge, setWebsiteKnowledge] = useState<any[]>([]);
   const [websiteLoading, setWebsiteLoading] = useState(false);
   const [websiteError, setWebsiteError] = useState<string | null>(null);
-  const [websiteDetails, setWebsiteDetails] = useState<Record<string, any>>({});
-  const [websiteDetailsLoading, setWebsiteDetailsLoading] = useState<Record<string, boolean>>({});
-  const [websiteDetailsError, setWebsiteDetailsError] = useState<Record<string, string>>({});
   const [websiteDeleteId, setWebsiteDeleteId] = useState<string | null>(null);
   const [websiteDeleteLoading, setWebsiteDeleteLoading] = useState(false);
   const [websiteDeleteError, setWebsiteDeleteError] = useState<string | null>(null);
@@ -104,19 +101,6 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
       setWebsiteError(null);
       const data = await KnowledgeService.getWebsiteKnowledge(agentId);
       setWebsiteKnowledge(Array.isArray(data) ? data : []);
-      // Fetch detail for each website knowledge
-      data.forEach(async (item: any) => {
-        setWebsiteDetailsLoading(prev => ({ ...prev, [item.id]: true }));
-        setWebsiteDetailsError(prev => ({ ...prev, [item.id]: '' }));
-        try {
-          const detail = await KnowledgeService.getWebsiteKnowledgeByWebsiteId(item.id);
-          setWebsiteDetails(prev => ({ ...prev, [item.id]: detail }));
-        } catch (err: any) {
-          setWebsiteDetailsError(prev => ({ ...prev, [item.id]: err.message || 'Failed to load detail' }));
-        } finally {
-          setWebsiteDetailsLoading(prev => ({ ...prev, [item.id]: false }));
-        }
-      });
     } catch (err: any) {
       setWebsiteError(err.message || 'Failed to load website knowledge');
     } finally {
@@ -388,52 +372,50 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
         ) : websiteKnowledge.length === 0 ? (
           <div className="text-muted-foreground py-8 text-center">No website knowledge found.</div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {websiteKnowledge.map((item) => {
-              const detail = websiteDetails[item.id];
-              const loading = websiteDetailsLoading[item.id];
-              const error = websiteDetailsError[item.id];
-              return (
-                <Card key={item.id} className="overflow-x-auto relative">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base font-semibold text-foreground truncate">
-                          {loading ? 'Loading...' : error ? 'Error' : (detail?.title || 'No Title')}
-                        </CardTitle>
-                        <CardDescription className="text-xs mt-1">
-                          {loading ? '' : error ? error : (detail?.url || item.url)}
-                        </CardDescription>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={e => {
-                          e.stopPropagation();
-                          setWebsiteDeleteId(item.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {websiteKnowledge.map((item) => (
+              <Card key={item.id} className="overflow-x-auto relative">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base font-semibold text-foreground truncate">
+                        {item.title || 'No Title'}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-1">
+                        {item.url}
+                      </CardDescription>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1 text-xs">
-                      <div>
-                        <span className="font-medium">URL:</span> {loading ? 'Loading...' : error ? error : (detail?.url || item.url)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Title:</span> {loading ? 'Loading...' : error ? error : (detail?.title || 'No Title')}
-                      </div>
-                      <div>
-                        <span className="font-medium">HTML Characters:</span> {loading ? 'Loading...' : error ? '-' : (detail?.html ? detail.html.length : 0)}
-                      </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setWebsiteDeleteId(item.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-xs">
+                    <div>
+                      <span className="font-medium">URL:</span> {item.url}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <div>
+                      <span className="font-medium">Title:</span> {item.title || 'No Title'}
+                    </div>
+                    <div>
+                      <span className="font-medium">HTML Characters:</span> {item.html ? item.html.length : 0}
+                    </div>
+                    <div>
+                      <span className="font-medium">Scraping Status:</span> {item.scraping_status || '-'}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
 
