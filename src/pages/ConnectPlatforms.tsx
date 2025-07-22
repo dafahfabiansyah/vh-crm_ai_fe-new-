@@ -212,9 +212,6 @@ export default function ConnectedPlatformsPage() {
 
   // Add Platform Modal state
   const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
-  
-  // Pipeline mapping method state (for testing)
-  const [useAlternativePipelineMapping, ] = useState(false);
 
   const filteredPlatforms = PlatformInboxs.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
