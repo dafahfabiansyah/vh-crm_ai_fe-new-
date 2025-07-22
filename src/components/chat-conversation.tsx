@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
-import type { ChatLog } from "@/services"
 import { ContactsService } from "@/services/contactsService"
 
 
@@ -16,6 +15,8 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [isTakenOver, setIsTakenOver] = useState(false)
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
+  const [searchResults, setSearchResults] = useState<number[]>([])
 
   // Check if conversation is already assigned
   const isAssigned = selectedContact?.lead_status === 'assigned'
@@ -23,6 +24,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Fetch chat logs for the selected contact
   const { chatLogs, loading, error } = useChatLogs(selectedContactId)
@@ -71,6 +73,72 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   useEffect(() => {
     scrollToBottom()
   }, [chatLogs])
+
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setSearchResults([])
+      setCurrentSearchIndex(-1)
+      return
+    }
+
+    const results: number[] = []
+    chatLogs.forEach((chatLog, index) => {
+      if (chatLog.message.toLowerCase().includes(searchQuery.toLowerCase())) {
+        results.push(index)
+      }
+    })
+    
+    setSearchResults(results)
+    if (results.length > 0) {
+      setCurrentSearchIndex(0)
+      scrollToMessage(results[0])
+    } else {
+      setCurrentSearchIndex(-1)
+    }
+  }, [searchQuery, chatLogs])
+
+  const scrollToMessage = (messageIndex: number) => {
+    const messageElement = messageRefs.current[messageIndex]
+    if (messageElement) {
+      messageElement.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "center" 
+      })
+      // Add highlight effect
+      messageElement.style.backgroundColor = '#fef3c7'
+      setTimeout(() => {
+        messageElement.style.backgroundColor = ''
+      }, 2000)
+    }
+  }
+
+  const navigateSearch = (direction: 'next' | 'prev') => {
+    if (searchResults.length === 0) return
+    
+    let newIndex
+    if (direction === 'next') {
+      newIndex = currentSearchIndex < searchResults.length - 1 ? currentSearchIndex + 1 : 0
+    } else {
+      newIndex = currentSearchIndex > 0 ? currentSearchIndex - 1 : searchResults.length - 1
+    }
+    
+    setCurrentSearchIndex(newIndex)
+    scrollToMessage(searchResults[newIndex])
+  }
+
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? 
+        <mark key={index} className="bg-yellow-200 text-yellow-900">{part}</mark> : 
+        part
+    )
+  }
 
   const handleTakeOver = async () => {
     if (!selectedContactId) return
@@ -309,8 +377,31 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
                 placeholder="Cari Percakapan"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 pr-20 w-80"
               />
+              {searchResults.length > 0 && (
+                <div className="absolute right-2 top-2 flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>{currentSearchIndex + 1}/{searchResults.length}</span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigateSearch('prev')}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigateSearch('next')}
+                    >
+                      ↓
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Info Button - Hidden on desktop since info sidebar is always visible */}
@@ -352,17 +443,24 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
             <p className="text-muted-foreground">No messages yet</p>
           </div>
         ) : (
-          chatLogs.map((chatLog: ChatLog) => (
-            <div key={chatLog.id} className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4`}>
+          chatLogs.map((chatLog, index) => (
+            <div 
+              key={chatLog.id} 
+              ref={(el) => {
+                messageRefs.current[index] = el
+              }}
+              className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4 transition-colors duration-500`}
+            >
               <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[75%] sm:max-w-[60%]`}>
-                <div className={`${chatLog.from_me
-                  ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
-                  : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
+                <div className={`${
+                  chatLog.from_me
+                    ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
+                    : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
                   } px-3 py-2 shadow-sm`}>
                   <p className="text-sm leading-relaxed break-words">
                     {breakEvery50Chars(chatLog.message).split('\n').map((line, idx, arr) => (
                       <span key={idx}>
-                        {line}
+                        {searchQuery ? highlightText(line, searchQuery) : line}
                         {idx !== arr.length - 1 && <br />}
                       </span>
                     ))}

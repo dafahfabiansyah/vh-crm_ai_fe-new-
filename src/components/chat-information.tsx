@@ -84,7 +84,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         </div> */}
 
         {/* Labels */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Labels</Label>
           {(!contactData.labels || contactData.labels.length === 0) ? (
             <p className="text-sm text-muted-foreground">No labels yet</p>
@@ -115,7 +115,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               <span className="hidden sm:inline">Add Label</span>
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Handled By */}
         <div className="space-y-2">
@@ -130,7 +130,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         </div>
 
         {/* Collaborators */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Collaborators</Label>
           {(!contactData.collaborators || contactData.collaborators.length === 0) ? (
             <p className="text-sm text-muted-foreground">No collaborators yet</p>
@@ -155,10 +155,10 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             <UserPlus className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Add Collaborator</span>
           </Button>
-        </div>
+        </div> */}
 
         {/* Notes */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Notes</Label>
           <Textarea
             placeholder="Add notes..."
@@ -166,19 +166,19 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             onChange={(e) => setNotes(e.target.value)}
             className="min-h-[80px]"
           />
-        </div>
+        </div> */}
 
         {/* AI Summary */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">AI Summary</Label>
           <Button variant="outline" className="w-full text-primary border-primary hover:bg-primary/10">
             <Sparkles className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Generate AI Summary</span>
           </Button>
-        </div>
+        </div> */}
 
         {/* Additional Data */}
-        <Collapsible open={isAdditionalDataOpen} onOpenChange={setIsAdditionalDataOpen}>
+        {/* <Collapsible open={isAdditionalDataOpen} onOpenChange={setIsAdditionalDataOpen}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-0 h-auto">
               <span className="text-sm font-medium text-foreground">Additional Data</span>
@@ -194,7 +194,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               </Button>
             </div>
           </CollapsibleContent>
-        </Collapsible>
+        </Collapsible> */}
 
         {/* Conversation Details */}
         <div className="space-y-3">
