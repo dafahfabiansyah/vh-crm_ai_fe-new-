@@ -1,19 +1,16 @@
 "use client";
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Plus, X, ChevronDown, ChevronUp, User, UserPlus, Calendar, Sparkles, MessageSquare } from "lucide-react"
+import { User,  Calendar, MessageSquare } from "lucide-react"
 import type { ChatInformationProps } from "@/types"
 
 export default function ChatInformation({ chatInfo }: ChatInformationProps) {
-  const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
-  const [newLabel, setNewLabel] = useState("")
-  const [notes, setNotes] = useState(chatInfo.notes || "")
+  // const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
+  // const [newLabel, setNewLabel] = useState("")
+  // const [notes, setNotes] = useState(chatInfo.notes || "")
   const [contactData, setContactData] = useState(chatInfo)
 
   useEffect(() => {
@@ -21,13 +18,13 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
     setContactData(chatInfo)
   }, [chatInfo])
 
-  const handleAddLabel = () => {
-    if (newLabel.trim()) {
-      // Handle adding label
-      console.log("Adding label:", newLabel)
-      setNewLabel("")
-    }
-  }
+  // const handleAddLabel = () => {
+  //   if (newLabel.trim()) {
+  //     // Handle adding label
+  //     console.log("Adding label:", newLabel)
+  //     setNewLabel("")
+  //   }
+  // }
 
   return (
     <div className="flex flex-col h-full">
