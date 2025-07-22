@@ -1,14 +1,17 @@
 import MainLayout from "@/main-layout"
 import ChatDashboard from "@/components/chat-dashboard"
-// import ManagerDialog from "@/components/manager-dialog";
+import ManagerDialog from "@/components/manager-dialog";
+import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
 // import ErrorDemo from "@/components/ErrorDemo"
 
 export default function DashboardPage() {
   return (
     <MainLayout>
+      {/* Aktifkan proteksi Manager ke Billing, bisa di-comment jika tidak diperlukan */}
+      <ManagerBillingEnforcer />
       <div className="space-y-6">
         <ChatDashboard />
-        {/* <ManagerDialog /> */}
+        <ManagerDialog />
 
         {/* Demo section untuk testing error boundary */}
         {/* <div className="p-6">

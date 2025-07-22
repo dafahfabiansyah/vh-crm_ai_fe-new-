@@ -228,6 +228,13 @@ export default function NavigationSidebar({
 
   return (
     <>
+      {/* Overlay to disable sidebar if Manager */}
+      {userRole?.toLowerCase() === "manager" && (
+        <div
+          style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "16rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
+          className="hidden lg:block"
+        />
+      )}
       {/* Mobile Overlay */}
       {isMobile && isMobileOpen && (
         <div
@@ -235,7 +242,6 @@ export default function NavigationSidebar({
           onClick={() => setIsMobileOpen(false)}
         />
       )}
-
       {/* Desktop Sidebar */}
       {!isMobile && (
         <div
@@ -271,14 +277,12 @@ export default function NavigationSidebar({
                 </div>
               </div>
             </div>
-
             {/* Main Navigation */}
             <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
               <nav className="space-y-1 px-2">
                 {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
               </nav>
             </div>
-
             {/* Bottom Navigation */}
             <div className="border-t border-border p-2">
               <nav className="space-y-1">
@@ -286,7 +290,6 @@ export default function NavigationSidebar({
               </nav>
             </div>
           </div>
-
           {/* Collapsed sidebar - always visible */}
           <div className="flex flex-col h-full">
             {/* Header - collapsed */}
@@ -297,7 +300,6 @@ export default function NavigationSidebar({
                 </div>
               </div>
             </div>
-
             {/* Main Navigation - collapsed (icons only) */}
             <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
               <nav className="space-y-1 px-2">
@@ -330,7 +332,6 @@ export default function NavigationSidebar({
                 ))}
               </nav>
             </div>
-
             {/* Bottom Navigation - collapsed */}
             <div className="border-t border-border p-2">
               <nav className="space-y-1">
@@ -366,7 +367,12 @@ export default function NavigationSidebar({
           </div>
         </div>
       )}
-
+      {/* Mobile Sidebar Overlay for Manager */}
+      {isMobile && userRole?.toLowerCase() === "manager" && isMobileOpen && (
+        <div
+          style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "20rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
+        />
+      )}
       {/* Mobile Sidebar */}
       {isMobile && (
         <div
