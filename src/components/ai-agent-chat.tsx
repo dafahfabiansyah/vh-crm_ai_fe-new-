@@ -1,13 +1,14 @@
 "use client";
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Send, MoreHorizontal, User, RotateCw, Loader2 } from "lucide-react";
 import { ChatService } from "@/services/chatService";
+import { Textarea } from "./ui/textarea";
 
 interface Message {
   id: string
@@ -30,6 +31,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
   const [isSending, setIsSending] = useState(false)
   const [sessionId, setSessionId] = useState(() => ChatService.generateSessionId())
   const [messages, setMessages] = useState<Message[]>([])
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   // Add welcome message when it changes
   useEffect(() => {
@@ -49,6 +51,13 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
       })
     }
   }, [welcomeMessage])
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages])
 
   const handleSendMessage = async () => {
     if (message.trim() && !isSending) {
@@ -146,7 +155,11 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
         </div>
 
         {/* Chat Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto" style={{ minHeight: '300px', maxHeight: '60vh' }}>
+        <div
+          className="flex-1 space-y-4 overflow-y-auto"
+          style={{ minHeight: '300px', maxHeight: '60vh' }}
+          ref={chatContainerRef}
+        >
           {messages.map((msg) => (
             <div key={msg.id} className="space-y-2">
               {msg.sender === "system" ? (
@@ -179,7 +192,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
 
         {/* Message Input */}
         <div className="flex gap-2">
-          <Input
+          <Textarea
             placeholder="Type your message..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}

@@ -31,7 +31,7 @@ function WhatsAppQRPage() {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Back to Connected Platforms
           </Button>
         </div>
 
@@ -41,7 +41,7 @@ function WhatsAppQRPage() {
               WhatsApp Integration
             </h1>
             <p className="text-muted-foreground">
-              {showQR ? "Scan QR code to connect your WhatsApp" : "Create a new WhatsApp session"}
+              {showQR ? "Scan QR code to connect your WhatsApp" : "Buat nama untuk Whatsapp Session"}
             </p>
           </div>
 

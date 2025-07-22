@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { AlertTriangle, Loader2, QrCode } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
-import { Label } from "@radix-ui/react-label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
@@ -39,10 +38,10 @@ const CreateSessionComponent = ({ onSessionCreated }: { onSessionCreated: (data:
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode className="h-5 w-5" />
-          Create WhatsApp Platform Name
+          Buat Nama WhatsApp Platform
         </CardTitle>
         <CardDescription>
-          Enter a session name to create a new WhatsApp connection
+          Masukkan Nama Session Untuk Menghubungkan Whatsapp
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -55,7 +54,6 @@ const CreateSessionComponent = ({ onSessionCreated }: { onSessionCreated: (data:
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="sessionName">Platforms Inbox Name</Label>
             <Input
               id="sessionName"
               placeholder="Buat session name (e.g., Tumbuhin WhatsApp)"
