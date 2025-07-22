@@ -207,11 +207,11 @@ export default function ConnectedPlatformsPage() {
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
+  // Active tab state
+  const [activeTab, setActiveTab] = useState("basic");
+
   // Add Platform Modal state
   const [isAddPlatformModalOpen, setIsAddPlatformModalOpen] = useState(false);
-  
-  // Pipeline mapping method state (for testing)
-  const [useAlternativePipelineMapping, ] = useState(false);
 
   const filteredPlatforms = PlatformInboxs.filter((platform) =>
     platform.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -309,55 +309,61 @@ export default function ConnectedPlatformsPage() {
 
     setIsSaving(true);
     try {
-      // 1. Mapping pipeline
-      if (currentPlatform.pipeline) {
-        console.log('Before pipeline mapping - Platform data:', currentPlatform);
-        if (useAlternativePipelineMapping) {
-          // Option 2: Use POST to /v1/platform_mappings (alternative approach)
-          console.log('Using alternative pipeline mapping method');
-          await platformsInboxService.mapPipelineToPlatform(currentPlatform.pipeline, currentPlatform.id);
-        } else {
-          // Option 1: Use PATCH to /v1/platform-inbox (might disconnect platform)
-          console.log('Using standard pipeline mapping method');
+      // Handle different behaviors based on active tab
+      if (activeTab === "pipeline") {
+        // Pipeline tab: Use update_platform_inbox API to update id_pipeline
+        if (currentPlatform.pipeline) {
+          console.log('Pipeline tab - updating id_pipeline via update_platform_inbox');
           await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
-        }
-        setToast({
-          show: true,
-          type: "success",
-          title: "Pipeline Mapping Saved Successfully",
-          description: `Pipeline berhasil di-mapping ke platform ${currentPlatform.name} .`,
-        });
-      }
-      // 2. Mapping AI agent (dan sebelumnya ada pipeline)
-      else if (currentPlatform.aiAgent) {
-        // Temukan agent yang dipilih
-        const selectedAIAgent = aiAgents.find(
-          (agent) => agent.name === currentPlatform.aiAgent
-        );
-        if (!selectedAIAgent) {
+          setToast({
+            show: true,
+            type: "success",
+            title: "Pipeline Mapping Saved Successfully",
+            description: `Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`,
+          });
+        } else {
           setToast({
             show: true,
             type: "error",
             title: "Validation Error",
-            description: "Selected AI Agent not found.",
+            description: "Please select a pipeline before saving.",
           });
           return;
         }
-        // PATCH ke /v1/platform-inbox dengan id_pipeline: null dan id_agent
-        await platformsInboxService.updatePlatformMapping(
-          currentPlatform.id,
-          null,
-          selectedAIAgent.id_agent,
-          'AI'
-        );
-        // POST ke /v1/platform_mappings untuk AI agent
-        await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
-        setToast({
-          show: true,
-          type: "success",
-          title: "AI Agent Mapping Saved Successfully",
-          description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name} .`,
-        });
+      } else if (activeTab === "basic") {
+        // Basic tab: Use create_platform_mappings endpoint and set id_pipeline to null
+        if (currentPlatform.aiAgent) {
+          // Find the selected AI agent
+          const selectedAIAgent = aiAgents.find(
+            (agent) => agent.name === currentPlatform.aiAgent
+          );
+          if (!selectedAIAgent) {
+            setToast({
+              show: true,
+              type: "error",
+              title: "Validation Error",
+              description: "Selected AI Agent not found.",
+            });
+            return;
+          }
+          console.log('Basic tab - mapping AI agent via create_platform_mappings and setting id_pipeline to null');
+          // Use create_platform_mappings endpoint which will update platform_inbox id_pipeline to null
+          await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
+          setToast({
+            show: true,
+            type: "success",
+            title: "AI Agent Mapping Saved Successfully",
+            description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`,
+          });
+        } else {
+          setToast({
+            show: true,
+            type: "error",
+            title: "Validation Error",
+            description: "Please select an AI Agent before saving.",
+          });
+          return;
+        }
       } else {
         setToast({
           show: true,
@@ -614,7 +620,7 @@ export default function ConnectedPlatformsPage() {
 
         {/* Mobile Configuration Content */}
         <div className="flex-1 overflow-y-auto p-4">
-          <Tabs defaultValue="basic" className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="w-full">
               <TabsTrigger value="basic" className="text-sm flex-1">
                 Basic
@@ -1197,7 +1203,7 @@ export default function ConnectedPlatformsPage() {
               {/* Configuration Content */}
               <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                 <div className="w-full">
-                  <Tabs defaultValue="basic" className="space-y-4 sm:space-y-6">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
                     <TabsList className="w-full flex flex-row  rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                       <TabsTrigger
                         value="basic"

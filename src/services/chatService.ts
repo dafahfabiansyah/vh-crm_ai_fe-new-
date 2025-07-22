@@ -5,6 +5,24 @@ export interface ChatRequest {
   session_id: string;
 }
 
+export interface TokenOperation {
+  operation: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  timestamp: string;
+}
+
+export interface TokenUsageSummary {
+  duration_ms: number;
+  input_tokens: number;
+  operations: TokenOperation[];
+  output_tokens: number;
+  request_id: string;
+  total_tokens: number;
+}
+
 export interface ChatResponse {
   id: string;
   agent_id: string;
@@ -13,6 +31,7 @@ export interface ChatResponse {
   response: string;
   created_at: string;
   tokens_used: number;
+  token_usage_summary: TokenUsageSummary;
 }
 
 export class ChatService {

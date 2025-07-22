@@ -38,11 +38,14 @@ export interface CreateHumanAgentRequest {
 
 export interface UpdateHumanAgentRequest {
   name?: string;
-  user_email?: string;
+  email?: string;
   password?: string;
   role?: string;
   department?: string;
   is_active?: boolean;
+  agent_type?: string;
+  phone_number?: string;
+  type?: string;
 }
 
 export class HumanAgentsService {
@@ -90,6 +93,7 @@ export class HumanAgentsService {
       department?: string | null;
       phone_number?: string;
       agent_type : string;
+       role?: string;
     }
   ): Promise<any> {
     try {
@@ -99,7 +103,8 @@ export class HumanAgentsService {
         password: agentData.password,
         department: agentData.department, // kirim dari form
         phone_number: agentData.phone_number,
-        agent_type: agentData.agent_type,
+        agent_type: "Human",
+        role: agentData.role,
         is_active: true,
       };
       const response = await axiosInstance.post(
@@ -130,9 +135,50 @@ export class HumanAgentsService {
     agentData: UpdateHumanAgentRequest
   ): Promise<HumanAgent> {
     try {
-      const response = await axiosInstance.put<ApiSuccessResponse<HumanAgent>>(
-        `/tenant/human-agents/${id}`,
-        agentData
+      // Build request body with only provided fields
+      const requestBody: any = {};
+      
+      if (agentData.department !== undefined) {
+        if (agentData.department && agentData.department !== "") {
+          requestBody.department = agentData.department;
+        }
+      }
+      
+      if (agentData.is_active !== undefined) {
+        requestBody.is_active = agentData.is_active;
+      }
+      
+      if (agentData.agent_type !== undefined) {
+        requestBody.agent_type = agentData.agent_type;
+      }
+      
+      if (agentData.name !== undefined) {
+        requestBody.name = agentData.name;
+      }
+      
+      if (agentData.email !== undefined) {
+        requestBody.email = agentData.email;
+      }
+      
+      if (agentData.phone_number !== undefined) {
+        requestBody.phone_number = agentData.phone_number;
+      }
+      
+      if (agentData.role !== undefined) {
+        requestBody.role = agentData.role;
+      }
+      
+      if (agentData.type !== undefined) {
+        requestBody.type = agentData.type;
+      }
+      
+      if (agentData.password !== undefined) {
+        requestBody.password = agentData.password;
+      }
+      
+      const response = await axiosInstance.patch<ApiSuccessResponse<HumanAgent>>(
+        `/v1/agents/${id}`,
+        requestBody
       );
       return response.data.data || response.data;
     } catch (error: any) {
@@ -185,6 +231,30 @@ export class HumanAgentsService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || "Failed to fetch human agent",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get agent details with complete user information
+   */
+  static async getAgentDetails(id: string): Promise<HumanAgent> {
+    try {
+      const response = await axiosInstance.get(
+        `/v1/agents/details/${id}`
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || "Failed to fetch agent details",
           status: error.response.status,
           errors: error.response.data.errors,
         };

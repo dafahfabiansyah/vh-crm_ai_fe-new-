@@ -46,7 +46,7 @@ export default function CreateHumanAgentModal({
     name: "",
     email: "",
     password: "",
-    role: "agent",
+    role: "Agent",
     department: "",
     phone_number: "",
     active: true,
@@ -73,20 +73,27 @@ export default function CreateHumanAgentModal({
 
     try {
       // Panggil API create agent
-      await HumanAgentsService.createHumanAgent({
+      const requestData: any = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        department: formData.department,
         phone_number: formData.phone_number,
-        agent_type: "Human"
-      });
+        agent_type: "Human",
+        role: formData.role
+      };
+      
+      // Only include department if one is selected
+      if (formData.department && formData.department !== "") {
+        requestData.department = formData.department;
+      }
+      
+      await HumanAgentsService.createHumanAgent(requestData);
       // Reset form
       setFormData({
         name: "",
         email: "",
         password: "",
-        role: "agent",
+        role: "Agent",
         phone_number: "",
         department: "",
         active: true,
@@ -199,7 +206,7 @@ export default function CreateHumanAgentModal({
             </div>
           </div>{" "}
           <div className="flex flex-row justify-between space-x-4">
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="role" className="text-sm text-gray-600">
                 Role *
               </Label>
@@ -212,11 +219,11 @@ export default function CreateHumanAgentModal({
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
-            </div> */}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="department" className="text-sm text-gray-600">
@@ -234,7 +241,7 @@ export default function CreateHumanAgentModal({
                 </SelectTrigger>
                 <SelectContent>
                   {departments.length === 0 && !loadingDepartments ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-departments" disabled>
                       No departments found
                     </SelectItem>
                   ) : (

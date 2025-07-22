@@ -85,7 +85,7 @@ export const platformsInboxService = {
   ) {
     try {
       const requestBody: any = { id };
-      if (id_pipeline !== undefined && id_pipeline !== null) requestBody.id_pipeline = id_pipeline;
+      if (id_pipeline !== undefined) requestBody.id_pipeline = id_pipeline;
       if (id_agent !== undefined && id_agent !== null) requestBody.id_agent = id_agent;
       if (agent_type !== undefined && agent_type !== null) requestBody.agent_type = agent_type;
       if (preserveConnectionStatus) {
