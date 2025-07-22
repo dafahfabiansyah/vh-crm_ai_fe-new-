@@ -118,6 +118,11 @@ export default function ConnectedPlatformsPage() {
           // Get the first active agent mapping if available
           const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
           
+          // Get AI agent mapping specifically
+          const aiAgentMapping = (item.platform_mappings || []).find((mapping: any) => 
+            mapping.is_active && mapping.agent_type === 'AI'
+          );
+          
           return {
             id: item.id,
             name: item.platform_name,
@@ -133,13 +138,16 @@ export default function ConnectedPlatformsPage() {
             isConnected: item.is_connected,
             isLoggedIn: item.is_connected,
             // Map agent information from platform_mappings
-            aiAgent: activeMapping?.agent_name || undefined,
+            aiAgent: aiAgentMapping?.agent_name || undefined,
             teams: activeMapping ? [activeMapping.agent_type] : undefined,
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
             platformMappings: item.platform_mappings || [],
-            humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
+            // Extract human agent IDs from platform_mappings
+            humanAgentsSelected: (item.platform_mappings || [])
+              .filter((mapping: any) => mapping.is_active && mapping.agent_type === 'Human')
+              .map((mapping: any) => mapping.id_agent)
           };
         });
         setPlatformInboxs(mapped);
@@ -223,6 +231,11 @@ export default function ConnectedPlatformsPage() {
           // Get the first active agent mapping if available
           const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
           
+          // Get AI agent mapping specifically
+          const aiAgentMapping = (item.platform_mappings || []).find((mapping: any) => 
+            mapping.is_active && mapping.agent_type === 'AI'
+          );
+          
           return {
             id: item.id,
             name: item.platform_name,
@@ -238,13 +251,16 @@ export default function ConnectedPlatformsPage() {
             isConnected: item.is_connected,
             isLoggedIn: item.is_connected,
             // Map agent information from platform_mappings
-            aiAgent: activeMapping?.agent_name || undefined,
+            aiAgent: aiAgentMapping?.agent_name || undefined,
             teams: activeMapping ? [activeMapping.agent_type] : undefined,
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
             platformMappings: item.platform_mappings || [],
-            humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
+            // Extract human agent IDs from platform_mappings
+            humanAgentsSelected: (item.platform_mappings || [])
+              .filter((mapping: any) => mapping.is_active && mapping.agent_type === 'Human')
+              .map((mapping: any) => mapping.id_agent)
           };
         });
         setPlatformInboxs(mapped);
@@ -741,7 +757,7 @@ export default function ConnectedPlatformsPage() {
                           : "Select human agents"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72 p-2">
+                    <PopoverContent className="w-full p-2">
                       <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
                         {humanAgents.map((agent) => (
                           <label key={agent.id} className="flex items-center gap-2 cursor-pointer">
@@ -1281,15 +1297,24 @@ export default function ConnectedPlatformsPage() {
                                 variant="outline"
                                 className="w-full justify-between text-left"
                               >
-                                {selectedPlatform.humanAgentsSelected && selectedPlatform.humanAgentsSelected.length > 0
-                                  ? humanAgents
+                                {(() => {
+                                  console.log('Desktop Platform:', selectedPlatform.name);
+                                  console.log('Desktop Platform mappings:', selectedPlatform.platformMappings);
+                                  console.log('Desktop Human agents selected IDs:', selectedPlatform.humanAgentsSelected);
+                                  console.log('Desktop Available human agents:', humanAgents.map(a => ({id: a.id, name: a.name})));
+                                  
+                                  if (selectedPlatform.humanAgentsSelected && selectedPlatform.humanAgentsSelected.length > 0) {
+                                    const selectedAgents = humanAgents
                                       .filter((agent) => selectedPlatform.humanAgentsSelected?.includes(agent.id))
-                                      .map((agent) => agent.name)
-                                      .join(", ")
-                                  : "Select human agents"}
+                                      .map((agent) => agent.name);
+                                    console.log('Desktop Matched agents:', selectedAgents);
+                                    return selectedAgents.length > 0 ? selectedAgents.join(", ") : "Select human agents";
+                                  }
+                                  return "Select human agents";
+                                })()}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-72 p-2">
+                            <PopoverContent className="w-90 p-2">
                               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
                                 {humanAgents.map((agent) => (
                                   <label key={agent.id} className="flex items-center gap-2 cursor-pointer">

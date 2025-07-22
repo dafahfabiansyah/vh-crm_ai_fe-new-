@@ -1,19 +1,16 @@
 "use client";
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Plus, X, ChevronDown, ChevronUp, User, UserPlus, Calendar, Sparkles, MessageSquare } from "lucide-react"
+import { User,  Calendar, MessageSquare } from "lucide-react"
 import type { ChatInformationProps } from "@/types"
 
 export default function ChatInformation({ chatInfo }: ChatInformationProps) {
-  const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
-  const [newLabel, setNewLabel] = useState("")
-  const [notes, setNotes] = useState(chatInfo.notes || "")
+  // const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
+  // const [newLabel, setNewLabel] = useState("")
+  // const [notes, setNotes] = useState(chatInfo.notes || "")
   const [contactData, setContactData] = useState(chatInfo)
 
   useEffect(() => {
@@ -21,13 +18,13 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
     setContactData(chatInfo)
   }, [chatInfo])
 
-  const handleAddLabel = () => {
-    if (newLabel.trim()) {
-      // Handle adding label
-      console.log("Adding label:", newLabel)
-      setNewLabel("")
-    }
-  }
+  // const handleAddLabel = () => {
+  //   if (newLabel.trim()) {
+  //     // Handle adding label
+  //     console.log("Adding label:", newLabel)
+  //     setNewLabel("")
+  //   }
+  // }
 
   return (
     <div className="flex flex-col h-full">
@@ -84,7 +81,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         </div> */}
 
         {/* Labels */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Labels</Label>
           {(!contactData.labels || contactData.labels.length === 0) ? (
             <p className="text-sm text-muted-foreground">No labels yet</p>
@@ -115,7 +112,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               <span className="hidden sm:inline">Add Label</span>
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Handled By */}
         <div className="space-y-2">
@@ -130,7 +127,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
         </div>
 
         {/* Collaborators */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Collaborators</Label>
           {(!contactData.collaborators || contactData.collaborators.length === 0) ? (
             <p className="text-sm text-muted-foreground">No collaborators yet</p>
@@ -155,10 +152,10 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             <UserPlus className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Add Collaborator</span>
           </Button>
-        </div>
+        </div> */}
 
         {/* Notes */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Notes</Label>
           <Textarea
             placeholder="Add notes..."
@@ -166,19 +163,19 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
             onChange={(e) => setNotes(e.target.value)}
             className="min-h-[80px]"
           />
-        </div>
+        </div> */}
 
         {/* AI Summary */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">AI Summary</Label>
           <Button variant="outline" className="w-full text-primary border-primary hover:bg-primary/10">
             <Sparkles className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Generate AI Summary</span>
           </Button>
-        </div>
+        </div> */}
 
         {/* Additional Data */}
-        <Collapsible open={isAdditionalDataOpen} onOpenChange={setIsAdditionalDataOpen}>
+        {/* <Collapsible open={isAdditionalDataOpen} onOpenChange={setIsAdditionalDataOpen}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-0 h-auto">
               <span className="text-sm font-medium text-foreground">Additional Data</span>
@@ -194,7 +191,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               </Button>
             </div>
           </CollapsibleContent>
-        </Collapsible>
+        </Collapsible> */}
 
         {/* Conversation Details */}
         <div className="space-y-3">

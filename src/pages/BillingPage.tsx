@@ -30,6 +30,7 @@ import {
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
 import { createTransaction } from "@/services/transactionService";
+import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
 
 export default function BillingPage() {
   const [, setSelectedPlan] = useState<string | null>(null);
@@ -191,6 +192,8 @@ export default function BillingPage() {
 
   return (
     <MainLayout>
+      {/* Aktifkan proteksi Manager ke Billing, bisa di-comment jika tidak diperlukan */}
+      <ManagerBillingEnforcer />
       <div className="min-h-screen bg-background">
         <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
           {/* Dashboard Cards */}
@@ -752,21 +755,15 @@ export default function BillingPage() {
         </Dialog>
 
         {/* Processing Dialog - Cannot be dismissed */}
-        <Dialog open={isProcessingDialogOpen} onOpenChange={() => {}}>
+        <Dialog open={isProcessingDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-center">
-                Processing Payment
+                Akun anda sedang kami siapkan, anda bisa menutup halaman ini
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 text-center">
-              {/* <div className="flex justify-center">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div> */}
-              <p className="text-foreground">
-                Akun anda sedang kami siapkan dan akan kami kabari secepatnya,
-                anda bisa menutup tab ini
-              </p>
+              {/* Optional: Spinner or info */}
             </div>
           </DialogContent>
         </Dialog>
