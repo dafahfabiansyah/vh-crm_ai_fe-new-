@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,9 +29,12 @@ interface EditHumanAgentModalProps {
 }
 
 interface EditHumanAgentFormData {
+  name: string;
+  email: string;
+  phone_number: string;
   department: string; // UUID
   active: boolean;
-  role: string; // agent_type
+  role: string; // role field
 }
 
 export default function EditHumanAgentModal({
@@ -40,23 +44,47 @@ export default function EditHumanAgentModal({
   onAgentUpdated,
 }: EditHumanAgentModalProps) {
   const [formData, setFormData] = useState<EditHumanAgentFormData>({
+    name: "",
+    email: "",
+    phone_number: "",
     department: "",
     active: true,
-    role: "Human",
+    role: "Manager",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
 
-  // Populate form when agent data is available
+  // Fetch and populate form when agent is available
   useEffect(() => {
-    if (agent) {
-      setFormData({
-        department: agent.department|| "",
-        active: agent.is_active !== undefined ? agent.is_active : true,
-        role: agent.role || "Human",
-      });
+    if (agent && agent.id) {
+      const fetchAgentDetails = async () => {
+        try {
+          const agentDetails = await HumanAgentsService.getAgentDetails(agent.id);
+          setFormData({
+            name: agentDetails.user?.name || agentDetails.name || "",
+            email: agentDetails.user?.email || "",
+            phone_number: agentDetails.user?.phone_number || "",
+            department: agentDetails.department || "",
+            active: agentDetails.is_active !== undefined ? agentDetails.is_active : true,
+            role: agentDetails.role || "Manager",
+          });
+        } catch (error) {
+          console.error("Error fetching agent details:", error);
+          // Fallback to basic agent data if detailed fetch fails
+          setFormData({
+            name: agent.name || "",
+            email: agent.user_email || "",
+            phone_number: "",
+            department: agent.department || "",
+            active: agent.is_active !== undefined ? agent.is_active : true,
+            role: agent.role || "Manager",
+          });
+        }
+      };
+      
+      fetchAgentDetails();
     }
   }, [agent]);
 
@@ -79,15 +107,19 @@ export default function EditHumanAgentModal({
     try {
       // PATCH update human agent
       const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phone_number,
         is_active: formData.active,
+        role: formData.role,
       };
-      if (formData.department) {
+      
+      // Only include department if one is selected
+      if (formData.department && formData.department !== "" && formData.department !== "no-departments") {
         payload.department = formData.department;
       }
-      // if (formData.role) {
-      //   payload.agent_type = formData.role;
-      // }
-      await HumanAgentsService.patchAgent(agent.id, payload);
+      
+      await HumanAgentsService.updateHumanAgent(agent.id, payload);
 
       onClose();
       if (onAgentUpdated) {
@@ -127,25 +159,70 @@ export default function EditHumanAgentModal({
             </div>
           )}
 
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm text-gray-600">
+              Name
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              disabled={isLoading}
+              className="bg-gray-50"
+              placeholder="Enter agent name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm text-gray-600">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              disabled={isLoading}
+              className="bg-gray-50"
+              placeholder="Enter email address"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone_number" className="text-sm text-gray-600">
+              Phone Number
+            </Label>
+            <Input
+              id="phone_number"
+              type="tel"
+              value={formData.phone_number}
+              onChange={(e) => handleInputChange("phone_number", e.target.value)}
+              disabled={isLoading}
+              className="bg-gray-50"
+              placeholder="Enter phone number"
+            />
+          </div>
+
           <div className="flex flex-row justify-between space-x-4">
-            {/* <div className="space-y-2 w-full">
+            <div className="space-y-2 w-full">
               <Label htmlFor="role" className="text-sm text-gray-600">
-                Agent Type
-              </Label>
+                  Role
+                </Label>
               <Select
                 value={formData.role}
                 onValueChange={(value) => handleInputChange("role", value)}
                 disabled={isLoading}
               >
                 <SelectTrigger className="bg-gray-50 w-full">
-                  <SelectValue placeholder="Select Type" />
+                  <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
-            </div> */}
+            </div>
 
             <div className="space-y-2 w-full">
               <Label htmlFor="department" className="text-sm text-gray-600">
@@ -161,7 +238,7 @@ export default function EditHumanAgentModal({
                 </SelectTrigger>
                 <SelectContent>
                   {departments.length === 0 && !loadingDepartments ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-departments" disabled>
                       No departments found
                     </SelectItem>
                   ) : (

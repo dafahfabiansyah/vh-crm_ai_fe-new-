@@ -84,7 +84,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
           content: response.response,
           sender: "ai",
           timestamp: new Date().toISOString(),
-          tokens_used: response.tokens_used
+          tokens_used: response.token_usage_summary?.total_tokens || response.tokens_used
         }
         console.log("AI Response:", aiResponse)
         setMessages((prev) => [...prev, aiResponse])
@@ -180,7 +180,7 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
                     </div>
                     {msg.tokens_used > 0 && (
                       <div className="text-xs opacity-70 mt-2">
-                        {Math.round(msg.tokens_used / 1500)} tokens used
+                        {Math.round(msg.tokens_used / 400)} tokens used
                       </div>
                     )}
                   </div>

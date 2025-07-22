@@ -113,7 +113,7 @@ export default function HumanAgentsPage() {
   const filteredAgents = humanAgents.filter((agent) => {
     const agentName = String(agent.name || "");
     const agentEmail = String(agent.user_email || "");
-    const agentRole = String(agent.user?.type || "");
+    const agentRole = String(agent.role || "Manager");
 
     const matchesSearch =
       agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,8 +206,8 @@ export default function HumanAgentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all-roles">All Roles</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
                       <SelectItem value="Agent">Agent</SelectItem>
-                      <SelectItem value="Owner">Owner</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -253,7 +253,7 @@ export default function HumanAgentsPage() {
                                 Email
                               </th>
                               <th className="text-left p-4 font-medium text-muted-foreground text-sm">
-                                Agent Type
+                                Role
                               </th>
                               <th className="text-left p-4 font-medium text-muted-foreground text-sm">
                                 Department
@@ -301,7 +301,7 @@ export default function HumanAgentsPage() {
                                   </td>
                                   <td className="p-4">
                                     <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded-full whitespace-nowrap">
-                                      {agent.user.type}
+                                      {agent.role || "Manager"}
                                     </span>
                                   </td>
                                   <td className="p-4 text-sm">
@@ -405,20 +405,14 @@ export default function HumanAgentsPage() {
                                 </div>
                                 <div className="flex items-center justify-between mt-3">
                                   <span
-                                    className={`px-2 py-1 text-xs rounded-full ${
-                                      agent.role === "superadmin"
-                                        ? "bg-red-100 text-red-800"
-                                        : agent.role === "manager"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-green-100 text-green-800"
-                                    }`}
-                                  >
-                                    {agent.role === "superadmin"
-                                      ? "Super Admin"
-                                      : agent.role === "manager"
-                                      ? "Manager"
-                                      : "Human Agent"}
-                                  </span>
+                              className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                                agent.role === "Manager"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-green-100 text-green-800"
+                              }`}
+                            >
+                              {agent.role || "Manager"}
+                            </span>
                                   <div className="flex items-center gap-2">
                                     <div
                                       className={`w-2 h-2 rounded-full ${
