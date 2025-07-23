@@ -29,7 +29,7 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [knowledgeContent, setKnowledgeContent] = useState<KnowledgeSourceContent | null>(null);
   const [loadingContent, setLoadingContent] = useState(false);
-  const [contentError, setContentError] = useState<string | null>(null);
+  const [, setContentError] = useState<string | null>(null);
 
   // Website Knowledge State
   const [websiteKnowledge, setWebsiteKnowledge] = useState<any[]>([]);
@@ -782,42 +782,18 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
                   </div>
 
                   {/* Right Column - Knowledge Content */}
-                  <div className="space-y-4">
-                    <h3 className="font-medium text-foreground">Knowledge Content</h3>
-                    <div className="border rounded-lg p-4 min-h-[300px] max-h-[600px] bg-card overflow-y-auto">
-                      {loadingContent ? (
-                        <div className="flex items-center justify-center py-12">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span>Loading content...</span>
-                          </div>
-                        </div>
-                      ) : contentError ? (
-                        <div className="text-center py-12">
-                          <div className="text-red-600 mb-4">
-                            <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p className="font-medium">Failed to load content</p>
-                            <p className="text-sm text-muted-foreground mt-1">{contentError}</p>
-                          </div>
-                          <Button 
-                            onClick={() => loadKnowledgeContent(selectedKnowledge.id)} 
-                            variant="outline"
-                            size="sm"
-                          >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Retry
-                          </Button>
-                        </div>
-                      ) : knowledgeContent ? (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-medium">Knowledge Content</span>
-                          </div>
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            {/* Render semua contentItems jika ada */}
-                            {knowledgeContent.contentItems && knowledgeContent.contentItems.length > 0 ? (
-                              knowledgeContent.contentItems.map((item, idx) => (
+                  {knowledgeContent && (
+                    knowledgeContent.contentItems && knowledgeContent.contentItems.length > 0 && knowledgeContent.contentItems.every(item => item.source_type === "Text") ? (
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-foreground">Knowledge Content</h3>
+                        <div className="border rounded-lg p-4 min-h-[300px] max-h-[600px] bg-card overflow-y-auto">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium">Knowledge Content</span>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              {knowledgeContent.contentItems.map((item, idx) => (
                                 <div key={item.id} className="mb-4">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="font-semibold">Content #{idx + 1}</span>
@@ -840,22 +816,13 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
                                     {item.content?.content || '-'}
                                   </pre>
                                 </div>
-                              ))
-                            ) : (
-                              <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                                {knowledgeContent.content?.text?.content || 'No content available'}
-                              </pre>
-                            )}
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No content loaded</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    ) : null
+                  )}
                 </div>
               </div>
             )}
