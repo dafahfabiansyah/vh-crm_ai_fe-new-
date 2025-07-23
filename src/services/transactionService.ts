@@ -18,4 +18,16 @@ export async function createTransaction({ id_subscription, voucher }: CreateTran
     prisma_external_id: "EXT-789",
   };
   return axios.post("/v1/transactions", body);
+}
+
+export async function getUsageTracking() {
+  return axios.get("/v1/usage-tracking");
+}
+
+export async function getCurrentSubscription() {
+  return axios.get("/v1/current-subscription");
+}
+
+export async function getTransactionHistory() {
+  return axios.get("/v1/transactions");
 } 
