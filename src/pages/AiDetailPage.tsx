@@ -154,6 +154,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [editError, setEditError] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(true);
   const [triggerCondition, setTriggerCondition] = useState("");
+  const [cooldownMinutes, setCooldownMinutes] = useState(0);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
   const [toast, setToast] = useState<{
@@ -261,6 +262,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       await axios.put(`/v1/ai-agents/${actualAgentId}/${editIntegration.id_integration}/integrations`, {
         trigger_condition: triggerCondition,
         is_enabled: isEnabled,
+        cooldown_minutes: cooldownMinutes,
       });
       
       // Refresh activated integrations
@@ -1017,6 +1019,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                               setEditIntegration(activatedIntegration);
                                               setIsEnabled(activatedIntegration.is_enabled);
                                               setTriggerCondition(activatedIntegration.trigger_condition || '');
+                                              setCooldownMinutes(activatedIntegration.cooldown_minutes || 0);
                                               setEditModalOpen(true);
                                             }}
                                             className="flex-1 text-xs"
@@ -1045,6 +1048,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                             setActivateIntegration(integration);
                                             setIsEnabled(true);
                                             setTriggerCondition(integration.trigger_condition || '');
+                                            setCooldownMinutes(0);
                                             setActivateModalOpen(true);
                                           }}
                                           className="w-full text-xs"
@@ -1149,6 +1153,18 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 rows={3}
               />
             </div>
+            <div>
+              <label htmlFor="cooldown_minutes" className="block mb-1 text-sm">Cooldown Minutes</label>
+              <input
+                type="number"
+                id="cooldown_minutes"
+                value={cooldownMinutes}
+                onChange={(e) => setCooldownMinutes(parseInt(e.target.value) || 0)}
+                placeholder="Enter cooldown in minutes"
+                min="0"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -1162,6 +1178,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     id_integration: activateIntegration.id,
                     is_enabled: isEnabled,
                     trigger_condition: triggerCondition,
+                    cooldown_minutes: cooldownMinutes,
                     is_active: false,
                   });
                   
@@ -1214,6 +1231,18 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                  rows={3}
                />
              </div>
+            <div>
+              <label htmlFor="edit_cooldown_minutes" className="block mb-1 text-sm">Cooldown Minutes</label>
+              <input
+                type="number"
+                id="edit_cooldown_minutes"
+                value={cooldownMinutes}
+                onChange={e => setCooldownMinutes(parseInt(e.target.value) || 0)}
+                placeholder="Enter cooldown in minutes"
+                min="0"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
