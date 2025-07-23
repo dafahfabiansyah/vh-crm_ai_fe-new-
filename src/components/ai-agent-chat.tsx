@@ -9,12 +9,21 @@ import { Send, MoreHorizontal, User, RotateCw, Loader2 } from "lucide-react";
 import { ChatService } from "@/services/chatService";
 import { Textarea } from "./ui/textarea";
 
+interface IntegrationExecution {
+  integration_name: string
+  success: boolean
+  response_body: string | null
+  error_message?: string
+  parsed_response?: any
+}
+
 interface Message {
   id: string
   content: string
   sender: "user" | "ai" | "system"
   timestamp: string
-  tokens_used : number
+  tokens_used: number
+  integrationExecutions?: IntegrationExecution[]
 }
 
 interface AIAgentChatPreviewProps {
@@ -77,14 +86,51 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
         // Call the real API
         const response = await ChatService.sendMessage(agentId, currentMessage, sessionId)
         
-        // Add AI response to messages
+        // Process integration executions if available
+        let processedIntegrations: IntegrationExecution[] | undefined = undefined
+        
+        if (response.integration_executions && response.integration_executions.length > 0) {
+          processedIntegrations = response.integration_executions.map(integration => {
+            // Try to parse the response_body if it's a JSON string
+            let parsedResponse = undefined
+            if (integration.response_body) {
+              try {
+                parsedResponse = JSON.parse(integration.response_body)
+              } catch (e) {
+                // If parsing fails, leave it as is
+                console.log('Failed to parse integration response:', e)
+              }
+            }
+            
+            return {
+              ...integration,
+              parsed_response: parsedResponse
+            }
+          })
+          
+          // Add integration results as a separate message first
+          const integrationMessage: Message = {
+            id: `integration-${Date.now()}`,
+            content: "Integration Results",
+            sender: "ai",
+            timestamp: new Date().toISOString(),
+            tokens_used: 0,
+            integrationExecutions: processedIntegrations
+          }
+          
+          setMessages((prev) => [...prev, integrationMessage])
+        }
+        
+        // Add AI response to messages as a separate message
         const aiResponse: Message = {
           id: `ai-${Date.now()}`,
           content: response.response,
           sender: "ai",
           timestamp: new Date().toISOString(),
           tokens_used: response.token_usage_summary?.total_tokens || response.tokens_used
+          // No integrationExecutions here as they're in a separate message now
         }
+        
         console.log("AI Response:", aiResponse)
         setMessages((prev) => [...prev, aiResponse])
       } catch (error: any) {
@@ -171,12 +217,47 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
                 <div className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[80%] p-3 rounded-lg text-sm break-words ${
-                      msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                      msg.sender === "user" ? "bg-primary text-primary-foreground" : 
+                      msg.id.startsWith("integration-") ? " bg-muted text-foreground" : 
+                      "bg-muted text-foreground"
                     }`}
                   >
-                    <div className="mb-1 whitespace-pre-wrap">
-                      {msg.content}
-                    </div>
+                    {/* For integration results message */}
+                    {msg.id.startsWith("integration-") && msg.integrationExecutions ? (
+                      <>
+                        <div className="font-medium mb-2">Integration Results</div>
+                        <div className="space-y-2">
+                          {msg.integrationExecutions.map((integration, index) => (
+                            <div key={index} className="text-xs">
+                              <div className={`flex items-center ${integration.success ? 'text-green-600' : 'text-red-600'}`}>
+                                <div className={`w-2 h-2 rounded-full mr-1 ${integration.success ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                <span className="font-medium">{integration.integration_name}</span>
+                                <span className="ml-1">- {integration.success ? 'Success' : 'Failed'}</span>
+                              </div>
+                              {integration.success && integration.response_body && (
+                                <div className="ml-3 mt-1 bg-white p-1 rounded text-gray-800 overflow-x-auto">
+                                  {integration.parsed_response ? (
+                                    <pre className="whitespace-pre-wrap">{JSON.stringify(integration.parsed_response, null, 2)}</pre>
+                                  ) : (
+                                    <pre className="whitespace-pre-wrap">{integration.response_body}</pre>
+                                  )}
+                                </div>
+                              )}
+                              {!integration.success && integration.error_message && (
+                                <div className="ml-3 mt-1 bg-red-50 p-1 rounded text-red-800">
+                                  {integration.error_message}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mb-1 whitespace-pre-wrap">
+                        {msg.content}
+                      </div>
+                    )}
+                    {/* Display token usage for all message types */}
                     {msg.tokens_used > 0 && (
                       <div className="text-xs opacity-70 mt-2">
                         {Math.round(msg.tokens_used / 1000)} tokens used

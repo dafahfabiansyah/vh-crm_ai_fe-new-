@@ -37,6 +37,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Toast } from "@/components/ui/toast";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
 import MainLayout from "@/main-layout";
 import { AgentsService } from "@/services/agentsService";
@@ -124,12 +125,27 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [customIntegrations, setCustomIntegrations] = useState<any[]>([]);
   const [customIntegrationsLoading, setCustomIntegrationsLoading] = useState(false);
   const [, setCustomIntegrationsError] = useState<string | null>(null);
+  const [activatedIntegrations, setActivatedIntegrations] = useState<any[]>([]);
+  const [activatedIntegrationsLoading, setActivatedIntegrationsLoading] = useState(false);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [activateIntegration, setActivateIntegration] = useState<any>(null);
+  const [editIntegration, setEditIntegration] = useState<any>(null);
   const [activateLoading, setActivateLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [activateError, setActivateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(true);
   const [triggerCondition, setTriggerCondition] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
 
   useEffect(() => {
     setCustomIntegrationsLoading(true);
@@ -143,6 +159,21 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       })
       .finally(() => setCustomIntegrationsLoading(false));
   }, []);
+
+  // Fetch activated integrations for this agent
+  useEffect(() => {
+    if (!actualAgentId) return;
+    
+    setActivatedIntegrationsLoading(true);
+    axios.get(`/v1/ai-agents/${actualAgentId}/integrations`)
+      .then(res => {
+        setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(err => {
+        console.error('Failed to load activated integrations:', err);
+      })
+      .finally(() => setActivatedIntegrationsLoading(false));
+  }, [actualAgentId]);
 
   const handleInputChange = (
     field: keyof AIAgentData,
@@ -197,6 +228,62 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEditIntegration = async () => {
+    if (!editIntegration || !actualAgentId) return;
+
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      await axios.put(`/v1/ai-agents/${actualAgentId}/${editIntegration.id_integration}/integrations`, {
+        trigger_condition: triggerCondition,
+        is_enabled: isEnabled,
+      });
+      
+      // Refresh activated integrations
+      const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
+      setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
+      
+      setEditModalOpen(false);
+      
+      // Show success message
+      setToast({
+        show: true,
+        type: "success",
+        title: "Integration Updated Successfully",
+        description: "The integration settings have been updated.",
+      });
+    } catch (err: any) {
+      setEditError(err?.response?.data?.message || err.message || 'Failed to update integration');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteIntegration = async (integrationId: string) => {
+    if (!actualAgentId) return;
+
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`/v1/ai-agents/${actualAgentId}/${integrationId}/integrations`);
+      
+      // Refresh activated integrations
+      const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
+      setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
+    } catch (err: any) {
+      console.error('Failed to delete integration:', err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const isIntegrationActivated = (integrationId: string) => {
+    return activatedIntegrations.some(activated => activated.id_integration === integrationId);
+  };
+
+  const getActivatedIntegration = (integrationId: string) => {
+    return activatedIntegrations.find(activated => activated.id_integration === integrationId);
   };
 
   const handleBack = () => {
@@ -285,6 +372,18 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
             </Button>
           </div>
         </div>
+
+        {/* Toast Notification */}
+        {toast?.show && (
+          <div className="px-3 sm:px-6 py-2">
+            <Toast
+              type={toast.type}
+              title={toast.title}
+              description={toast.description}
+              onClose={() => setToast(null)}
+            />
+          </div>
+        )}
 
         {/* Content Area - Always Scrollable */}
         <div className="px-3 sm:px-6 py-4 sm:py-6 pb-20">
@@ -751,7 +850,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       {/* Section 1: Integrations */}
                       <div>
                         <h2 className="text-lg font-semibold mb-4">Integrations</h2>
-                        <div className="w-full max-w-sm">
+                        <div className="w-full">
                           <Card>
                             <CardHeader className="flex flex-row items-center gap-3 pb-2">
                               <div className="p-3 bg-yellow-100 rounded-lg">
@@ -793,7 +892,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                           </Card>
                         </div> */}
                         {/* List Custom Integrations */}
-                        <div className="w-full max-w-sm">
+                        <div className="w-full">
                           <h3 className="text-lg font-semibold mb-4">List Custom Integrations</h3>
                           {customIntegrationsLoading ? (
                             <div className="flex items-center gap-2 text-muted-foreground py-4">
@@ -819,26 +918,99 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             </CardFooter>
                           </Card>
                           ) : (
-                            <div className="space-y-3">
-                              {customIntegrations.map((integration: any) => (
-                                <Card key={integration.id || integration.name}>
-                                  <CardHeader>
-                                    <CardTitle className="text-base font-semibold">{integration.name}</CardTitle>
-                                    <CardDescription>{integration.description}</CardDescription>
-                                  </CardHeader>
-                                  <CardFooter>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setActivateIntegration(integration);
-                                        setIsEnabled(true);
-                                        setTriggerCondition(integration.trigger_condition || '');
-                                        setActivateModalOpen(true);
-                                      }}
-                                    >Aktifkan</Button>
-                                  </CardFooter>
-                                </Card>
-                              ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {customIntegrations.map((integration: any) => {
+                                const isActivated = isIntegrationActivated(integration.id);
+                                const activatedIntegration = isActivated ? getActivatedIntegration(integration.id) : null;
+                                
+                                return (
+                                  <Card 
+                                    key={integration.id || integration.name}
+                                    className={`relative ${isActivated ? 'border-green-500 bg-green-50' : 'hover:shadow-md transition-shadow'}`}
+                                  >
+                                    {isActivated && (
+                                      <div className="absolute top-3 right-3">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                      </div>
+                                    )}
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-sm font-semibold text-gray-900">{integration.name}</CardTitle>
+                                      <CardDescription className="text-xs text-gray-600 line-clamp-2">
+                                        {integration.description && integration.description.length > 80 
+                                          ? integration.description.substring(0, 80) + '...' 
+                                          : integration.description}
+                                      </CardDescription>
+                                      {isActivated && activatedIntegration && (
+                                        <div className="mt-2 space-y-1">
+                                          <div className="text-xs text-gray-600">
+                                            <span className="font-medium">Trigger:</span> 
+                                            <span className="truncate block max-w-full" title={activatedIntegration.trigger_condition || '-'}>
+                                              {activatedIntegration.trigger_condition && activatedIntegration.trigger_condition.length > 50
+                                                ? activatedIntegration.trigger_condition.substring(0, 50) + '...'
+                                                : activatedIntegration.trigger_condition || '-'}
+                                            </span>
+                                          </div>
+                                          <div className="text-xs">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                              activatedIntegration.is_enabled 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : 'bg-gray-100 text-gray-800'
+                                            }`}>
+                                              {activatedIntegration.is_enabled ? 'Active' : 'Inactive'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </CardHeader>
+                                    <CardFooter className="pt-0 flex gap-2">
+                                      {isActivated ? (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                              setEditIntegration(activatedIntegration);
+                                              setIsEnabled(activatedIntegration.is_enabled);
+                                              setTriggerCondition(activatedIntegration.trigger_condition || '');
+                                              setEditModalOpen(true);
+                                            }}
+                                            className="flex-1 text-xs"
+                                          >
+                                            Update
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => {
+                                              setIntegrationToDelete(integration);
+                                              setDeleteModalOpen(true);
+                                            }}
+                                            disabled={deleteLoading}
+                                            className="flex-1 text-xs"
+                                          >
+                                            {deleteLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                                            Delete
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            setActivateIntegration(integration);
+                                            setIsEnabled(true);
+                                            setTriggerCondition(integration.trigger_condition || '');
+                                            setActivateModalOpen(true);
+                                          }}
+                                          className="w-full text-xs"
+                                        >
+                                          Active
+                                        </Button>
+                                      )}
+                                    </CardFooter>
+                                  </Card>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -915,11 +1087,13 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
             </div>
             <div>
               <label htmlFor="trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
-              <Input
+              <textarea
                 id="trigger_condition"
                 value={triggerCondition}
                 onChange={e => setTriggerCondition(e.target.value)}
                 placeholder="Masukkan trigger condition"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                rows={3}
               />
             </div>
           </div>
@@ -936,6 +1110,11 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     is_enabled: isEnabled,
                     trigger_condition: triggerCondition,
                   });
+                  
+                  // Refresh activated integrations
+                  const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
+                  setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
+                  
                   setActivateModalOpen(false);
                 } catch (err: any) {
                   setActivateError(err?.response?.data?.message || err.message || 'Gagal mengaktifkan integration');
@@ -947,6 +1126,80 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
             >
               {activateLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Aktifkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Edit Integration */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Custom Integration</DialogTitle>
+          </DialogHeader>
+          {editError && <div className="text-red-600 text-sm mb-2">{editError}</div>}
+          <div className="space-y-4">
+            <div>
+              <Checkbox id="edit_is_enabled" checked={isEnabled} onCheckedChange={v => setIsEnabled(!!v)} />
+              <label htmlFor="edit_is_enabled" className="ml-2">Aktifkan Integration</label>
+            </div>
+            <div>
+               <label htmlFor="edit_trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
+               <textarea
+                 id="edit_trigger_condition"
+                 value={triggerCondition}
+                 onChange={e => setTriggerCondition(e.target.value)}
+                 placeholder="Masukkan trigger condition"
+                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                 rows={3}
+               />
+             </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleEditIntegration}
+              disabled={editLoading}
+            >
+              {editLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Delete Confirmation */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Integration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete the integration <strong>{integrationToDelete?.name}</strong>? 
+              This action cannot be undone and will remove all associated configurations.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (integrationToDelete) {
+                  await handleDeleteIntegration(integrationToDelete.id);
+                  setDeleteModalOpen(false);
+                  setIntegrationToDelete(null);
+                }
+              }}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

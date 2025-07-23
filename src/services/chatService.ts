@@ -23,6 +23,13 @@ export interface TokenUsageSummary {
   total_tokens: number;
 }
 
+export interface IntegrationExecution {
+  integration_name: string;
+  success: boolean;
+  response_body: string | null;
+  error_message?: string;
+}
+
 export interface ChatResponse {
   id: string;
   agent_id: string;
@@ -32,6 +39,7 @@ export interface ChatResponse {
   created_at: string;
   tokens_used: number;
   token_usage_summary: TokenUsageSummary;
+  integration_executions?: IntegrationExecution[];
 }
 
 export class ChatService {
