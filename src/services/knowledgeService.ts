@@ -328,6 +328,28 @@ export class KnowledgeService {
   }
 
   /**
+   * Update knowledge base (name, description, status)
+   */
+  static async updateKnowledgeBase(id: string, data: { name: string; description: string; status: boolean }): Promise<any> {
+    try {
+      const response = await axiosInstance.put(`/v1/ai/knowledge/base/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to update knowledge base',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
    * Delete website knowledge by scraped pages ID
    */
   static async deleteWebsiteKnowledge(scrapedPagesId: string): Promise<void> {
@@ -454,6 +476,104 @@ export class KnowledgeService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to delete Q&A knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Edit text knowledge
+   */
+  static async editTextKnowledge(id: string, content: string): Promise<any> {
+    try {
+      const response = await axiosInstance.put(
+        `/v1/ai/knowledge/text/${id}`,
+        {
+          content,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to edit text knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Update text knowledge by ID
+   */
+  static async updateTextKnowledge(id: string, content: string): Promise<any> {
+    try {
+      const response = await axiosInstance.put(
+        `/v1/ai/knowledge/text/${id}`,
+        {
+          content,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to update text knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get all text knowledge
+   */
+  static async getAllTextKnowledge(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/v1/ai/knowledge/text');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch all text knowledge',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get text knowledge by ID
+   */
+  static async getTextKnowledgeById(id: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/knowledge/text/${id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch text knowledge by id',
           status: error.response.status,
           errors: error.response.data.errors,
         };
