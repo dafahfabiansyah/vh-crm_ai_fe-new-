@@ -74,6 +74,11 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   const [editBaseLoading, setEditBaseLoading] = useState(false);
   const [editBaseError, setEditBaseError] = useState<string | null>(null);
 
+  // Knowledge Text State
+  // const [allTextKnowledge, setAllTextKnowledge] = useState<any[]>([]);
+  // const [allTextLoading, setAllTextLoading] = useState(false);
+  // const [allTextError, setAllTextError] = useState<string | null>(null);
+
   const handleEditQAKnowledge = (item: any) => {
     setQaEditItem(item);
     setQaEditQuestion(item.question);
@@ -257,6 +262,15 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
       loadQAKnowledge();
     }
   }, [agentId]);
+
+  // useEffect(() => {
+  //   setAllTextLoading(true);
+  //   setAllTextError(null);
+  //   KnowledgeService.getAllTextKnowledge()
+  //     .then((data: any[]) => setAllTextKnowledge(Array.isArray(data) ? data : []))
+  //     .catch((err: any) => setAllTextError(err.message || 'Failed to fetch all knowledge text'))
+  //     .finally(() => setAllTextLoading(false));
+  // }, []);
 
   const handleRefresh = () => {
     loadKnowledgeList(true);
@@ -1004,6 +1018,65 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Knowledge Text Section */}
+      {/* <div className="mt-8">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Knowledge Text</h3>
+        {allTextLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading knowledge text...</span>
+          </div>
+        ) : allTextError ? (
+          <div className="text-red-600 mb-4">
+            <Database className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="font-medium">Failed to load knowledge text</p>
+            <p className="text-sm text-muted-foreground mt-1">{allTextError}</p>
+            <Button onClick={() => {
+              setAllTextLoading(true);
+              setAllTextError(null);
+              KnowledgeService.getAllTextKnowledge()
+                .then((data: any[]) => setAllTextKnowledge(Array.isArray(data) ? data : []))
+                .catch((err: any) => setAllTextError(err.message || 'Failed to fetch all knowledge text'))
+                .finally(() => setAllTextLoading(false));
+            }} variant="outline" className="mt-2">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        ) : allTextKnowledge.length === 0 ? (
+          <div className="text-muted-foreground py-8 text-center">No knowledge text found.</div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {allTextKnowledge.map((item: any) => (
+              <Card key={item.id} className="overflow-x-auto relative">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base font-semibold text-foreground truncate">
+                        {item.name || 'No Name'}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-1">
+                        {item.content}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-xs">
+                    <div>
+                      <span className="font-medium">ID:</span> {item.id}
+                    </div>
+                    <div>
+                      <span className="font-medium">Knowledge Base ID:</span> {item.id_knowledge}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div> */}
     </div>
   );
 }
