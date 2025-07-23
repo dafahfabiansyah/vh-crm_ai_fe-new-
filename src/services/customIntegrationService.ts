@@ -6,6 +6,12 @@ export interface CustomIntegrationField {
   description: string;
   enum_values?: string;
   is_required: boolean;
+  display_order?: number;
+}
+
+export interface CustomIntegrationHeader {
+  header_name: string;
+  header_value: string;
 }
 
 export interface CustomIntegrationPayload {
@@ -13,9 +19,13 @@ export interface CustomIntegrationPayload {
   description: string;
   webhook_url: string;
   http_method: 'POST' | 'GET';
-  max_tool_calls: number;
-  api_key: string;
-  trigger_condition: string;
+  content_type?: string;
+  max_tool_calls?: number;
+  timeout_seconds?: number;
+  api_key?: string;
+  trigger_condition?: string;
+  is_active?: boolean;
+  headers?: CustomIntegrationHeader[];
   fields: CustomIntegrationField[];
 }
 
@@ -41,7 +51,7 @@ export async function getCustomIntegrationById(id: string) {
 
 export async function editCustomIntegration(id: string, payload: CustomIntegrationPayload) {
   const baseGo = import.meta.env.VITE_API_BASE_URL || '';
-  const url = `${baseGo}/v1/custom-integrations/${id}`;
+  const url = `${baseGo}/v1/custom-integrations/${id}/with-fields-headers`;
   return axios.put(url, payload);
 }
 
@@ -49,4 +59,4 @@ export async function deleteCustomIntegration(id: string) {
   const baseGo = import.meta.env.VITE_API_BASE_URL || '';
   const url = `${baseGo}/v1/custom-integrations/${id}`;
   return axios.delete(url);
-} 
+}

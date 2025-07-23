@@ -29,8 +29,16 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
-import { createTransaction } from "@/services/transactionService";
+import { createTransaction, getUsageTracking, getCurrentSubscription, getTransactionHistory } from "@/services/transactionService";
 import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export default function BillingPage() {
   const [, setSelectedPlan] = useState<string | null>(null);
@@ -47,6 +55,15 @@ export default function BillingPage() {
   const [isProcessingDialogOpen, setIsProcessingDialogOpen] = useState(false);
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [topUpType, setTopUpType] = useState<null | "mau" | "responses">(null);
+  const [usageTracking, setUsageTracking] = useState<any>(null);
+  const [loadingUsage, setLoadingUsage] = useState(true);
+  const [usageError, setUsageError] = useState<string | null>(null);
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [transactionsError, setTransactionsError] = useState<string | null>(null);
 
   const handleUpgrade = (planId: string) => {
     const plan = pricingPlans.find((p) => p.id === planId);
@@ -103,72 +120,6 @@ export default function BillingPage() {
   };
 
   // Mock data for dashboard cards
-  const dashboardData = {
-    packageDetails: {
-      plan: "-",
-      renewal: "-",
-      status: "active",
-    },
-    monthlyUsers: {
-      current: 0,
-      limit: 0,
-      additional: 0,
-    },
-    aiResponses: {
-      used: 0,
-      limit: 0,
-      resetDate: "Reset Setup Tanggal 1",
-    },
-    additionalResponses: {
-      count: 0,
-      permanent: true,
-    },
-  };
-
-  // Mock transaction data
-  // const transactions = [
-  //   {
-  //     id: 1,
-  //     date: "2025-07-01",
-  //     description: "Business Plan - Monthly Subscription",
-  //     amount: "IDR 3,609,050",
-  //     status: "paid",
-  //     type: "subscription",
-  //   },
-  //   {
-  //     id: 2,
-  //     date: "2025-06-15",
-  //     description: "Additional AI Responses - Top Up",
-  //     amount: "IDR 500,000",
-  //     status: "paid",
-  //     type: "topup",
-  //   },
-  //   {
-  //     id: 3,
-  //     date: "2025-06-01",
-  //     description: "Business Plan - Monthly Subscription",
-  //     amount: "IDR 3,609,050",
-  //     status: "paid",
-  //     type: "subscription",
-  //   },
-  //   {
-  //     id: 4,
-  //     date: "2025-05-20",
-  //     description: "Additional MAU - Top Up",
-  //     amount: "IDR 750,000",
-  //     status: "paid",
-  //     type: "topup",
-  //   },
-  //   {
-  //     id: 5,
-  //     date: "2025-05-01",
-  //     description: "Business Plan - Monthly Subscription",
-  //     amount: "IDR 3,609,050",
-  //     status: "pending",
-  //     type: "subscription",
-  //   },
-  // ];
-
   const periods = [
     { id: "monthly", label: "Monthly", discount: null },
     { id: "3months", label: "3 Months", discount: "5% Discount" },
@@ -189,6 +140,87 @@ export default function BillingPage() {
         setLoadingPlans(false);
       });
   }, []);
+
+  useEffect(() => {
+    setLoadingUsage(true);
+    getUsageTracking()
+      .then((res) => {
+        setUsageTracking(res.data);
+        setLoadingUsage(false);
+      })
+      .catch((err) => {
+        setUsageError("Gagal mengambil data usage");
+        setLoadingUsage(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setLoadingSubscription(true);
+    getCurrentSubscription()
+      .then((res) => {
+        setCurrentSubscription(res.data);
+        setLoadingSubscription(false);
+      })
+      .catch((err) => {
+        setSubscriptionError("Gagal mengambil data subscription");
+        setLoadingSubscription(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setLoadingTransactions(true);
+    getTransactionHistory()
+      .then((res) => {
+        setTransactions(res.data);
+        setLoadingTransactions(false);
+      })
+      .catch((err) => {
+        setTransactionsError("Gagal mengambil data transaksi");
+        setLoadingTransactions(false);
+      });
+  }, []);
+
+  // Helper untuk format bulan
+  function formatUsageMonth(dateStr: string) {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleString("id-ID", { month: "long", year: "numeric" });
+  }
+
+  function formatDate(dateStr: string) {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  // Ganti dashboardData dengan data dari usageTracking jika ada
+  const dashboardData = {
+    packageDetails: {
+      plan: currentSubscription?.package_name || "-",
+      renewal:
+        currentSubscription?.start_date && currentSubscription?.end_date
+          ? `${formatDate(currentSubscription.start_date)} - ${formatDate(currentSubscription.end_date)}`
+          : "-",
+      status: "active",
+      limit_token: currentSubscription?.limit_token ?? 0,
+      limit_mau: currentSubscription?.limit_mau ?? 0,
+    },
+    monthlyUsers: {
+      current: usageTracking?.current_mau ?? 0,
+      limit: currentSubscription?.limit_mau ?? 0,
+      additional: usageTracking?.additional_mau ?? 0,
+      usageMonth: usageTracking?.usage_month ? formatUsageMonth(usageTracking.usage_month) : "-",
+    },
+    aiResponses: {
+      used: usageTracking?.current_ai_response ?? 0,
+      limit: currentSubscription?.limit_token ?? 0,
+      resetDate: usageTracking?.usage_month ? formatUsageMonth(usageTracking.usage_month) : "-",
+    },
+    additionalResponses: {
+      count: usageTracking?.additional_ai_response ?? 0,
+      permanent: true,
+    },
+  };
 
   return (
     <MainLayout>
@@ -220,14 +252,14 @@ export default function BillingPage() {
                     {dashboardData.packageDetails.renewal}
                   </span>
                 </div>
-                <Button
+                {/* <Button
                   variant="secondary"
                   disabled
                   size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
                 >
                   View Current Subscription
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
 
@@ -298,7 +330,7 @@ export default function BillingPage() {
                   <span>{dashboardData.aiResponses.resetDate}</span>
                 </div>
               </CardContent>
-            </Card>
+          </Card>
 
             {/* Additional AI Responses Card */}
             <Card className="bg-gradient-to-br from-primary to-emerald-700 text-white border-0">
@@ -593,65 +625,46 @@ export default function BillingPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="text-center text-muted-foreground">
-                    Belum ada transaksi
-                  </div>
-                  {/* {transactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                      <div
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          transaction.type === "subscription"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-green-100 text-green-600"
-                        }`}
-                      >
-                        {transaction.type === "subscription" ? (
-                          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-                        ) : (
-                          <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-foreground text-sm sm:text-base truncate">
-                          {transaction.description}
-                        </h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {new Date(transaction.date).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            }
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-0">
-                      <div className="text-left sm:text-right">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">
-                          {transaction.amount}
-                        </div>
-                        <Badge
-                          variant={
-                            transaction.status === "paid"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="text-xs mt-1"
-                        >
-                          {transaction.status === "paid" ? "Paid" : "Pending"}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))} */}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Tipe</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Subscription</TableHead>
+                      <TableHead>Metode</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingTransactions ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center">Memuat transaksi...</TableCell>
+                      </TableRow>
+                    ) : transactionsError ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-red-500">{transactionsError}</TableCell>
+                      </TableRow>
+                    ) : transactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center">Belum ada transaksi</TableCell>
+                      </TableRow>
+                    ) : (
+                      transactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>
+                            {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs max-w-[120px] truncate" title={transaction.id}>{transaction.id}</TableCell>
+                          <TableCell>{transaction.transaction_type}</TableCell>
+                          <TableCell>{transaction.quantity}</TableCell>
+                          <TableCell className="max-w-[120px] truncate" title={transaction.id_subscription}>{transaction.id_subscription}</TableCell>
+                          <TableCell>{transaction.payment_method}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>

@@ -1,7 +1,7 @@
-import axiosInstance from './axios';
+import axiosInstance from "./axios";
 
 export interface KnowledgeContent {
-  type: 'Text' | 'Website' | 'Product' | 'File' | 'QA';
+  type: "Text" | "Website" | "Product" | "File" | "QA";
   text?: {
     content: string;
   };
@@ -81,20 +81,26 @@ export class KnowledgeService {
   /**
    * Create knowledge for an AI agent
    */
-  static async createKnowledge(agentId: string, data: CreateKnowledgeRequest): Promise<KnowledgeResponse> {
+  static async createKnowledge(
+    agentId: string,
+    data: CreateKnowledgeRequest
+  ): Promise<KnowledgeResponse> {
     try {
-      const response = await axiosInstance.post<KnowledgeResponse>(`/v1/ai/knowledge/agent/${agentId}/complete`, data);
+      const response = await axiosInstance.post<KnowledgeResponse>(
+        `/v1/ai/knowledge/agent/${agentId}/complete`,
+        data
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to create knowledge',
+          message: error.response.data.message || "Failed to create knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -103,13 +109,18 @@ export class KnowledgeService {
   /**
    * Create text knowledge
    */
-  static async createTextKnowledge(agentId: string, name: string, content: string, description?: string): Promise<KnowledgeResponse> {
+  static async createTextKnowledge(
+    agentId: string,
+    name: string,
+    content: string,
+    description?: string
+  ): Promise<KnowledgeResponse> {
     return this.createKnowledge(agentId, {
       name,
       description: description || `Text Knowledge Base - ${name}`,
       status: true,
       content: {
-        type: 'Text',
+        type: "Text",
         text: {
           content,
         },
@@ -118,15 +129,92 @@ export class KnowledgeService {
   }
 
   /**
+   * Update text knowledge by ID
+   */
+  static async updateTextKnowledge(id: string, content: string): Promise<any> {
+    try {
+      const response = await axiosInstance.put(`/v1/ai/knowledge/text/${id}`, {
+        content,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message:
+            error.response.data.message || "Failed to update text knowledge",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get all text knowledge
+   */
+  static async getAllTextKnowledge(): Promise<any> {
+    try {
+      const response = await axiosInstance.get("/v1/ai/knowledge/text");
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message:
+            error.response.data.message || "Failed to fetch all text knowledge",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get text knowledge by ID
+   */
+  static async getTextKnowledgeById(id: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/v1/ai/knowledge/text/${id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message:
+            error.response.data.message ||
+            "Failed to fetch text knowledge by id",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
    * Create website knowledge
    */
-  static async createWebsiteKnowledge(agentId: string, name: string, url: string, title?: string): Promise<KnowledgeResponse> {
+  static async createWebsiteKnowledge(
+    agentId: string,
+    name: string,
+    url: string,
+    title?: string
+  ): Promise<KnowledgeResponse> {
     return this.createKnowledge(agentId, {
       name,
       description: `Website Knowledge Base - ${name}`,
       status: true,
       content: {
-        type: 'Website',
+        type: "Website",
         website: {
           url,
           title,
@@ -138,21 +226,24 @@ export class KnowledgeService {
   /**
    * Create product knowledge
    */
-  static async createProductKnowledge(agentId: string, name: string, description: string, product_id: string): Promise<KnowledgeResponse> {
+  static async createProductKnowledge(
+    agentId: string,
+    name: string,
+    description: string,
+    product_id: string
+  ): Promise<KnowledgeResponse> {
     return this.createKnowledge(agentId, {
       name,
       description,
       status: true,
       content: {
-        type: 'Product',
+        type: "Product",
         product: {
           product_id,
         },
       },
     });
   }
-
-
 
   /**
    * Post website knowledge dengan format baru (tanpa content, langsung url, scrape_type, max_links di root)
@@ -181,13 +272,14 @@ export class KnowledgeService {
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to post website knowledge',
+          message:
+            error.response.data.message || "Failed to post website knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -196,20 +288,25 @@ export class KnowledgeService {
   /**
    * Get existing knowledge sources for an agent
    */
-  static async getExistingKnowledge(agentId: string): Promise<ExistingKnowledge[]> {
+  static async getExistingKnowledge(
+    agentId: string
+  ): Promise<ExistingKnowledge[]> {
     try {
-      const response = await axiosInstance.get<ExistingKnowledge[]>(`/v1/ai/knowledge/base/agent/${agentId}`);
+      const response = await axiosInstance.get<ExistingKnowledge[]>(
+        `/v1/ai/knowledge/base/agent/${agentId}`
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch existing knowledge',
+          message:
+            error.response.data.message || "Failed to fetch existing knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -220,18 +317,21 @@ export class KnowledgeService {
    */
   static async getWebsiteKnowledge(agentId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/v1/ai/knowledge/website/agent/${agentId}`);
+      const response = await axiosInstance.get(
+        `/v1/ai/knowledge/website/agent/${agentId}`
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch website knowledge',
+          message:
+            error.response.data.message || "Failed to fetch website knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -242,18 +342,22 @@ export class KnowledgeService {
    */
   static async getWebsiteKnowledgeByWebsiteId(websiteId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/v1/ai/scraped-pages/website/${websiteId}`);
+      const response = await axiosInstance.get(
+        `/v1/ai/scraped-pages/website/${websiteId}`
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch website knowledge detail',
+          message:
+            error.response.data.message ||
+            "Failed to fetch website knowledge detail",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -262,16 +366,22 @@ export class KnowledgeService {
   /**
    * Get knowledge source content by ID
    */
-  static async getKnowledgeSourceContent(knowledgeId: string): Promise<KnowledgeSourceContent> {
+  static async getKnowledgeSourceContent(
+    knowledgeId: string
+  ): Promise<KnowledgeSourceContent> {
     try {
       // Get the basic knowledge source information
-      const baseResponse = await axiosInstance.get<ExistingKnowledge>(`/v1/ai/knowledge/base/${knowledgeId}`);
+      const baseResponse = await axiosInstance.get<ExistingKnowledge>(
+        `/v1/ai/knowledge/base/${knowledgeId}`
+      );
       const baseData = baseResponse.data;
-      
+
       // Get the content items for this knowledge source
-      const contentResponse = await axiosInstance.get<KnowledgeContentItem[]>(`/v1/ai/knowledge/source/knowledge/${knowledgeId}`);
+      const contentResponse = await axiosInstance.get<KnowledgeContentItem[]>(
+        `/v1/ai/knowledge/source/knowledge/${knowledgeId}`
+      );
       const contentItems = contentResponse.data;
-      
+
       // Create a combined response with both the base knowledge info and the content items
       const result: KnowledgeSourceContent = {
         id: baseData.id,
@@ -282,25 +392,27 @@ export class KnowledgeService {
         updated_at: baseData.updated_at,
         contentItems: contentItems,
         // Set a default content for backward compatibility
-        content: { 
-          type: 'Text', 
-          text: { 
-            content: contentItems[0]?.content?.content || 'No content available' 
-          } 
-        }
+        content: {
+          type: "Text",
+          text: {
+            content:
+              contentItems[0]?.content?.content || "No content available",
+          },
+        },
       };
-      
+
       return result;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch knowledge content',
+          message:
+            error.response.data.message || "Failed to fetch knowledge content",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -315,13 +427,43 @@ export class KnowledgeService {
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to delete knowledge source',
+          message:
+            error.response.data.message || "Failed to delete knowledge source",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Update knowledge base (name, description, status)
+   */
+  static async updateKnowledgeBase(
+    id: string,
+    data: { name: string; description: string; status: boolean }
+  ): Promise<any> {
+    try {
+      const response = await axiosInstance.put(
+        `/v1/ai/knowledge/base/${id}`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message:
+            error.response.data.message || "Failed to update knowledge base",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -336,13 +478,14 @@ export class KnowledgeService {
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to delete website knowledge',
+          message:
+            error.response.data.message || "Failed to delete website knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -353,23 +496,27 @@ export class KnowledgeService {
   /**
    * Create Q&A knowledge
    */
-  static async createQAKnowledge(question: string, answer: string): Promise<any> {
+  static async createQAKnowledge(
+    question: string,
+    answer: string
+  ): Promise<any> {
     try {
       const response = await axiosInstance.post(`/v1/ai/knowledge/qa`, {
         question,
-        answer
+        answer,
       });
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to create Q&A knowledge',
+          message:
+            error.response.data.message || "Failed to create Q&A knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -385,13 +532,14 @@ export class KnowledgeService {
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch Q&A knowledge',
+          message:
+            error.response.data.message || "Failed to fetch Q&A knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -402,18 +550,21 @@ export class KnowledgeService {
    */
   static async getQAKnowledgeById(idQnaKnowledge: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/v1/ai/knowledge/qa/${idQnaKnowledge}`);
+      const response = await axiosInstance.get(
+        `/v1/ai/knowledge/qa/${idQnaKnowledge}`
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch Q&A knowledge',
+          message:
+            error.response.data.message || "Failed to fetch Q&A knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -422,23 +573,31 @@ export class KnowledgeService {
   /**
    * Update Q&A knowledge
    */
-  static async updateQAKnowledge(idQnaKnowledge: string, question: string, answer: string): Promise<any> {
+  static async updateQAKnowledge(
+    idQnaKnowledge: string,
+    question: string,
+    answer: string
+  ): Promise<any> {
     try {
-      const response = await axiosInstance.put(`/v1/ai/knowledge/qa/${idQnaKnowledge}`, {
-        question,
-        answer
-      });
+      const response = await axiosInstance.put(
+        `/v1/ai/knowledge/qa/${idQnaKnowledge}`,
+        {
+          question,
+          answer,
+        }
+      );
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to update Q&A knowledge',
+          message:
+            error.response.data.message || "Failed to update Q&A knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }
@@ -453,13 +612,39 @@ export class KnowledgeService {
     } catch (error: any) {
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to delete Q&A knowledge',
+          message:
+            error.response.data.message || "Failed to delete Q&A knowledge",
           status: error.response.status,
           errors: error.response.data.errors,
         };
       }
       throw {
-        message: 'Network error. Please check your connection.',
+        message: "Network error. Please check your connection.",
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Edit text knowledge
+   */
+  static async editTextKnowledge(id: string, content: string): Promise<any> {
+    try {
+      const response = await axiosInstance.put(`/v1/ai/knowledge/text/${id}`, {
+        content,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message:
+            error.response.data.message || "Failed to edit text knowledge",
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: "Network error. Please check your connection.",
         status: 0,
       };
     }

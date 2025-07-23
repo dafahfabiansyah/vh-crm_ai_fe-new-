@@ -20,7 +20,7 @@ interface CustomIntegrationField {
   created_at: string;
 }
 
-interface CustomIntegrationDetail {
+export interface CustomIntegrationDetail {
   id: string;
   name: string;
   description: string;

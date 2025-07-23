@@ -12,14 +12,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import {
   getCustomIntegrationById,
   editCustomIntegration,
   type CustomIntegrationPayload,
+  type CustomIntegrationHeader,
 } from "@/services/customIntegrationService";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 interface CustomIntegrationField {
   id: string;
@@ -63,9 +65,10 @@ const EditCustomIntegration = () => {
     description: "",
     webhook_url: "",
     http_method: "POST",
-    max_tool_calls: 1,
-    api_key: "",
-    trigger_condition: "",
+    content_type: "application/json",
+    timeout_seconds: 30,
+    is_active: true,
+    headers: [],
     fields: [],
   });
 
@@ -84,9 +87,10 @@ const EditCustomIntegration = () => {
           description: data.description,
           webhook_url: data.webhook_url,
           http_method: data.http_method as "POST" | "GET",
-          max_tool_calls: 1,
-          api_key: "",
-          trigger_condition: "",
+          content_type: data.content_type || "application/json",
+          timeout_seconds: data.timeout_seconds || 30,
+          is_active: data.is_active,
+          headers: Array.isArray(data.headers) ? data.headers : [],
           fields: data.fields.map(
             (field: {
               field_name: string;
@@ -94,12 +98,14 @@ const EditCustomIntegration = () => {
               description: string;
               enum_values: string;
               is_required: boolean;
+              display_order?: number;
             }) => ({
               field_name: field.field_name,
               field_type: field.field_type,
               description: field.description,
               enum_values: field.enum_values,
               is_required: field.is_required,
+              display_order: field.display_order || 1,
             })
           ),
         });
@@ -120,28 +126,42 @@ const EditCustomIntegration = () => {
     }));
   };
 
-  const handleFieldChange = (index: number, field: string, value: any) => {
+  // Header management functions
+  const addHeader = () => {
     setFormData((prev) => ({
       ...prev,
-      fields: prev.fields.map((f, i) =>
-        i === index ? { ...f, [field]: value } : f
+      headers: [...(prev.headers || []), { header_name: "", header_value: "" }],
+    }));
+  };
+
+  const removeHeader = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      headers: (prev.headers || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleHeaderChange = (index: number, field: keyof CustomIntegrationHeader, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      headers: (prev.headers || []).map((header, i) => 
+        i === index ? { ...header, [field]: value } : header
       ),
     }));
   };
 
+  // Field management functions
   const addField = () => {
     setFormData((prev) => ({
       ...prev,
-      fields: [
-        ...prev.fields,
-        {
-          field_name: "",
-          field_type: "text",
-          description: "",
-          enum_values: "",
-          is_required: false,
-        },
-      ],
+      fields: [...prev.fields, {
+        field_name: "",
+        field_type: "text",
+        description: "",
+        enum_values: "",
+        is_required: false,
+        display_order: prev.fields.length + 1,
+      }],
     }));
   };
 
@@ -149,6 +169,15 @@ const EditCustomIntegration = () => {
     setFormData((prev) => ({
       ...prev,
       fields: prev.fields.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleFieldChange = (index: number, field: keyof CustomIntegrationField, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      fields: prev.fields.map((f, i) => 
+        i === index ? { ...f, [field]: value } : f
+      ),
     }));
   };
 
@@ -265,7 +294,7 @@ const EditCustomIntegration = () => {
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="http_method">HTTP Method</Label>
                       <Select
@@ -284,14 +313,32 @@ const EditCustomIntegration = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="max_tool_calls">Max Tool Calls</Label>
+                      <Label htmlFor="content_type">Content Type</Label>
+                      <Select
+                        value={formData.content_type}
+                        onValueChange={(value) =>
+                          handleInputChange("content_type", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="application/json">application/json</SelectItem>
+                          <SelectItem value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</SelectItem>
+                          <SelectItem value="text/plain">text/plain</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="timeout_seconds">Timeout (seconds)</Label>
                       <Input
-                        id="max_tool_calls"
+                        id="timeout_seconds"
                         type="number"
-                        value={formData.max_tool_calls}
+                        value={formData.timeout_seconds}
                         onChange={(e) =>
                           handleInputChange(
-                            "max_tool_calls",
+                            "timeout_seconds",
                             parseInt(e.target.value)
                           )
                         }
@@ -300,34 +347,168 @@ const EditCustomIntegration = () => {
                       />
                     </div>
                   </div>
-                  <div>
-                    <Label htmlFor="api_key">API Key</Label>
-                    <Input
-                      id="api_key"
-                      value={formData.api_key}
-                      onChange={(e) =>
-                        handleInputChange("api_key", e.target.value)
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("is_active", checked)
                       }
-                      placeholder="Enter API key"
-                      type="password"
                     />
+                    <Label htmlFor="is_active">Active Integration</Label>
                   </div>
-                  {/* <div>
-                    <Label htmlFor="trigger_condition">Trigger Condition</Label>
-                    <Textarea
-                      id="trigger_condition"
-                      value={formData.trigger_condition}
-                      onChange={(e) =>
-                        handleInputChange("trigger_condition", e.target.value)
-                      }
-                      placeholder="Enter trigger condition"
-                    />
-                  </div> */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Headers</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addHeader}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Header
+                      </Button>
+                    </div>
+                    {formData.headers?.map((header, index) => (
+                       <div key={index} className="grid grid-cols-2 gap-2 mb-2">
+                         <Input
+                           placeholder="Header Name"
+                           value={header.header_name}
+                           onChange={(e) =>
+                             handleHeaderChange(index, "header_name", e.target.value)
+                           }
+                         />
+                         <div className="flex gap-2">
+                           <Input
+                             placeholder="Header Value"
+                             value={header.header_value}
+                             onChange={(e) =>
+                               handleHeaderChange(index, "header_value", e.target.value)
+                             }
+                           />
+                           <Button
+                             type="button"
+                             variant="outline"
+                             size="sm"
+                             onClick={() => removeHeader(index)}
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     ))}
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Fields</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addField}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Field
+                      </Button>
+                    </div>
+                    {formData.fields?.map((field, index) => (
+                      <div key={index} className="border p-4 rounded-lg mb-4">
+                        <div className="grid grid-cols-2 gap-4 mb-2">
+                          <div>
+                            <Label>Field Name</Label>
+                            <Input
+                              placeholder="Field Name"
+                              value={field.field_name}
+                              onChange={(e) =>
+                                handleFieldChange(index, "field_name", e.target.value)
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label>Field Type</Label>
+                            <Select
+                              value={field.field_type}
+                              onValueChange={(value) =>
+                                handleFieldChange(index, "field_type", value)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="email">Email</SelectItem>
+                                <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="enum">Enum</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-2">
+                          <div>
+                            <Label>Description</Label>
+                            <Input
+                              placeholder="Field Description"
+                              value={field.description}
+                              onChange={(e) =>
+                                handleFieldChange(index, "description", e.target.value)
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label>Display Order</Label>
+                            <Input
+                              type="number"
+                              placeholder="Display Order"
+                              value={field.display_order}
+                              onChange={(e) =>
+                                handleFieldChange(index, "display_order", parseInt(e.target.value))
+                              }
+                            />
+                          </div>
+                        </div>
+                        {field.field_type === "enum" && (
+                          <div className="mb-2">
+                            <Label>Enum Values (comma-separated)</Label>
+                            <Input
+                              placeholder="low,medium,high"
+                              value={field.enum_values}
+                              onChange={(e) =>
+                                handleFieldChange(index, "enum_values", e.target.value)
+                              }
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`required-${index}`}
+                              checked={field.is_required}
+                              onCheckedChange={(checked) =>
+                                handleFieldChange(index, "is_required", checked)
+                              }
+                            />
+                            <Label htmlFor={`required-${index}`}>Required Field</Label>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeField(index)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Remove Field
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </form>
             </Card>
             {/* Fields Configuration */}
-            <Card className="p-6">
+            {/* <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Fields Configuration</h2>
                 <Button
@@ -447,7 +628,7 @@ const EditCustomIntegration = () => {
                   )}
                 </div>
               </form>
-            </Card>
+            </Card> */}
           </div>
           {/* Sidebar (Info & Actions) */}
           <div className="space-y-6">
