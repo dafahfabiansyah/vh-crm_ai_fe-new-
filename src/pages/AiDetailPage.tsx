@@ -143,7 +143,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     useState(false);
   const [, setCustomIntegrationsError] = useState<string | null>(null);
   const [activatedIntegrations, setActivatedIntegrations] = useState<any[]>([]);
-  const [activatedIntegrationsLoading, setActivatedIntegrationsLoading] = useState(false);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [activateIntegration,setActivateIntegration ] = useState<any>(null);
@@ -183,15 +182,13 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   useEffect(() => {
     if (!actualAgentId) return;
     
-    setActivatedIntegrationsLoading(true);
     axios.get(`/v1/ai-agents/${actualAgentId}/integrations`)
       .then(res => {
         setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
       })
       .catch(err => {
         console.error('Failed to load activated integrations:', err);
-      })
-      .finally(() => setActivatedIntegrationsLoading(false));
+      });
   }, [actualAgentId]);
 
   const handleInputChange = (
