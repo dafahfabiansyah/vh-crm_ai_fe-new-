@@ -58,11 +58,11 @@ export default function BillingPage() {
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [topUpType, setTopUpType] = useState<null | "mau" | "responses">(null);
   const [usageTracking, setUsageTracking] = useState<any>(null);
-  const [loadingUsage, setLoadingUsage] = useState(true);
-  const [usageError, setUsageError] = useState<string | null>(null);
+  const [, setLoadingUsage] = useState(true);
+  const [, setUsageError] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
-  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  const [, setLoadingSubscription] = useState(true);
+  const [, setSubscriptionError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -151,6 +151,7 @@ export default function BillingPage() {
         setLoadingUsage(false);
       })
       .catch((err) => {
+        console.log(err);
         setUsageError("Gagal mengambil data usage");
         setLoadingUsage(false);
       });
@@ -164,6 +165,7 @@ export default function BillingPage() {
         setLoadingSubscription(false);
       })
       .catch((err) => {
+        console.log(err);
         setSubscriptionError("Gagal mengambil data subscription");
         setLoadingSubscription(false);
       });
@@ -177,6 +179,7 @@ export default function BillingPage() {
         setLoadingTransactions(false);
       })
       .catch((err) => {
+        console.log(err);
         setTransactionsError("Gagal mengambil data transaksi");
         setLoadingTransactions(false);
       });
