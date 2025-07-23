@@ -47,6 +47,8 @@ import {
   Info,
   Menu,
 } from "lucide-react";
+import { getCurrentSubscription } from "@/services/transactionService";
+import { useEffect } from "react";
 
 // Notification type for state
 type Notification = {
@@ -115,6 +117,20 @@ export default function Topbar({
     tags: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  useEffect(() => {
+    setLoadingSubscription(true);
+    getCurrentSubscription()
+      .then((res) => {
+        setCurrentSubscription(res.data);
+        setLoadingSubscription(false);
+      })
+      .catch(() => {
+        setLoadingSubscription(false);
+      });
+  }, []);
 
   // Get user data from Redux state (which is loaded from cookies)
   const { user } = useAppSelector((state) => state.auth);
@@ -232,10 +248,16 @@ export default function Topbar({
           <div className="flex items-center">
             <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 mr-1 sm:mr-2 flex-shrink-0" />
             <AlertDescription className="text-xs sm:text-sm font-medium whitespace-nowrap">
-              {/* <span className="hidden sm:inline">Anda sedang menggunakan paket standar</span> */}
-              <span className="hidden sm:inline capitalize">Belum Berlangganan, Silakan lakukan pembelian</span>
-              {/* <span className="sm:hidden">Paket Standar</span> */}
-              <span className="sm:hidden">Belum Berlangganan</span>
+              {loadingSubscription ? (
+                <span>Memuat paket...</span>
+              ) : currentSubscription?.package_name ? (
+                <span className="capitalize">Anda Sedang berlangganan paket {currentSubscription.package_name}</span>
+              ) : (
+                <>
+                  <span className="hidden sm:inline capitalize">Belum Berlangganan, Silakan lakukan pembelian</span>
+                  <span className="sm:hidden">Belum Berlangganan</span>
+                </>
+              )}
             </AlertDescription>
           </div>
         </Alert>

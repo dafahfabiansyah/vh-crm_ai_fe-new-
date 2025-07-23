@@ -39,6 +39,8 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function BillingPage() {
   const [, setSelectedPlan] = useState<string | null>(null);
@@ -56,11 +58,11 @@ export default function BillingPage() {
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [topUpType, setTopUpType] = useState<null | "mau" | "responses">(null);
   const [usageTracking, setUsageTracking] = useState<any>(null);
-  const [loadingUsage, setLoadingUsage] = useState(true);
-  const [usageError, setUsageError] = useState<string | null>(null);
+  const [, setLoadingUsage] = useState(true);
+  const [, setUsageError] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
-  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  const [, setLoadingSubscription] = useState(true);
+  const [, setSubscriptionError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -149,6 +151,7 @@ export default function BillingPage() {
         setLoadingUsage(false);
       })
       .catch((err) => {
+        console.log(err);
         setUsageError("Gagal mengambil data usage");
         setLoadingUsage(false);
       });
@@ -162,6 +165,7 @@ export default function BillingPage() {
         setLoadingSubscription(false);
       })
       .catch((err) => {
+        console.log(err);
         setSubscriptionError("Gagal mengambil data subscription");
         setLoadingSubscription(false);
       });
@@ -175,6 +179,7 @@ export default function BillingPage() {
         setLoadingTransactions(false);
       })
       .catch((err) => {
+        console.log(err);
         setTransactionsError("Gagal mengambil data transaksi");
         setLoadingTransactions(false);
       });
@@ -191,6 +196,12 @@ export default function BillingPage() {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
     return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  // Helper untuk mendapatkan nama plan dari id_subscription
+  function getPlanNameById(id: string) {
+    const plan = pricingPlans.find((p) => p.id === id);
+    return plan ? plan.name : id;
   }
 
   // Ganti dashboardData dengan data dari usageTracking jika ada
@@ -220,6 +231,24 @@ export default function BillingPage() {
       count: usageTracking?.additional_ai_response ?? 0,
       permanent: true,
     },
+  };
+
+  const handleExportTransactions = () => {
+    if (!transactions || transactions.length === 0) return;
+    const exportData = transactions.map(tx => ({
+      id: tx.id,
+      transaction_type: tx.transaction_type,
+      quantity: tx.quantity,
+      created_at: tx.created_at,
+      subscription: getPlanNameById(tx.id_subscription),
+      payment_method: tx.payment_method,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(file, `transactions_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
   return (
@@ -618,6 +647,7 @@ export default function BillingPage() {
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto"
+                    onClick={handleExportTransactions}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Export
@@ -629,7 +659,7 @@ export default function BillingPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tanggal</TableHead>
-                      <TableHead>ID</TableHead>
+                      <TableHead>Transaction ID</TableHead>
                       <TableHead>Tipe</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Subscription</TableHead>
@@ -658,7 +688,7 @@ export default function BillingPage() {
                           <TableCell className="font-mono text-xs max-w-[120px] truncate" title={transaction.id}>{transaction.id}</TableCell>
                           <TableCell>{transaction.transaction_type}</TableCell>
                           <TableCell>{transaction.quantity}</TableCell>
-                          <TableCell className="max-w-[120px] truncate" title={transaction.id_subscription}>{transaction.id_subscription}</TableCell>
+                          <TableCell className="max-w-[120px] truncate" title={transaction.id_subscription}>{getPlanNameById(transaction.id_subscription)}</TableCell>
                           <TableCell>{transaction.payment_method}</TableCell>
                         </TableRow>
                       ))
