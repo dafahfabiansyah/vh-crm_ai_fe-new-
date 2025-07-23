@@ -656,7 +656,7 @@ export default function BillingPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tanggal</TableHead>
-                      <TableHead>ID</TableHead>
+                      <TableHead>Transaction ID</TableHead>
                       <TableHead>Tipe</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Subscription</TableHead>
