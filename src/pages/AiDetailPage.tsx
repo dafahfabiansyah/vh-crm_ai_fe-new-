@@ -258,7 +258,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     setEditLoading(true);
     setEditError(null);
     try {
-      await axios.put(`/v1/ai-agents/${actualAgentId}/${editIntegration.id_integration}/integrations/with-custom`, {
+      await axios.put(`/v1/ai-agents/${actualAgentId}/${editIntegration.id_integration}/integrations`, {
         trigger_condition: triggerCondition,
         is_enabled: isEnabled,
       });
