@@ -36,16 +36,31 @@ import {
   Truck,
   Loader2,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
 import MainLayout from "@/main-layout";
 import { AgentsService } from "@/services/agentsService";
 import KnowledgeTab from "@/components/knowledge-tab";
 import ExistingKnowledgeList from "@/components/existing-knowledge-list";
 import type { AIAgentData, AIAgentDetailPageProps } from "@/types";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCustomIntegrations } from '@/services/customIntegrationService';
-import axios from '@/services/axios';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { getCustomIntegrations } from "@/services/customIntegrationService";
+import axios from "@/services/axios";
+import type { CustomIntegrationDetail } from "./CustomIntegrationDetail";
 
 export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const navigate = useNavigate();
@@ -100,7 +115,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
           messageAwait: settingsResponse.message_await,
           aiMessageLimit: settingsResponse.message_limit,
           rajaongkir_enabled: settingsResponse.rajaongkir_enabled,
-          rajaongkir_origin_district: settingsResponse.rajaongkir_origin_district,
+          rajaongkir_origin_district:
+            settingsResponse.rajaongkir_origin_district,
           rajaongkir_couriers: settingsResponse.rajaongkir_couriers,
           // UI state (default values)
           isActive: true,
@@ -121,25 +137,28 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     loadAgentData();
   }, [actualAgentId]);
 
-  const [customIntegrations, setCustomIntegrations] = useState<any[]>([]);
-  const [customIntegrationsLoading, setCustomIntegrationsLoading] = useState(false);
+  const [customIntegrations, setCustomIntegrations] = useState<CustomIntegrationDetail[]>([]);
+  const [customIntegrationsLoading, setCustomIntegrationsLoading] =
+    useState(false);
   const [, setCustomIntegrationsError] = useState<string | null>(null);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
-  const [activateIntegration, setActivateIntegration] = useState<any>(null);
+  const [activateIntegration, ] = useState<any>(null);
   const [activateLoading, setActivateLoading] = useState(false);
   const [activateError, setActivateError] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(true);
-  const [triggerCondition, setTriggerCondition] = useState('');
+  const [triggerCondition, setTriggerCondition] = useState("");
 
   useEffect(() => {
     setCustomIntegrationsLoading(true);
     setCustomIntegrationsError(null);
     getCustomIntegrations()
-      .then(res => {
+      .then((res) => {
         setCustomIntegrations(Array.isArray(res.data) ? res.data : []);
       })
-      .catch(err => {
-        setCustomIntegrationsError(err.message || 'Failed to load custom integrations');
+      .catch((err) => {
+        setCustomIntegrationsError(
+          err.message || "Failed to load custom integrations"
+        );
       })
       .finally(() => setCustomIntegrationsLoading(false));
   }, []);
@@ -169,11 +188,17 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       let couriers: string[] = [];
       if (Array.isArray(agentData.rajaongkir_couriers)) {
         couriers = agentData.rajaongkir_couriers.filter(Boolean);
-      } else if (typeof agentData.rajaongkir_couriers === 'string') {
+      } else if (typeof agentData.rajaongkir_couriers === "string") {
         try {
-          couriers = String(agentData.rajaongkir_couriers).split(',').map((s: string) => s.trim()).filter(Boolean);
+          couriers = String(agentData.rajaongkir_couriers)
+            .split(",")
+            .map((s: string) => s.trim())
+            .filter(Boolean);
         } catch {
-          couriers = String(agentData.rajaongkir_couriers).split(',').map((s: string) => s.trim()).filter(Boolean);
+          couriers = String(agentData.rajaongkir_couriers)
+            .split(",")
+            .map((s: string) => s.trim())
+            .filter(Boolean);
         }
       }
       await AgentsService.updateAgentSettings(agentData.id_settings, {
@@ -187,7 +212,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         message_limit: agentData.aiMessageLimit,
         rajaongkir_enabled: agentData.rajaongkir_enabled,
         rajaongkir_origin_district: agentData.rajaongkir_origin_district,
-        rajaongkir_couriers: couriers.join(','), // Ensure string type
+        rajaongkir_couriers: couriers.join(","), // Ensure string type
       });
 
       setHasChanges(false);
@@ -750,22 +775,35 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     <div className="flex flex-col justify-center py-8 gap-10">
                       {/* Section 1: Integrations */}
                       <div>
-                        <h2 className="text-lg font-semibold mb-4">Integrations</h2>
+                        <h2 className="text-lg font-semibold mb-4">
+                          Integrations
+                        </h2>
                         <div className="w-full max-w-sm">
                           <Card>
                             <CardHeader className="flex flex-row items-center gap-3 pb-2">
                               <div className="p-3 bg-yellow-100 rounded-lg">
                                 <Truck className="h-6 w-6 text-yellow-600" />
                               </div>
-                              <CardTitle className="text-lg">Cek Ongkos Kirim</CardTitle>
+                              <CardTitle className="text-lg">
+                                Cek Ongkos Kirim
+                              </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <CardDescription>
-                                Mengecek ongkir dari berbagai kurir dan mendapatkan status pengiriman
+                                Mengecek ongkir dari berbagai kurir dan
+                                mendapatkan status pengiriman
                               </CardDescription>
                             </CardContent>
                             <CardFooter>
-                              <Button onClick={() => navigate("/integration/shipping")} className="w-full" variant="outline">Aktifkan</Button>
+                              <Button
+                                onClick={() =>
+                                  navigate("/integration/shipping")
+                                }
+                                className="w-full"
+                                variant="outline"
+                              >
+                                Aktifkan
+                              </Button>
                             </CardFooter>
                           </Card>
                         </div>
@@ -794,48 +832,75 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                         </div> */}
                         {/* List Custom Integrations */}
                         <div className="w-full max-w-sm">
-                          <h3 className="text-lg font-semibold mb-4">List Custom Integrations</h3>
+                          <h3 className="text-lg font-semibold mb-4">
+                            List Custom Integrations
+                          </h3>
                           {customIntegrationsLoading ? (
                             <div className="flex items-center gap-2 text-muted-foreground py-4">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>Loading custom integrations...</span>
                             </div>
-                          )  : customIntegrations.length === 0 ? (
+                          ) : customIntegrations.length === 0 ? (
                             <Card>
-                            <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                              <div className="p-3 bg-blue-100 rounded-lg">
-                                <Webhook className="h-6 w-6 text-blue-600" />
-                              </div>
-                              <CardTitle className="text-lg">API Integration</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <CardDescription>
-                                Integrasi dengan API eksternal untuk memperluas kemampuan AI Agent Anda
-                              </CardDescription>
-                            </CardContent>
-                            <CardFooter>
-                              <Button onClick={() => navigate("/integration/api")}
-                                className="w-full" variant="outline">Aktifkan</Button>
-                            </CardFooter>
-                          </Card>
+                              <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                                <div className="p-3 bg-blue-100 rounded-lg">
+                                  <Webhook className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <CardTitle className="text-lg">
+                                  API Integration
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <CardDescription>
+                                  Integrasi dengan API eksternal untuk
+                                  memperluas kemampuan AI Agent Anda
+                                </CardDescription>
+                              </CardContent>
+                              <CardFooter>
+                                <Button
+                                  onClick={() => navigate("/integration/api")}
+                                  className="w-full"
+                                  variant="outline"
+                                >
+                                  Aktifkan
+                                </Button>
+                              </CardFooter>
+                            </Card>
                           ) : (
                             <div className="space-y-3">
-                              {customIntegrations.map((integration: any) => (
+                              {customIntegrations.map((integration) => (
                                 <Card key={integration.id || integration.name}>
                                   <CardHeader>
-                                    <CardTitle className="text-base font-semibold">{integration.name}</CardTitle>
-                                    <CardDescription>{integration.description}</CardDescription>
+                                    <CardTitle className="text-base font-semibold">
+                                      {integration.name}
+                                    </CardTitle>
+                                    <CardDescription>
+                                      {integration.description}
+                                    </CardDescription>
                                   </CardHeader>
                                   <CardFooter>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setActivateIntegration(integration);
-                                        setIsEnabled(true);
-                                        setTriggerCondition(integration.trigger_condition || '');
-                                        setActivateModalOpen(true);
-                                      }}
-                                    >Aktifkan</Button>
+                                    {integration.is_active ? (
+                                      <Button variant="outline" disabled>
+                                        Sudah Aktif
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        variant="outline"
+                                        onClick={async () => {
+                                          // Aktifkan integration
+                                          await axios.put(`/v1/custom-integrations/${integration.id}`, { is_active: true });
+                                          // Refresh list
+                                          setCustomIntegrationsLoading(true);
+                                          getCustomIntegrations()
+                                            .then((res) => {
+                                              setCustomIntegrations(Array.isArray(res.data) ? res.data : []);
+                                            })
+                                            .finally(() => setCustomIntegrationsLoading(false));
+                                        }}
+                                      >
+                                        Aktifkan
+                                      </Button>
+                                    )}
                                   </CardFooter>
                                 </Card>
                               ))}
@@ -907,18 +972,28 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
           <DialogHeader>
             <DialogTitle>Aktifkan Custom Integration</DialogTitle>
           </DialogHeader>
-          {activateError && <div className="text-red-600 text-sm mb-2">{activateError}</div>}
+          {activateError && (
+            <div className="text-red-600 text-sm mb-2">{activateError}</div>
+          )}
           <div className="space-y-4">
             <div>
-              <Checkbox id="is_enabled" checked={isEnabled} onCheckedChange={v => setIsEnabled(!!v)} />
-              <label htmlFor="is_enabled" className="ml-2">Aktifkan Integration</label>
+              <Checkbox
+                id="is_enabled"
+                checked={isEnabled}
+                onCheckedChange={(v) => setIsEnabled(!!v)}
+              />
+              <label htmlFor="is_enabled" className="ml-2">
+                Aktifkan Integration
+              </label>
             </div>
             <div>
-              <label htmlFor="trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
+              <label htmlFor="trigger_condition" className="block mb-1 text-sm">
+                Trigger Condition
+              </label>
               <Input
                 id="trigger_condition"
                 value={triggerCondition}
-                onChange={e => setTriggerCondition(e.target.value)}
+                onChange={(e) => setTriggerCondition(e.target.value)}
                 placeholder="Masukkan trigger condition"
               />
             </div>
@@ -930,22 +1005,29 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 setActivateLoading(true);
                 setActivateError(null);
                 try {
-                  await axios.post('/v1/ai-agent-integrations', {
+                  await axios.post("/v1/ai-agent-integrations", {
                     id_ai_agent: actualAgentId,
                     id_integration: activateIntegration.id,
                     is_enabled: isEnabled,
                     trigger_condition: triggerCondition,
+                    is_active: false,
                   });
                   setActivateModalOpen(false);
                 } catch (err: any) {
-                  setActivateError(err?.response?.data?.message || err.message || 'Gagal mengaktifkan integration');
+                  setActivateError(
+                    err?.response?.data?.message ||
+                      err.message ||
+                      "Gagal mengaktifkan integration"
+                  );
                 } finally {
                   setActivateLoading(false);
                 }
               }}
               disabled={activateLoading}
             >
-              {activateLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {activateLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
               Aktifkan
             </Button>
           </DialogFooter>

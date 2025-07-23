@@ -13,7 +13,8 @@ export interface CustomIntegrationPayload {
   description: string;
   webhook_url: string;
   http_method: 'POST' | 'GET';
-  max_tool_calls: number;
+  max_tool_calls?: number;
+  timeout_seconds?: number;
   api_key: string;
   trigger_condition: string;
   fields: CustomIntegrationField[];

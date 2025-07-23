@@ -31,7 +31,7 @@ const CreateApiIntegrationPage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [webhook, setWebhook] = useState("");
-  const [maxCalls, setMaxCalls] = useState("30");
+  const [timeoutSeconds, setTimeoutSeconds] = useState("30");
   const [apiKey, setApiKey] = useState("");
   // const [payloadType, setPayloadType] = useState("text");
   // const [payloadKey, setPayloadKey] = useState("");
@@ -74,9 +74,10 @@ const CreateApiIntegrationPage = () => {
         description,
         webhook_url: webhook,
         http_method: method as "POST" | "GET",
-        max_tool_calls: Number(maxCalls),
+        timeout_seconds: Number(timeoutSeconds),
         api_key: apiKey,
         trigger_condition: triggerCondition,
+        is_active: false, // <-- di root
         fields: aiInputs.map((input) => ({
           field_name: input.name,
           field_type: input.type as
@@ -211,11 +212,11 @@ const CreateApiIntegrationPage = () => {
               <div className="flex flex-col gap-4">
                 <div className="w-1/2">
                   <label className="block text-sm font-medium mb-1">
-                    Max Tool Calls
+                    Timeout (seconds)
                   </label>
                   <Input
-                    value={maxCalls}
-                    onChange={(e) => setMaxCalls(e.target.value)}
+                    value={timeoutSeconds}
+                    onChange={(e) => setTimeoutSeconds(e.target.value)}
                     type="number"
                   />
                 </div>

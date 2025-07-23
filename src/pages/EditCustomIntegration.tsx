@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import {
@@ -19,7 +18,7 @@ import {
   editCustomIntegration,
   type CustomIntegrationPayload,
 } from "@/services/customIntegrationService";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft,  Save } from "lucide-react";
 import { toast } from "sonner";
 interface CustomIntegrationField {
   id: string;
@@ -63,7 +62,7 @@ const EditCustomIntegration = () => {
     description: "",
     webhook_url: "",
     http_method: "POST",
-    max_tool_calls: 1,
+    max_tool_calls: 0,
     api_key: "",
     trigger_condition: "",
     fields: [],
@@ -84,7 +83,7 @@ const EditCustomIntegration = () => {
           description: data.description,
           webhook_url: data.webhook_url,
           http_method: data.http_method as "POST" | "GET",
-          max_tool_calls: 1,
+          timeout_seconds: data.timeout_seconds,
           api_key: "",
           trigger_condition: "",
           fields: data.fields.map(
@@ -117,38 +116,6 @@ const EditCustomIntegration = () => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleFieldChange = (index: number, field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      fields: prev.fields.map((f, i) =>
-        i === index ? { ...f, [field]: value } : f
-      ),
-    }));
-  };
-
-  const addField = () => {
-    setFormData((prev) => ({
-      ...prev,
-      fields: [
-        ...prev.fields,
-        {
-          field_name: "",
-          field_type: "text",
-          description: "",
-          enum_values: "",
-          is_required: false,
-        },
-      ],
-    }));
-  };
-
-  const removeField = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      fields: prev.fields.filter((_, i) => i !== index),
     }));
   };
 
@@ -284,14 +251,14 @@ const EditCustomIntegration = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="max_tool_calls">Max Tool Calls</Label>
+                      <Label htmlFor="timeout_seconds">Timeout (seconds)</Label>
                       <Input
-                        id="max_tool_calls"
+                        id="timeout_seconds"
                         type="number"
-                        value={formData.max_tool_calls}
+                        value={formData.timeout_seconds}
                         onChange={(e) =>
                           handleInputChange(
-                            "max_tool_calls",
+                            "timeout_seconds",
                             parseInt(e.target.value)
                           )
                         }
@@ -300,7 +267,7 @@ const EditCustomIntegration = () => {
                       />
                     </div>
                   </div>
-                  <div>
+                  {/* <div>
                     <Label htmlFor="api_key">API Key</Label>
                     <Input
                       id="api_key"
@@ -311,7 +278,7 @@ const EditCustomIntegration = () => {
                       placeholder="Enter API key"
                       type="password"
                     />
-                  </div>
+                  </div> */}
                   {/* <div>
                     <Label htmlFor="trigger_condition">Trigger Condition</Label>
                     <Textarea
@@ -327,7 +294,7 @@ const EditCustomIntegration = () => {
               </form>
             </Card>
             {/* Fields Configuration */}
-            <Card className="p-6">
+            {/* <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Fields Configuration</h2>
                 <Button
@@ -447,7 +414,7 @@ const EditCustomIntegration = () => {
                   )}
                 </div>
               </form>
-            </Card>
+            </Card> */}
           </div>
           {/* Sidebar (Info & Actions) */}
           <div className="space-y-6">
