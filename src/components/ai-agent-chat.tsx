@@ -260,7 +260,8 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
                     {/* Display token usage for all message types */}
                     {msg.tokens_used > 0 && (
                       <div className="text-xs opacity-70 mt-2">
-                        {Math.round(msg.tokens_used / 1000)} tokens used
+                        {Math.ceil(msg.tokens_used / 1500)} tokens used
+                        {/* {Math.round(msg.tokens_used / 1500)} tokens used */}
                       </div>
                     )}
                   </div>
