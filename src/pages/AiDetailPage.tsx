@@ -1132,14 +1132,14 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
 
       {/* Modal Aktivasi Integration */}
       <Dialog open={activateModalOpen} onOpenChange={setActivateModalOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Aktifkan Custom Integration</DialogTitle>
           </DialogHeader>
           {activateError && (
-            <div className="text-red-600 text-sm mb-2">{activateError}</div>
+            <div className="text-red-600 text-sm mb-2 flex-shrink-0">{activateError}</div>
           )}
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             <div>
               <Checkbox
                 id="is_enabled"
@@ -1157,7 +1157,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 value={triggerCondition}
                 onChange={(e) => setTriggerCondition(e.target.value)}
                 placeholder="Masukkan trigger condition"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
                 rows={3}
               />
             </div>
@@ -1202,7 +1202,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
               </select>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button
               onClick={async () => {
                 if (!activateIntegration) return;
