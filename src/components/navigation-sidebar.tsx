@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import type { NavigationItem } from "@/types";
 import { navigationItems, bottomNavigationItems } from "@/mock/data";
 import { usePipelineList } from "@/hooks/usePipeline";
 import { AuthService } from "../services/authService";
+import { getCurrentSubscription } from "../services/transactionService";
 
 interface NavigationSidebarProps {
   isMobileOpen?: boolean;
@@ -32,6 +33,8 @@ export default function NavigationSidebar({
   const [isMobile, setIsMobile] = useState(false);
   // Ambil role user sekali saja saat komponen mount
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean>(false);
+  const subscriptionCheckedRef = useRef(false);
 
   // Pipeline list hook
   const { pipelines, fetchPipelines } = usePipelineList();
@@ -62,6 +65,23 @@ export default function NavigationSidebar({
   // Ambil role user sekali saja saat komponen mount
   useEffect(() => {
     setUserRole(AuthService.getRoleFromToken());
+  }, []);
+
+  // Fetch subscription status on mount (only once per session)
+  useEffect(() => {
+    if (subscriptionCheckedRef.current) return;
+    subscriptionCheckedRef.current = true;
+    getCurrentSubscription()
+      .then((res) => {
+        if (res?.data && res.data.package_name) {
+          setHasActiveSubscription(true);
+        } else {
+          setHasActiveSubscription(false);
+        }
+      })
+      .catch(() => {
+        setHasActiveSubscription(false);
+      });
   }, []);
 
   // Create enhanced navigation items with dynamic pipeline list
@@ -204,8 +224,8 @@ export default function NavigationSidebar({
             itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
           )}
           style={paddingLeft}
-          disabled={userRole?.toLowerCase() === "manager"}
-          title={userRole?.toLowerCase() === "manager" ? "Manager tidak dapat mengakses menu" : undefined}
+          disabled={userRole?.toLowerCase() === "manager" && !hasActiveSubscription}
+          title={userRole?.toLowerCase() === "manager" && !hasActiveSubscription ? "Manager tidak dapat mengakses menu" : undefined}
         >
           <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
           <div
@@ -228,8 +248,8 @@ export default function NavigationSidebar({
 
   return (
     <>
-      {/* Overlay to disable sidebar if Manager */}
-      {userRole?.toLowerCase() === "manager" && (
+      {/* Overlay to disable sidebar if Manager and NOT subscribed */}
+      {userRole?.toLowerCase() === "manager" && !hasActiveSubscription && (
         <div
           style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "16rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
           className="hidden lg:block"
@@ -368,7 +388,7 @@ export default function NavigationSidebar({
         </div>
       )}
       {/* Mobile Sidebar Overlay for Manager */}
-      {isMobile && userRole?.toLowerCase() === "manager" && isMobileOpen && (
+      {isMobile && userRole?.toLowerCase() === "manager" && isMobileOpen && !hasActiveSubscription && (
         <div
           style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "20rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
         />

@@ -311,9 +311,9 @@ export default function BillingPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-xs sm:text-sm text-purple-100 mb-3">
+                {/* <div className="text-xs sm:text-sm text-purple-100 mb-3">
                   Additional MAU: {dashboardData.monthlyUsers.additional}
-                </div>
+                </div> */}
                 <div className="flex gap-2 mb-2">
                   <Button
                     variant="secondary"
@@ -327,10 +327,10 @@ export default function BillingPage() {
                     Top Up MAU
                   </Button>
                 </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
+                {/* <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
                   <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>Reset Setup Tanggal 1</span>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -367,7 +367,7 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="text-xs sm:text-sm font-medium text-indigo-100">
-                      Token Tumbuhin AI Responses
+                      Tumbuhin Additional Responses
                     </CardTitle>
                     <h2 className="text-lg sm:text-xl font-bold mt-1">
                       {dashboardData.additionalResponses.count} Responses
@@ -388,10 +388,10 @@ export default function BillingPage() {
                 >
                   Top Up Responses
                 </Button>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-indigo-200">
+                {/* <div className="flex items-center gap-2 text-xs sm:text-sm text-indigo-200">
                   <Check className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>AI Responses Permanent</span>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </div>
