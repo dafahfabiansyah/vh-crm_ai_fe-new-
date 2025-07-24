@@ -135,15 +135,40 @@ export const platformsInboxService = {
       const response = await axiosInstance.post('/v1/platform_mappings', {
         id_agent,
         id_platform,
-        agent_type: 'HUMAN',
+        agent_type: 'Human',
       });
-      console.log('Mapping Human Agent to Platform:', { id_agent, id_platform, agent_type: 'HUMAN' }, response.data);
+      console.log('Mapping Human Agent to Platform:', { id_agent, id_platform, agent_type: 'Human' }, response.data);
       return response.data;
     } catch (error) {
       const err = error as any;
       console.error('Error mapping human agent to platform:', err);
       console.error('Error response:', err.response?.data);
       throw new Error(err.response?.data?.message || err.message || 'Failed to map human agent to platform');
+    }
+  },
+
+  /**
+   * Update platform mapping active status
+   */
+  async updatePlatformMappingStatus(mappingId: string, is_active: boolean, agentId?: string) {
+    try {
+      const requestBody: any = {
+        agent_type: 'Human',
+        is_active,
+      };
+      
+      if (agentId) {
+        requestBody.id_agent = agentId;
+      }
+      
+      const response = await axiosInstance.patch(`/v1/platform_mappings/patch/${mappingId}`, requestBody);
+      console.log('Updated Platform Mapping Status:', { mappingId, is_active }, response.data);
+      return response.data;
+    } catch (error) {
+      const err = error as any;
+      console.error('Error updating platform mapping status:', err);
+      console.error('Error response:', err.response?.data);
+      throw new Error(err.response?.data?.message || err.message || 'Failed to update platform mapping status');
     }
   }
 };
