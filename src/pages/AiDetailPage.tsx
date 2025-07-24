@@ -154,6 +154,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [editError, setEditError] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(true);
   const [triggerCondition, setTriggerCondition] = useState("");
+  const [cooldownMinutes, setCooldownMinutes] = useState(0);
+  const [executionOrder, setExecutionOrder] = useState(1);
+  const [dependsOnIntegration, setDependsOnIntegration] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
   const [toast, setToast] = useState<{
@@ -261,6 +264,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       await axios.put(`/v1/ai-agents/${actualAgentId}/${editIntegration.id_integration}/integrations`, {
         trigger_condition: triggerCondition,
         is_enabled: isEnabled,
+        cooldown_minutes: cooldownMinutes,
+        execution_order: executionOrder,
+        depends_on_integration: dependsOnIntegration,
       });
       
       // Refresh activated integrations
@@ -1017,6 +1023,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                               setEditIntegration(activatedIntegration);
                                               setIsEnabled(activatedIntegration.is_enabled);
                                               setTriggerCondition(activatedIntegration.trigger_condition || '');
+                                              setCooldownMinutes(activatedIntegration.cooldown_minutes || 0);
+                                              setExecutionOrder(activatedIntegration.execution_order || 1);
+                                              setDependsOnIntegration(activatedIntegration.depends_on_integration || null);
                                               setEditModalOpen(true);
                                             }}
                                             className="flex-1 text-xs"
@@ -1045,6 +1054,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                             setActivateIntegration(integration);
                                             setIsEnabled(true);
                                             setTriggerCondition(integration.trigger_condition || '');
+                                            setCooldownMinutes(0);
+                                            setExecutionOrder(1);
+                                            setDependsOnIntegration(null);
                                             setActivateModalOpen(true);
                                           }}
                                           className="w-full text-xs"
@@ -1149,6 +1161,46 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 rows={3}
               />
             </div>
+            <div>
+              <label htmlFor="cooldown_minutes" className="block mb-1 text-sm">Cooldown Minutes</label>
+              <input
+                type="number"
+                id="cooldown_minutes"
+                value={cooldownMinutes}
+                onChange={(e) => setCooldownMinutes(parseInt(e.target.value) || 0)}
+                placeholder="Enter cooldown in minutes"
+                min="0"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label htmlFor="execution_order" className="block mb-1 text-sm">Execution Order</label>
+              <input
+                type="number"
+                id="execution_order"
+                value={executionOrder}
+                onChange={(e) => setExecutionOrder(parseInt(e.target.value) || 1)}
+                placeholder="Enter execution order"
+                min="1"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label htmlFor="depends_on_integration" className="block mb-1 text-sm">Depends on Integration</label>
+              <select
+                id="depends_on_integration"
+                value={dependsOnIntegration || ""}
+                onChange={(e) => setDependsOnIntegration(e.target.value || null)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">None</option>
+                {activatedIntegrations.filter(ai => ai.id_integration !== activateIntegration?.id).map((ai) => (
+                  <option key={ai.id_integration} value={ai.id_integration}>
+                    {ai.integration_name || ai.id_integration}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -1162,6 +1214,9 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     id_integration: activateIntegration.id,
                     is_enabled: isEnabled,
                     trigger_condition: triggerCondition,
+                    cooldown_minutes: cooldownMinutes,
+                    execution_order: executionOrder,
+                    depends_on_integration: dependsOnIntegration,
                     is_active: false,
                   });
                   
@@ -1214,6 +1269,46 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                  rows={3}
                />
              </div>
+            <div>
+              <label htmlFor="edit_cooldown_minutes" className="block mb-1 text-sm">Cooldown Minutes</label>
+              <input
+                type="number"
+                id="edit_cooldown_minutes"
+                value={cooldownMinutes}
+                onChange={e => setCooldownMinutes(parseInt(e.target.value) || 0)}
+                placeholder="Enter cooldown in minutes"
+                min="0"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit_execution_order" className="block mb-1 text-sm">Execution Order</label>
+              <input
+                type="number"
+                id="edit_execution_order"
+                value={executionOrder}
+                onChange={e => setExecutionOrder(parseInt(e.target.value) || 1)}
+                placeholder="Enter execution order"
+                min="1"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit_depends_on_integration" className="block mb-1 text-sm">Depends on Integration</label>
+              <select
+                id="edit_depends_on_integration"
+                value={dependsOnIntegration || ""}
+                onChange={e => setDependsOnIntegration(e.target.value || null)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">None</option>
+                {activatedIntegrations.filter(ai => ai.id_integration !== editIntegration?.id_integration).map((ai) => (
+                  <option key={ai.id_integration} value={ai.id_integration}>
+                    {ai.integration_name || ai.id_integration}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <DialogFooter>
             <Button
