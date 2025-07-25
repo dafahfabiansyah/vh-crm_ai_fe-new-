@@ -514,7 +514,6 @@ export const platformIcons = {
   email: Mail,
   website: Globe,
   twitter: Twitter,
-  webchat: Globe,
 };
 
 export const distributionMethods = [

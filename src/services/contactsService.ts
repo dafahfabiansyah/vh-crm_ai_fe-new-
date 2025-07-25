@@ -90,14 +90,4 @@ export class ContactsService {
             throw new Error(error.response?.data?.message || 'Failed to send message');
         }
     }
-
-    static async createContact(contactData: any): Promise<any> {
-        try {
-            const response = await axiosInstance.post(`${this.BASE_PATH}`, contactData);
-            return response.data;
-        } catch (error: any) {
-            console.error('Error creating contact:', error);
-            throw new Error(error.response?.data?.message || 'Failed to create contact');
-        }
-    }
 }

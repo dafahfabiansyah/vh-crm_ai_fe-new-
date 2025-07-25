@@ -91,11 +91,11 @@ export interface PlatformMapping {
   agent_name: string;
 }
 
-// Platform interface based on API response
+// WhatsApp Platform interface based on API response
 export interface PlatformInbox {
   id: string;
   name: string;
-  type: "whatsapp" | "webchat";
+  type: "whatsapp";
   phone: string;
   description?: string;
   isActive: boolean;

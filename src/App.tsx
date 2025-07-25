@@ -26,10 +26,6 @@ import ApiIntegrationPage from "./pages/ApiIntegrationPage";
 import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
 import EditCustomIntegration from "./pages/EditCustomIntegration";
-import WebchatDemo from "./pages/WebchatDemo";
-import WebchatConnectionPage from "./pages/WebchatConnectionPage";
-import StandaloneWebchatPage from "./pages/StandaloneWebchatPage";
-import WebchatManagePage from "./pages/WebchatManagePage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -228,30 +224,9 @@ export default function App() {
           path="/connect/webchat"
           element={
             <ProtectedRoute>
-              <WebchatConnectionPage />
+              <WhatsAppQRPage />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/webchat-manage"
-          element={
-            <ProtectedRoute>
-              <WebchatManagePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/webchat-demo"
-          element={
-            <ProtectedRoute>
-              <WebchatDemo />
-            </ProtectedRoute>
-          }
-        />
-        {/* Standalone Webchat Widget Page */}
-        <Route
-          path="/webchat/:platformId"
-          element={<StandaloneWebchatPage />}
         />
         {/* Settings Page */}
         <Route

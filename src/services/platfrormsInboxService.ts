@@ -2,29 +2,6 @@ import axiosInstance from './axios';
 
 export const platformsInboxService = {
   /**
-   * Create webchat platform
-   */
-  async createWebchatPlatform(platformData: {
-    platform_name: string;
-    platform_identifier: string;
-    source_type: string;
-    is_connected: boolean;
-    id_pipeline?: string;
-    platform_config?: any;
-  }) {
-    try {
-      const response = await axiosInstance.post('/v1/platform-inbox', platformData);
-      console.log('Webchat platform created:', response.data);
-      return response.data;
-    } catch (error) {
-      const err = error as any;
-      console.error('Error creating webchat platform:', err);
-      console.error('Error response:', err.response?.data);
-      throw new Error(err.response?.data?.message || err.message || 'Failed to create webchat platform');
-    }
-  },
-
-  /**
    * Ambil data platform inbox
    */
   async getPlatformInbox() {

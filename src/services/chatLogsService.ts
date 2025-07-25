@@ -28,24 +28,4 @@ export class ChatLogsService {
             throw error;
         }
     }
-
-    static async createChatLog(chatLogData: any): Promise<any> {
-        try {
-            const response = await axiosInstance.post(this.BASE_URL, chatLogData);
-            return response.data;
-        } catch (error: any) {
-            console.error('Error creating chat log:', error);
-            throw new Error(error.response?.data?.message || 'Failed to create chat log');
-        }
-    }
-
-    static async getChatLogsByContact(contactId: string): Promise<any[]> {
-        try {
-            const response = await this.getChatLogsByContactId(contactId);
-            return response.chatlogs || [];
-        } catch (error: any) {
-            console.error('Error fetching chat logs by contact:', error);
-            throw new Error(error.message || 'Failed to fetch chat logs');
-        }
-    }
 }
