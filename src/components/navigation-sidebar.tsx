@@ -85,7 +85,11 @@ export default function NavigationSidebar({
   }, []);
 
   // Create enhanced navigation items with dynamic pipeline list
-  const enhancedNavigationItems = navigationItems.map(item => {
+  let filteredNavigationItems = navigationItems;
+  if (userRole?.toLowerCase() === "manager") {
+    filteredNavigationItems = navigationItems.filter(item => item.id !== "ai-agents");
+  }
+  const enhancedNavigationItems = filteredNavigationItems.map(item => {
     if (item.id === "pipeline") {
       // Add pipeline list to the pipeline item
       const pipelineChildren = [
