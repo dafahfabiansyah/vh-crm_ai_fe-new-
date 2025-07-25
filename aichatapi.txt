@@ -1,0 +1,188 @@
+package aiChat
+
+import (
+	"net/http"
+
+	routing "github.com/go-ozzo/ozzo-routing/v2"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
+	"github.com/qiangxue/go-rest-api/internal/errors"
+	"github.com/qiangxue/go-rest-api/pkg/accesslog"
+	"github.com/qiangxue/go-rest-api/pkg/log"
+)
+
+type resource struct {
+	service Service
+	logger  log.Logger
+}
+
+// RegisterHandlers registers the AI chat handlers to the router
+func RegisterHandlers(rg *routing.RouteGroup, service Service, logger log.Logger) {
+	res := resource{service, logger}
+
+	// AI Chat routes
+	rg.Post("/chat/agent/<agent_id>", res.sendMessage)
+	rg.Post("/chat/agent/<agent_id>/welcome", res.sendWelcomeMessage)
+	rg.Post("/agents/<agent_id>/whatsapp", res.sendMessageToWhatsApp)
+	rg.Post("/agents/<agent_id>/whatsapp/image", res.uploadImageFromWhatsApp)
+
+}
+
+// // RegisterWhatsAppHandlers registers WhatsApp webhook handlers without authentication
+// func RegisterWhatsAppHandlers(rg *routing.RouteGroup, service Service, logger log.Logger) {
+// 	res := resource{service, logger}
+
+// 	// WhatsApp webhook routes (no authentication required)
+// }
+
+// sendMessage handles chat message requests
+func (r resource) sendMessage(c *routing.Context) error {
+	agentID, err := uuid.Parse(c.Param("agent_id"))
+	if err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid agent ID:", err)
+		return errors.BadRequest("invalid agent ID")
+	}
+
+	var req ChatRequest
+	if err := c.Read(&req); err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid request body:", err)
+		return errors.BadRequest("invalid request: " + err.Error())
+	}
+
+	if err := req.Validate(); err != nil {
+		r.logger.With(c.Request.Context()).Info("Validation failed:", err)
+		if validationErrs, ok := err.(validation.Errors); ok {
+			return errors.InvalidInput(validationErrs)
+		}
+		return errors.BadRequest("validation failed: " + err.Error())
+	}
+
+	response, err := r.service.SendMessage(c.Request.Context(), agentID, req)
+	if err != nil {
+		r.logger.With(c.Request.Context()).Error("SendMessage failed:", err)
+		return err
+	}
+
+	// Create response with token usage information
+	responseWithTokens := map[string]interface{}{
+		"id":          response.ID,
+		"agent_id":    response.AgentID,
+		"session_id":  response.SessionID,
+		"message":     response.Message,
+		"response":    response.Response,
+		"created_at":  response.CreatedAt,
+		"tokens_used": response.TokensUsed,
+	}
+
+	// Add messages array for separate bubbles if available
+	if response.Messages != nil && len(response.Messages) > 0 {
+		responseWithTokens["messages"] = response.Messages
+	}
+
+	// Add integration executions if available
+	if response.IntegrationExecutions != nil && len(response.IntegrationExecutions) > 0 {
+		responseWithTokens["integration_executions"] = response.IntegrationExecutions
+	}
+
+	// Add token usage summary from context if available
+	if tokenTracker := accesslog.GetTokenTrackerFromContext(c.Request.Context()); tokenTracker != nil {
+		tokenSummary := tokenTracker.GetSummary()
+		responseWithTokens["token_usage_summary"] = tokenSummary
+	}
+
+	return c.WriteWithStatus(responseWithTokens, http.StatusOK)
+}
+
+// sendWelcomeMessage handles welcome message requests
+func (r resource) sendWelcomeMessage(c *routing.Context) error {
+	agentID, err := uuid.Parse(c.Param("agent_id"))
+	if err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid agent ID:", err)
+		return errors.BadRequest("invalid agent ID")
+	}
+
+	var req ChatRequest
+	if err := c.Read(&req); err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid request body:", err)
+		return errors.BadRequest("invalid request: " + err.Error())
+	}
+
+	if err := req.Validate(); err != nil {
+		r.logger.With(c.Request.Context()).Info("Validation failed:", err)
+		if validationErrs, ok := err.(validation.Errors); ok {
+			return errors.InvalidInput(validationErrs)
+		}
+		return errors.BadRequest("validation failed: " + err.Error())
+	}
+
+	response, err := r.service.SendWelcomeMessage(c.Request.Context(), agentID, req)
+	if err != nil {
+		r.logger.With(c.Request.Context()).Error("SendWelcomeMessage failed:", err)
+		return err
+	}
+
+	return c.WriteWithStatus(response, http.StatusOK)
+}
+
+// sendMessageToWhatsApp handles WhatsApp chat message requests
+func (r resource) sendMessageToWhatsApp(c *routing.Context) error {
+	agentID, err := uuid.Parse(c.Param("agent_id"))
+	if err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid agent ID:", err)
+		return errors.BadRequest("invalid agent ID")
+	}
+
+	var req WhatsAppChatRequest
+	if err := c.Read(&req); err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid request body:", err)
+		return errors.BadRequest("invalid request: " + err.Error())
+	}
+
+	if err := req.Validate(); err != nil {
+		r.logger.With(c.Request.Context()).Info("Validation failed:", err)
+		if validationErrs, ok := err.(validation.Errors); ok {
+			return errors.InvalidInput(validationErrs)
+		}
+		return errors.BadRequest(err.Error())
+	}
+
+	response, err := r.service.SendMessageToWhatsApp(c.Request.Context(), agentID, req)
+	if err != nil {
+		r.logger.With(c.Request.Context()).Error("Failed to send message to WhatsApp:", err)
+		return errors.InternalServerError("Failed to process WhatsApp message")
+	}
+
+	return c.WriteWithStatus(response, http.StatusOK)
+}
+
+// uploadImageFromWhatsApp handles WhatsApp image upload requests
+// The agent_id parameter is the agents.id which gets converted to ai_agents.id via agents.identifier
+func (r resource) uploadImageFromWhatsApp(c *routing.Context) error {
+	agentID, err := uuid.Parse(c.Param("agent_id"))
+	if err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid agent ID:", err)
+		return errors.BadRequest("invalid agent ID")
+	}
+
+	var req WhatsAppImageRequest
+	if err := c.Read(&req); err != nil {
+		r.logger.With(c.Request.Context()).Info("Invalid request body:", err)
+		return errors.BadRequest("invalid request: " + err.Error())
+	}
+
+	if err := req.Validate(); err != nil {
+		r.logger.With(c.Request.Context()).Info("Validation failed:", err)
+		if validationErrs, ok := err.(validation.Errors); ok {
+			return errors.InvalidInput(validationErrs)
+		}
+		return errors.BadRequest(err.Error())
+	}
+
+	response, err := r.service.UploadImageFromWhatsApp(c.Request.Context(), agentID, req)
+	if err != nil {
+		r.logger.With(c.Request.Context()).Error("Failed to upload image from WhatsApp:", err)
+		return errors.InternalServerError("Failed to process WhatsApp image")
+	}
+
+	return c.WriteWithStatus(response, http.StatusOK)
+}
