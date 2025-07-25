@@ -117,6 +117,8 @@ export interface PlatformInbox {
   platformMappings?: PlatformMapping[];
   // Multi-select human agents
   humanAgentsSelected?: string[];
+  // All human agent mappings (active and inactive) for tracking
+  allHumanAgentMappings?: { id: string; id_agent: string; is_active: boolean }[];
 }
 
 // lead card interface

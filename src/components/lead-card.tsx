@@ -22,6 +22,7 @@ export const LeadCard: React.FC<{
     }),
   });
 
+
   const handleCardClick = (e: React.MouseEvent) => {
     if (!isEditing) {
       e.stopPropagation();
@@ -48,7 +49,7 @@ export const LeadCard: React.FC<{
           <div className="text-xs text-gray-500 mt-1">
             <span className="font-semibold">Status:</span> {lead.status}
           </div>
-        </div>
+        </div>  
       </div>
     </div>
   );

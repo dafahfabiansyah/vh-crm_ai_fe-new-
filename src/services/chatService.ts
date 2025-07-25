@@ -30,11 +30,18 @@ export interface IntegrationExecution {
   error_message?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  content: string;
+  sender: string;
+  created_at: string;
+}
+
 export interface ChatResponse {
   id: string;
   agent_id: string;
   session_id: string;
-  message: string;
+  messages: ChatMessage[];
   response: string;
   created_at: string;
   tokens_used: number;
@@ -59,6 +66,33 @@ export class ChatService {
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to send message',
+          status: error.response.status,
+          errors: error.response.data.errors,
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      };
+    }
+  }
+
+  /**
+   * Get welcome message from an AI agent
+   */
+  static async getWelcomeMessage(agentId: string, sessionId: string): Promise<ChatResponse> {
+    try {
+      const requestBody: ChatRequest = {
+        message: '',
+        session_id: sessionId
+      };
+
+      const response = await axiosInstance.post<ChatResponse>(`/v1/chat/agent/${agentId}/welcome`, requestBody);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to get welcome message',
           status: error.response.status,
           errors: error.response.data.errors,
         };

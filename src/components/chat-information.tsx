@@ -6,17 +6,55 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { User,  Calendar, MessageSquare } from "lucide-react"
 import type { ChatInformationProps } from "@/types"
+import { PipelineService } from "@/services/pipelineService"
 
 export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   // const [isAdditionalDataOpen, setIsAdditionalDataOpen] = useState(false)
   // const [newLabel, setNewLabel] = useState("")
   // const [notes, setNotes] = useState(chatInfo.notes || "")
   const [contactData, setContactData] = useState(chatInfo)
+  const [leadNotes, setLeadNotes] = useState<string[]>([])
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false)
+  const [notesError, setNotesError] = useState<string | null>(null)
 
   useEffect(() => {
     // Update contactData when chatInfo changes
     setContactData(chatInfo)
   }, [chatInfo])
+
+  // Fetch lead notes when contact data changes
+  useEffect(() => {
+    if (!contactData?.id) {
+      setLeadNotes([])
+      setNotesError(null)
+      return
+    }
+
+    setIsLoadingNotes(true)
+    setNotesError(null)
+
+    // Get leads by contact ID
+    PipelineService.getLeads({ id_contact: contactData.id })
+      .then((leads: any[]) => {
+        if (leads && leads.length > 0) {
+          // Get notes from the first lead (or combine notes from all leads)
+          const lead = leads[0]
+          if (lead.notes) {
+            const notesArray = lead.notes.split('\n').filter((note: string) => note.trim() !== '')
+            setLeadNotes(notesArray.length > 0 ? notesArray : [])
+          } else {
+            setLeadNotes([])
+          }
+        } else {
+          setLeadNotes([])
+        }
+      })
+      .catch((err: any) => {
+        setNotesError(err.message || "Failed to fetch lead notes")
+        setLeadNotes([])
+      })
+      .finally(() => setIsLoadingNotes(false))
+  }, [contactData?.id])
 
   // const handleAddLabel = () => {
   //   if (newLabel.trim()) {
@@ -124,6 +162,26 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
               <span className="hidden sm:inline">Assign Agent</span>
             </Button>
           </div>
+        </div>
+
+        {/* Notes */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-foreground">AI Notes</Label>
+          {isLoadingNotes ? (
+            <div className="text-sm text-muted-foreground">Loading notes...</div>
+          ) : notesError ? (
+            <div className="text-sm text-red-500">{notesError}</div>
+          ) : leadNotes.length > 0 ? (
+            <div className="max-h-32 overflow-y-auto space-y-2">
+              {leadNotes.map((note: string, index: number) => (
+                <div key={index} className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                  {note}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">No notes available.</div>
+          )}
         </div>
 
         {/* Collaborators */}

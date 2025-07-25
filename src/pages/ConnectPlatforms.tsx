@@ -144,10 +144,15 @@ export default function ConnectedPlatformsPage() {
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
             platformMappings: item.platform_mappings || [],
-            // Extract human agent IDs from platform_mappings
+            // Extract human agent IDs from platform_mappings (only active ones for selection)
             humanAgentsSelected: (item.platform_mappings || [])
               .filter((mapping: any) => mapping.is_active && mapping.agent_type === 'Human')
-              .map((mapping: any) => mapping.id_agent)
+              .map((mapping: any) => mapping.id_agent),
+            // Store all human agent mappings (active and inactive) for tracking
+            // Filter out mappings that might reference deleted human agents
+            allHumanAgentMappings: (item.platform_mappings || [])
+              .filter((mapping: any) => mapping.agent_type === 'Human' && mapping.id_agent)
+              .map((mapping: any) => ({ id: mapping.id, id_agent: mapping.id_agent, is_active: mapping.is_active }))
           };
         });
         setPlatformInboxs(mapped);
@@ -254,10 +259,15 @@ export default function ConnectedPlatformsPage() {
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
             platformMappings: item.platform_mappings || [],
-            // Extract human agent IDs from platform_mappings
+            // Extract human agent IDs from platform_mappings (only active ones for selection)
             humanAgentsSelected: (item.platform_mappings || [])
               .filter((mapping: any) => mapping.is_active && mapping.agent_type === 'Human')
-              .map((mapping: any) => mapping.id_agent)
+              .map((mapping: any) => mapping.id_agent),
+            // Store all human agent mappings (active and inactive) for tracking
+            // Filter out mappings that might reference deleted human agents
+          allHumanAgentMappings: (item.platform_mappings || [])
+            .filter((mapping: any) => mapping.agent_type === 'Human' && mapping.id_agent)
+            .map((mapping: any) => ({ id: mapping.id, id_agent: mapping.id_agent, is_active: mapping.is_active }))
           };
         });
         setPlatformInboxs(mapped);
@@ -355,15 +365,73 @@ export default function ConnectedPlatformsPage() {
             title: "AI Agent Mapping Saved Successfully",
             description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`,
           });
-        } else {
+        }
+        
+        // Handle multiple human agents mapping
+        if (currentPlatform.humanAgentsSelected && currentPlatform.humanAgentsSelected.length > 0) {
+          console.log('Basic tab - mapping multiple human agents via create_platform_mappings');
+          
+          // Get existing human agent mappings for this platform
+          const existingHumanMappings = (currentPlatform.allHumanAgentMappings || []);
+          
+          // Create a mapping for each selected human agent
+          for (const humanAgentId of currentPlatform.humanAgentsSelected) {
+            const existingMapping = existingHumanMappings.find(mapping => mapping.id_agent === humanAgentId);
+            
+            if (existingMapping) {
+              // Agent is already mapped, only update if not already active
+              if (!existingMapping.is_active) {
+                try {
+                  await platformsInboxService.updatePlatformMappingStatus(existingMapping.id, true, humanAgentId);
+                } catch (error: any) {
+                  console.warn(`Failed to activate mapping ${existingMapping.id}:`, error.message);
+                  // If activation fails, try creating a new mapping instead
+                  await platformsInboxService.mapHumanAgentToPlatform(humanAgentId, currentPlatform.id);
+                }
+              }
+              // If already active, skip - no backend call needed
+            } else {
+              // Agent is not mapped, create new mapping
+              await platformsInboxService.mapHumanAgentToPlatform(humanAgentId, currentPlatform.id);
+            }
+          }
+          
+          // Deactivate agents that were previously selected but are now unselected
+          for (const existingMapping of existingHumanMappings) {
+            if (!currentPlatform.humanAgentsSelected.includes(existingMapping.id_agent) && existingMapping.is_active) {
+              try {
+                await platformsInboxService.updatePlatformMappingStatus(existingMapping.id, false, existingMapping.id_agent);
+              } catch (error: any) {
+                console.warn(`Failed to deactivate mapping ${existingMapping.id}:`, error.message);
+                // Continue with other mappings even if one fails
+              }
+            }
+          }
+          
           setToast({
             show: true,
-            type: "error",
-            title: "Validation Error",
-            description: "Please select an AI Agent before saving.",
+            type: "success",
+            title: "Human Agents Mapping Saved Successfully",
+            description: `${currentPlatform.humanAgentsSelected.length} Human Agent(s) berhasil di-mapping ke platform ${currentPlatform.name}.`,
           });
-          return;
+        } else {
+          // No human agents selected, deactivate all existing human agent mappings
+          const existingHumanMappings = (currentPlatform.allHumanAgentMappings || []);
+          
+          for (const existingMapping of existingHumanMappings) {
+            if (existingMapping.is_active) {
+              try {
+                await platformsInboxService.updatePlatformMappingStatus(existingMapping.id, false, existingMapping.id_agent);
+              } catch (error: any) {
+                console.warn(`Failed to deactivate mapping ${existingMapping.id}:`, error.message);
+                // Continue with other mappings even if one fails
+              }
+            }
+          }
         }
+        
+        // Allow deselecting all agents - this is a valid operation to clear all mappings
+        // The validation will be handled by the backend if needed
       } else {
         setToast({
           show: true,
@@ -377,6 +445,21 @@ export default function ConnectedPlatformsPage() {
       // Refresh data from API to ensure consistency
       const refreshedData = await platformsInboxService.getPlatformInbox();
       console.log('After mapping - Refreshed data from API:', refreshedData);
+      
+      // Also refresh AI agents and human agents data to ensure validation works correctly
+      try {
+        const refreshedAiAgents = await AgentsService.getAgents();
+        setAiAgents(refreshedAiAgents);
+      } catch (err) {
+        console.error('Failed to refresh AI agents:', err);
+      }
+      
+      try {
+        const refreshedHumanAgents = await HumanAgentsService.getHumanAgents();
+        setHumanAgents(refreshedHumanAgents);
+      } catch (err) {
+        console.error('Failed to refresh human agents:', err);
+      }
       const mapped = (refreshedData || []).map((item: any) => {
         const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
         const mappedItem = {
@@ -397,7 +480,15 @@ export default function ConnectedPlatformsPage() {
           teams: activeMapping ? [activeMapping.agent_type] : undefined,
           pipeline: item.id_pipeline || undefined,
           platformMappings: item.platform_mappings || [],
-          humanAgentsSelected: item.human_agents_selected || [] // Add humanAgentsSelected
+          // Extract human agent IDs from platform_mappings (only active ones for selection)
+          humanAgentsSelected: (item.platform_mappings || [])
+            .filter((mapping: any) => mapping.is_active && mapping.agent_type === 'Human')
+            .map((mapping: any) => mapping.id_agent),
+          // Store all human agent mappings (active and inactive) for tracking
+          // Filter out mappings that might reference deleted human agents
+          allHumanAgentMappings: (item.platform_mappings || [])
+            .filter((mapping: any) => mapping.agent_type === 'Human' && mapping.id_agent)
+            .map((mapping: any) => ({ id: mapping.id, id_agent: mapping.id_agent, is_active: mapping.is_active }))
         };
         // Log if this is the platform we just updated
         if (item.id === currentPlatform.id) {
@@ -783,30 +874,33 @@ export default function ConnectedPlatformsPage() {
                 </div>
 
                 {/* Chat Distribution Method */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-foreground">
-                    Chat Distribution Method
-                  </Label>
-                  <Select
-                    value={platform.distributionMethod}
-                    onValueChange={(value) =>
-                      updateSelectedPlatform({
-                        distributionMethod: value,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {distributionMethods.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground">
+                            Chat Distribution Method
+                          </Label>
+                          <Select
+                            value={platform.distributionMethod || "least-assigned"}
+                            onValueChange={(value) =>
+                              updateSelectedPlatform({
+                                distributionMethod: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Least Assigned First" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {distributionMethods.map((method) => (
+                                <SelectItem
+                                  key={method.value}
+                                  value={method.value}
+                                >
+                                  {method.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                 {/* Customer Satisfaction Feature */}
                 <div className="space-y-3">
@@ -1313,24 +1407,43 @@ export default function ConnectedPlatformsPage() {
                             </PopoverTrigger>
                             <PopoverContent className="w-90 p-2">
                               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                                {humanAgents.map((agent) => (
-                                  <label key={agent.id} className="flex items-center gap-2 cursor-pointer">
-                                    <Checkbox
-                                      checked={selectedPlatform.humanAgentsSelected?.includes(agent.id) || false}
-                                      onCheckedChange={(checked) => {
-                                        let updated: string[] = selectedPlatform.humanAgentsSelected ? [...selectedPlatform.humanAgentsSelected] : [];
-                                        if (checked) {
-                                          if (!updated.includes(agent.id)) updated.push(agent.id);
-                                        } else {
-                                          updated = updated.filter((id) => id !== agent.id);
-                                        }
-                                        updateSelectedPlatform({ humanAgentsSelected: updated });
-                                      }}
-                                      id={`human-agent-checkbox-${agent.id}`}
-                                    />
-                                    <span className="text-sm">{agent.name}</span>
-                                  </label>
-                                ))}
+                                {humanAgents.map((agent) => {
+                                  const isSelected = selectedPlatform.humanAgentsSelected?.includes(agent.id) || false;
+                                  const existingMapping = selectedPlatform.allHumanAgentMappings?.find(
+                                    (mapping: any) => mapping.id_agent === agent.id
+                                  );
+                                  const isMapped = !!existingMapping;
+                                  const isActive = existingMapping?.is_active || false;
+                                  
+                                  return (
+                                    <label key={agent.id} className="flex items-center gap-2 cursor-pointer">
+                                      <Checkbox
+                                        checked={isSelected}
+                                        onCheckedChange={(checked) => {
+                                          let updated: string[] = selectedPlatform.humanAgentsSelected ? [...selectedPlatform.humanAgentsSelected] : [];
+                                          if (checked) {
+                                            if (!updated.includes(agent.id)) updated.push(agent.id);
+                                          } else {
+                                            updated = updated.filter((id) => id !== agent.id);
+                                          }
+                                          updateSelectedPlatform({ humanAgentsSelected: updated });
+                                        }}
+                                        id={`human-agent-checkbox-${agent.id}`}
+                                      />
+                                      <span className="text-sm flex items-center gap-1">
+                                        {agent.name}
+                                        {isMapped && (
+                                          <Badge 
+                                            variant={isActive ? "default" : "secondary"} 
+                                            className="text-xs px-1 py-0"
+                                          >
+                                            {isActive ? "Active" : "Inactive"}
+                                          </Badge>
+                                        )}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
                                 {humanAgents.length === 0 && !humanAgentsLoading && (
                                   <span className="text-muted-foreground text-sm">No human agents available</span>
                                 )}
@@ -1401,7 +1514,7 @@ export default function ConnectedPlatformsPage() {
                             Chat Distribution Method
                           </Label>
                           <Select
-                            value={selectedPlatform.distributionMethod}
+                            value={selectedPlatform.distributionMethod || "least-assigned"}
                             onValueChange={(value) =>
                               updateSelectedPlatform({
                                 distributionMethod: value,
@@ -1409,7 +1522,7 @@ export default function ConnectedPlatformsPage() {
                             }
                           >
                             <SelectTrigger className="text-sm">
-                              <SelectValue />
+                              <SelectValue placeholder="Least Assigned First" />
                             </SelectTrigger>
                             <SelectContent>
                               {distributionMethods.map((method) => (

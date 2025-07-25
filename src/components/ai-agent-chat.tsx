@@ -39,26 +39,48 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
   const [isSending, setIsSending] = useState(false)
   const [sessionId, setSessionId] = useState(() => ChatService.generateSessionId())
   const [messages, setMessages] = useState<Message[]>([])
+  const [hasUserSentMessage, setHasUserSentMessage] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  // Add welcome message when it changes
-  useEffect(() => {
-    if (welcomeMessage && welcomeMessage.trim()) {
-      // const welcomeMsg: Message = {
-      //   id: "welcome-1",
-      //   content: welcomeMessage,
-      //   sender: "ai",
-      //   timestamp: new Date().toISOString(),
-      // }
+  // Load welcome message function
+  const loadWelcomeMessage = async () => {
+    try {
+      const response = await ChatService.getWelcomeMessage(agentId, sessionId)
+      
+      if (response.response && response.response.trim()) {
+        const welcomeMsg: Message = {
+          id: "welcome-1",
+          content: response.response,
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+          tokens_used: 0,
+        }
 
-      setMessages((prev) => {
-        // Remove existing welcome message if any
-        const filtered = prev.filter((msg) => !msg.id.startsWith("welcome-"))
-        return [...filtered]
-        // return [...filtered, welcomeMsg]
-      })
+        setMessages((prev) => {
+          // Remove existing welcome message if any
+          const filtered = prev.filter((msg) => !msg.id.startsWith("welcome-"))
+          return [...filtered, welcomeMsg]
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load welcome message:', error)
+      // Fallback to prop-based welcome message if API fails
+      if (welcomeMessage && welcomeMessage.trim()) {
+        const welcomeMsg: Message = {
+          id: "welcome-1",
+          content: welcomeMessage,
+          sender: "ai",
+          timestamp: new Date().toISOString(),
+          tokens_used: 0,
+        }
+
+        setMessages((prev) => {
+          const filtered = prev.filter((msg) => !msg.id.startsWith("welcome-"))
+          return [...filtered, welcomeMsg]
+        })
+      }
     }
-  }, [welcomeMessage])
+  }
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
@@ -81,6 +103,12 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
       const currentMessage = message
       setMessage("")
       setIsSending(true)
+
+      // Load welcome message immediately after first user message
+      if (!hasUserSentMessage) {
+        await loadWelcomeMessage()
+        setHasUserSentMessage(true)
+      }
 
       try {
         // Call the real API
@@ -121,18 +149,31 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
           setMessages((prev) => [...prev, integrationMessage])
         }
         
-        // Add AI response to messages as a separate message
-        const aiResponse: Message = {
-          id: `ai-${Date.now()}`,
-          content: response.response,
-          sender: "ai",
-          timestamp: new Date().toISOString(),
-          tokens_used: response.token_usage_summary?.total_tokens || response.tokens_used
-          // No integrationExecutions here as they're in a separate message now
+        // Handle multiple messages if available (new format)
+        if (response.messages && response.messages.length > 0) {
+          response.messages.forEach((chatMessage) => {
+            const message: Message = {
+              id: chatMessage.id,
+              content: chatMessage.content,
+              sender: chatMessage.sender as 'user' | 'ai' | 'system',
+              timestamp: new Date(chatMessage.created_at).toISOString(),
+              tokens_used: chatMessage.sender === 'ai' ? (response.token_usage_summary?.total_tokens || response.tokens_used) : 0
+            };
+            setMessages(prev => [...prev, message]);
+          });
+        } else {
+          // Fallback to single response (backward compatibility)
+          const aiResponse: Message = {
+            id: `ai-${Date.now()}`,
+            content: response.response,
+            sender: "ai",
+            timestamp: new Date().toISOString(),
+            tokens_used: response.token_usage_summary?.total_tokens || response.tokens_used
+          }
+          
+          console.log("AI Response:", aiResponse)
+          setMessages((prev) => [...prev, aiResponse])
         }
-        
-        console.log("AI Response:", aiResponse)
-        setMessages((prev) => [...prev, aiResponse])
       } catch (error: any) {
         console.error('Error sending message:', error)
         // Add error message
@@ -160,8 +201,19 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
   const handleRefresh = () => {
     setIsRefreshing(true)
     
+    // Clear existing messages
+    setMessages([])
+    
+    // Reset user message state
+    setHasUserSentMessage(false)
+    
     // Generate new session ID for fresh conversation
     setSessionId(ChatService.generateSessionId())
+    
+    // Reset refreshing state after a short delay
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 500)
   }
 
   return (

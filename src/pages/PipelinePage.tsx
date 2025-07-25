@@ -69,6 +69,9 @@ const PipelinePage = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [leadNotes, setLeadNotes] = useState<any[]>([]);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
 
   const handleLeadClick = (lead: any) => {
     setSelectedContactId(lead.id_contact);
@@ -298,6 +301,7 @@ const PipelinePage = () => {
           phone: lead.phone || "",
           value: lead.potential_value || 0,
           source: lead.moved_by || "unknown",
+          moved_by: lead.moved_by || "unknown",
           daysAgo: 0,
           status: lead.status || "unknown",
           email: lead.email || "",
@@ -403,6 +407,8 @@ const PipelinePage = () => {
     if (!selectedLeadId) {
       setLeadTransferHistory([]);
       setHistoryError(null);
+      setLeadNotes([]);
+      setNotesError(null);
       return;
     }
     setIsLoadingHistory(true);
@@ -416,7 +422,30 @@ const PipelinePage = () => {
         setLeadTransferHistory([]);
       })
       .finally(() => setIsLoadingHistory(false));
-  }, [selectedLeadId]);
+
+    // Get lead notes from the selected lead data
+    setIsLoadingNotes(true);
+    setNotesError(null);
+    
+    // Find the selected lead and get its notes
+    let selectedLead = null;
+    for (const stage of pipelineData) {
+      const lead = stage.leads.find(l => l.id === selectedLeadId);
+      if (lead) {
+        selectedLead = lead;
+        break;
+      }
+    }
+    
+    if (selectedLead && selectedLead.notes) {
+      // Split notes by newlines to create separate note entries
+      const notesArray = selectedLead.notes.split('\n').filter(note => note.trim() !== '');
+      setLeadNotes(notesArray.length > 0 ? notesArray : []);
+    } else {
+      setLeadNotes([]);
+    }
+    setIsLoadingNotes(false);
+  }, [selectedLeadId, pipelineData]);
 
   const fetchAgentName = async (agentId: string) => {
     if (!agentId || agentNames[agentId]) return;
@@ -430,34 +459,36 @@ const PipelinePage = () => {
 
   function LeadTransferTimeline({ history }: { history: LeadTransferHistoryItem[] }) {
     return (
-      <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
-        {history
-          .slice()
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .map((item) => {
-            if (item.moved_by_agent_id && !agentNames[item.moved_by_agent_id]) {
-              fetchAgentName(item.moved_by_agent_id);
-            }
-            return (
-              <li className="mb-6 ml-4" key={item.id}>
-                <div className="absolute w-3 h-3 bg-emerald-200 border-2 border-emerald-500 rounded-full -left-1.5 mt-1.5"></div>
-                <div className="text-xs text-gray-500 mb-1">{new Date(item.created_at).toLocaleString()}</div>
-                <div className="text-sm font-medium text-gray-900 mb-1">
-                  {item.from_stage_name} ➔ {item.to_stage_name}
-                </div>
-                <div className="text-xs text-gray-700 mb-1">
-                  Pipeline: {item.from_pipeline_name} ➔ {item.to_pipeline_name}
-                </div>
-                <div className="text-xs text-gray-700 mb-1">
-                  Agent: {item.from_agent_name} ➔ {item.to_agent_name}
-                </div>
-                <div className="text-xs text-gray-700">
-                  Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${humanAgentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
-                </div>
-              </li>
-            );
-          })}
-      </ol>
+      <div className="max-h-100 overflow-y-auto pr-2">
+        <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
+          {history
+            .slice()
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .map((item) => {
+              if (item.moved_by_agent_id && !agentNames[item.moved_by_agent_id]) {
+                fetchAgentName(item.moved_by_agent_id);
+              }
+              return (
+                <li className="mb-6 ml-4" key={item.id}>
+                  <div className="absolute w-3 h-3 bg-emerald-200 border-2 border-emerald-500 rounded-full -left-1.5 mt-1.5"></div>
+                  <div className="text-xs text-gray-500 mb-1">{new Date(item.created_at).toLocaleString()}</div>
+                  <div className="text-sm font-medium text-gray-900 mb-1">
+                    {item.from_stage_name} ➔ {item.to_stage_name}
+                  </div>
+                  <div className="text-xs text-gray-700 mb-1">
+                    Pipeline: {item.from_pipeline_name} ➔ {item.to_pipeline_name}
+                  </div>
+                  <div className="text-xs text-gray-700 mb-1">
+                    Agent: {item.from_agent_name} ➔ {item.to_agent_name}
+                  </div>
+                  <div className="text-xs text-gray-700">
+                    Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${humanAgentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
+                  </div>
+                </li>
+              );
+            })}
+        </ol>
+      </div>
     );
   }
 
@@ -689,9 +720,38 @@ const PipelinePage = () => {
                               <LeadTransferTimeline history={leadTransferHistory} />
                             )}
                           </div>
+                          
+                          {/* Lead Notes Section */}
+                          <div className="mt-6">
+                            <h3 className="font-semibold text-base mb-2">
+                              Notes
+                            </h3>
+                            {isLoadingNotes ? (
+                              <div className="text-xs text-gray-400">
+                                Memuat notes...
+                              </div>
+                            ) : notesError ? (
+                              <div className="text-xs text-red-500">
+                                {notesError}
+                              </div>
+                            ) : leadNotes.length === 0 ? (
+                              <div className="text-xs text-gray-400">
+                                Belum ada notes.
+                              </div>
+                            ) : (
+                              <div className="max-h-32 overflow-y-auto space-y-2">
+                                {leadNotes.map((note: any, index: number) => (
+                                  <div key={index} className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                                    {note.content || note.text || note}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
                           {selectedContact && selectedContact.notes && (
                             <div className="space-y-2 mt-4">
-                              <h3 className="font-semibold text-gray-900">Notes</h3>
+                              <h3 className="font-semibold text-gray-900">Contact Notes</h3>
                               <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
                                 {selectedContact.notes}
                               </p>
