@@ -35,6 +35,7 @@ import {
 import { ContactsService } from "@/services/contactsService";
 import type { LeadTransferHistoryItem, LeadTransferHistoryResponse } from "@/types/interface";
 import { HumanAgentsService } from "@/services/humanAgentsService";
+import { Toast } from "@/components/ui/toast";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -73,6 +74,18 @@ const PipelinePage = () => {
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
 
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    type: "pipeline" | "stage" | null;
+    targetId?: string;
+  }>({ open: false, type: null });
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
+
   const handleLeadClick = (lead: any) => {
     setSelectedContactId(lead.id_contact);
     setSelectedLeadId(lead.id); // <-- simpan lead id
@@ -86,7 +99,12 @@ const PipelinePage = () => {
         contact_identifier: "-", // fallback
         lead_status: lead.status || "unassigned",
       });
-      alert("Contact untuk lead ini tidak ditemukan!");
+      setToast({
+        show: true,
+        type: "error",
+        title: "Contact Not Found",
+        description: "Contact untuk lead ini tidak ditemukan!",
+      });
     }
   };
 
@@ -198,34 +216,50 @@ const PipelinePage = () => {
     }
   }, [pipelineData]);
 
-  const handleDeletePipeline = async () => {
+  const handleDeletePipeline = () => {
     if (!pipelineId || !pipelineInfo) return;
+    setDeleteDialog({ open: true, type: "pipeline", targetId: pipelineId });
+  };
 
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete pipeline "${pipelineInfo.name}"? This action cannot be undone.`
-    );
-
-    if (!confirmDelete) return;
-
+  const confirmDeletePipeline = async () => {
+    if (!pipelineId) return;
     setIsDeleting(true);
-
     try {
       await PipelineService.deletePipeline(pipelineId);
-      
-      // Redirect to dashboard after successful deletion
+      setToast({
+        show: true,
+        type: "success",
+        title: "Pipeline Deleted",
+        description: `Pipeline berhasil dihapus.`,
+      });
       navigate("/dashboard");
     } catch (error: any) {
-      console.error("Error deleting pipeline:", error);
-      alert(error.message || "Failed to delete pipeline. Please try again.");
+      setToast({
+        show: true,
+        type: "error",
+        title: "Delete Failed",
+        description: error.message || "Failed to delete pipeline. Please try again.",
+      });
     } finally {
       setIsDeleting(false);
+      setDeleteDialog({ open: false, type: null });
     }
   };
 
-  const handleDeleteStage = async (stageId: string) => {
+  const handleDeleteStage = (stageId: string) => {
+    setDeleteDialog({ open: true, type: "stage", targetId: stageId });
+  };
+
+  const confirmDeleteStage = async () => {
+    if (!deleteDialog.targetId) return;
     try {
-      await PipelineService.deleteStage(stageId);
-      // Refresh stages
+      await PipelineService.deleteStage(deleteDialog.targetId);
+      setToast({
+        show: true,
+        type: "success",
+        title: "Stage Deleted",
+        description: `Stage berhasil dihapus.`,
+      });
       if (pipelineId) {
         const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
         const mappedStages = stages.map((stage: any, idx: number) => ({
@@ -247,8 +281,15 @@ const PipelinePage = () => {
         }));
         setPipelineData(mappedStages);
       }
-    } catch (err) {
-      alert("Gagal menghapus stage");
+    } catch (err: any) {
+      setToast({
+        show: true,
+        type: "error",
+        title: "Delete Failed",
+        description: err.message || "Gagal menghapus stage",
+      });
+    } finally {
+      setDeleteDialog({ open: false, type: null });
     }
   };
 
@@ -847,6 +888,46 @@ const PipelinePage = () => {
             </>
           )}
         </div>
+        {/* Toast Notification */}
+        {toast?.show && (
+          <div className="mb-4">
+            <Toast
+              type={toast.type}
+              title={toast.title}
+              description={toast.description}
+              onClose={() => setToast(null)}
+            />
+          </div>
+        )}
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+          <DialogContent>
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold">
+                {deleteDialog.type === "pipeline"
+                  ? "Hapus Pipeline?"
+                  : "Hapus Stage?"}
+              </h2>
+              <p>
+                {deleteDialog.type === "pipeline"
+                  ? `Apakah Anda yakin ingin menghapus pipeline "${pipelineInfo?.name}"? Tindakan ini tidak dapat dibatalkan.`
+                  : "Apakah Anda yakin ingin menghapus stage ini? Tindakan ini tidak dapat dibatalkan."}
+              </p>
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  onClick={deleteDialog.type === "pipeline" ? confirmDeletePipeline : confirmDeleteStage}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Menghapus..." : "Hapus"}
+                </Button>
+                <DialogClose asChild>
+                  <Button variant="outline">Batal</Button>
+                </DialogClose>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
       </MainLayout>
     </DndProvider>
   );

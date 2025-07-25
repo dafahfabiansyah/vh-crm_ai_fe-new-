@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Toast } from "@/components/ui/toast";
 
 export default function ShippingIntegrationPage() {
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -38,6 +39,12 @@ export default function ShippingIntegrationPage() {
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [savingIntegration, setSavingIntegration] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -137,7 +144,12 @@ export default function ShippingIntegrationPage() {
     e.preventDefault();
     
     if (!selectedDistrict || !aiAgentId || courier.length === 0) {
-      alert('Please fill in all required fields');
+      setToast({
+        show: true,
+        type: "error",
+        title: "Form Tidak Lengkap",
+        description: "Please fill in all required fields",
+      });
       return;
     }
     
@@ -167,11 +179,21 @@ export default function ShippingIntegrationPage() {
       // Make API call to update agent settings using the settings ID
       await AgentsService.updateAgentSettings(settingsId, requestBody);
       
-      alert('Integration data saved successfully!');
+      setToast({
+        show: true,
+        type: "success",
+        title: "Integration Saved",
+        description: "Integration data saved successfully!",
+      });
       
     } catch (error: any) {
       console.error('Error saving integration data:', error);
-      alert(error.message || 'Failed to save integration data');
+      setToast({
+        show: true,
+        type: "error",
+        title: "Save Failed",
+        description: error.message || 'Failed to save integration data',
+      });
     } finally {
       setSavingIntegration(false);
     }
@@ -337,6 +359,17 @@ export default function ShippingIntegrationPage() {
           </div>
         </form>
       </div>
+      {/* Toast Notification */}
+      {toast?.show && (
+        <div className="mb-4">
+          <Toast
+            type={toast.type}
+            title={toast.title}
+            description={toast.description}
+            onClose={() => setToast(null)}
+          />
+        </div>
+      )}
     </MainLayout>
   );
 }

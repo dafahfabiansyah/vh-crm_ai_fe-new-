@@ -151,6 +151,17 @@ const ProductPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
+  const [deleteCategoryDialog, setDeleteCategoryDialog] = useState<{
+    open: boolean;
+    targetId?: string;
+  }>({ open: false });
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
+
   const handleInputChange =
     (field: keyof ProductFormData) =>
     (
@@ -353,7 +364,12 @@ const ProductPage = () => {
     e.preventDefault();
 
     if (!categoryFormData.name) {
-      alert("Please enter a category name");
+      setToast({
+        show: true,
+        type: "error",
+        title: "Form Tidak Lengkap",
+        description: "Please enter a category name",
+      });
       return;
     }
 
@@ -398,51 +414,59 @@ const ProductPage = () => {
         description: "",
         attributes: [],
       });
+      setToast({
+        show: true,
+        type: "success",
+        title: "Category Created",
+        description: "Category created successfully.",
+      });
     } catch (error: any) {
       console.error("Error creating category:", error);
-      alert(`Failed to create category: ${error.message}`);
+      setToast({
+        show: true,
+        type: "error",
+        title: "Create Failed",
+        description: error.message || "Failed to create category.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   // Delete category function
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this category? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  const handleDeleteCategory = (categoryId: string) => {
+    setDeleteCategoryDialog({ open: true, targetId: categoryId });
+  };
 
+  const confirmDeleteCategory = async () => {
+    if (!deleteCategoryDialog.targetId) return;
     try {
       setIsLoading(true);
-
-      // API call to delete category using service
-      await categoryService.deleteCategory(categoryId);
-
-      console.log(`Category ${categoryId} deleted successfully`);
-
-      // Remove from local state
+      await categoryService.deleteCategory(deleteCategoryDialog.targetId);
       setCategories((prev) =>
-        prev.filter((category) => category.id !== categoryId)
+        prev.filter((category) => category.id !== deleteCategoryDialog.targetId)
       );
-
-      // Remove attributes from map
       setCategoriesWithAttributes((prev) => {
         const newMap = new Map(prev);
-        newMap.delete(categoryId);
+        newMap.delete(deleteCategoryDialog.targetId!);
         return newMap;
       });
-
-      // Show success message
-      alert("Category deleted successfully");
+      setToast({
+        show: true,
+        type: "success",
+        title: "Category Deleted",
+        description: "Category deleted successfully.",
+      });
     } catch (error: any) {
-      console.error("Error deleting category:", error);
-      alert(`Failed to delete category: ${error.message}`);
+      setToast({
+        show: true,
+        type: "error",
+        title: "Delete Failed",
+        description: error.message || "Failed to delete category.",
+      });
     } finally {
       setIsLoading(false);
+      setDeleteCategoryDialog({ open: false });
     }
   };
 
@@ -1949,6 +1973,36 @@ const ProductPage = () => {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        {/* Toast Notification */}
+        {toast?.show && (
+          <div className="mb-4">
+            <Toast
+              type={toast.type}
+              title={toast.title}
+              description={toast.description}
+              onClose={() => setToast(null)}
+            />
+          </div>
+        )}
+        {/* Delete Category Confirmation Dialog */}
+        <Dialog open={deleteCategoryDialog.open} onOpenChange={(open) => setDeleteCategoryDialog((prev) => ({ ...prev, open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Category</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p>Are you sure you want to delete this category? This action cannot be undone.</p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="destructive" onClick={confirmDeleteCategory} disabled={isLoading}>
+                  Delete
+                </Button>
+                <Button variant="outline" onClick={() => setDeleteCategoryDialog({ open: false })} disabled={isLoading}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
