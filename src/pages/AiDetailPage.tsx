@@ -157,6 +157,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [cooldownMinutes, setCooldownMinutes] = useState(0);
   const [executionOrder, setExecutionOrder] = useState(1);
   const [dependsOnIntegration, setDependsOnIntegration] = useState<string | null>(null);
+  const [requireSucess, setRequireSucess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
   const [toast, setToast] = useState<{
@@ -265,6 +266,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         trigger_condition: triggerCondition,
         is_enabled: isEnabled,
         cooldown_minutes: cooldownMinutes,
+        requires_success: requireSucess,
         execution_order: executionOrder,
         depends_on_integration: dependsOnIntegration,
       });
@@ -977,11 +979,19 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                 return (
                                   <Card 
                                     key={integration.id || integration.name}
-                                    className={`relative ${isActivated ? 'border-green-500 justify-between bg-green-50' : ' justify-between hover:shadow-md transition-shadow'}`}
+                                    className={`relative ${
+                                      isActivated 
+                                        ? activatedIntegration?.is_enabled 
+                                          ? 'border-green-500 justify-between bg-green-50' 
+                                          : 'border-gray-300 justify-between bg-gray-50 opacity-75'
+                                        : ' justify-between hover:shadow-md transition-shadow'
+                                    }`}
                                   >
                                     {isActivated && (
                                       <div className="absolute top-3 right-3">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <div className={`w-2 h-2 rounded-full ${
+                                          activatedIntegration?.is_enabled ? 'bg-green-500' : 'bg-gray-400'
+                                        }`}></div>
                                       </div>
                                     )}
                                     <CardHeader className="pb-3">
@@ -1026,6 +1036,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                               setCooldownMinutes(activatedIntegration.cooldown_minutes || 0);
                                               setExecutionOrder(activatedIntegration.execution_order || 1);
                                               setDependsOnIntegration(activatedIntegration.depends_on_integration || null);
+                                              setRequireSucess(activatedIntegration.requires_success || false);
                                               setEditModalOpen(true);
                                             }}
                                             className="flex-1 text-xs"
@@ -1057,6 +1068,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                             setCooldownMinutes(0);
                                             setExecutionOrder(1);
                                             setDependsOnIntegration(null);
+                                            setRequireSucess(false);
                                             setActivateModalOpen(true);
                                           }}
                                           className="w-full text-xs"
@@ -1201,6 +1213,16 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                 ))}
               </select>
             </div>
+            <div>
+              <Checkbox
+                id="require_success"
+                checked={requireSucess}
+                onCheckedChange={(v) => setRequireSucess(!!v)}
+              />
+              <label htmlFor="require_success" className="ml-2">
+                Require Success
+              </label>
+            </div>
           </div>
           <DialogFooter className="flex-shrink-0">
             <Button
@@ -1215,6 +1237,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     is_enabled: isEnabled,
                     trigger_condition: triggerCondition,
                     cooldown_minutes: cooldownMinutes,
+                    requires_success: requireSucess,
                     execution_order: executionOrder,
                     depends_on_integration: dependsOnIntegration,
                     is_active: false,
@@ -1308,6 +1331,16 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <Checkbox
+                id="edit_require_success"
+                checked={requireSucess}
+                onCheckedChange={(v) => setRequireSucess(!!v)}
+              />
+              <label htmlFor="edit_require_success" className="ml-2">
+                Require Success
+              </label>
             </div>
           </div>
           <DialogFooter className="flex-shrink-0">
