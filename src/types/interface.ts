@@ -220,6 +220,7 @@ export interface Product {
   price: number;
   weight: number;
   stock: number;
+  image_url: string;
   colors: string[];
   material: string;
   image: string;

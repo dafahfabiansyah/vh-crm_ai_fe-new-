@@ -139,6 +139,7 @@ const ProductPage = () => {
     description: "",
     stock: "",
     price: "",
+    image_url: "",
     status: true,
   });
   const [isEditLoading, setIsEditLoading] = useState(false);
@@ -309,6 +310,7 @@ const ProductPage = () => {
         price: response.price,
         weight: response.weight,
         stock: response.stock,
+        image_url: response.image_url,
         colors: response.colors,
         material: response.material,
         image: response.image, // <-- mapping image dari response
@@ -452,6 +454,7 @@ const ProductPage = () => {
       description: product.description || "",
       stock: String(product.stock ?? ""),
       price: String(product.price ?? ""),
+      image_url: product.image_url || "",
       status: (product as any).status !== false, // fallback for status, if available
     });
     setIsEditModalOpen(true);
@@ -473,6 +476,7 @@ const ProductPage = () => {
         stock: editForm.stock, // string
         price: parseFloat(editForm.price), // float
         status: editForm.status, // boolean
+        image: editForm.image_url, // <-- gunakan key 'image' sesuai backend
       };
       const updated = await productService.updateProduct(
         editProduct.id,
@@ -914,7 +918,8 @@ const ProductPage = () => {
                                                 {attribute.attribute_name}
                                               </div>
                                               <div className="text-xs text-gray-500">
-                                                Display Order: {attribute.display_order}
+                                                Display Order:{" "}
+                                                {attribute.display_order}
                                               </div>
                                             </div>
                                           </div>
@@ -973,7 +978,9 @@ const ProductPage = () => {
         {activeTab === "addToAI" && (
           <Card className="rounded-lg shadow-sm">
             <CardContent className="p-4 md:p-6">
-              <h2 className="text-lg md:text-xl font-bold mb-4">Add Product to AI</h2>
+              <h2 className="text-lg md:text-xl font-bold mb-4">
+                Add Product to AI
+              </h2>
               {/* Select AI Agent & Filter by Category */}
               <div className="mb-4 flex flex-col md:flex-row md:items-end md:gap-4 gap-4">
                 <div className="flex-1 min-w-0">
@@ -1093,10 +1100,14 @@ const ProductPage = () => {
                       <th className="p-2 md:p-3 text-left font-bold">Image</th>
                       <th className="p-2 md:p-3 text-left font-bold">Name</th>
                       <th className="p-2 md:p-3 text-left font-bold">SKU</th>
-                      <th className="p-2 md:p-3 text-left font-bold">Category</th>
+                      <th className="p-2 md:p-3 text-left font-bold">
+                        Category
+                      </th>
                       <th className="p-2 md:p-3 text-left font-bold">Stock</th>
                       <th className="p-2 md:p-3 text-left font-bold">Price</th>
-                      <th className="p-2 md:p-3 text-left font-bold">Description</th>
+                      <th className="p-2 md:p-3 text-left font-bold">
+                        Description
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1134,9 +1145,9 @@ const ProductPage = () => {
                             />
                           </td>
                           <td className="p-2 md:p-3">
-                            {product.image ? (
+                            {product.image_url ? (
                               <img
-                                src={product.image}
+                                src={product.image_url}
                                 alt={product.name}
                                 className="h-10 w-10 md:h-12 md:w-12 object-cover rounded border"
                               />
@@ -1146,11 +1157,19 @@ const ProductPage = () => {
                               </div>
                             )}
                           </td>
-                          <td className="p-2 md:p-3 font-medium">{product.name}</td>
-                          <td className="p-2 md:p-3">{product.sku || product.code || "-"}</td>
-                          <td className="p-2 md:p-3">{product.category_name || "-"}</td>
+                          <td className="p-2 md:p-3 font-medium">
+                            {product.name}
+                          </td>
+                          <td className="p-2 md:p-3">
+                            {product.sku || product.code || "-"}
+                          </td>
+                          <td className="p-2 md:p-3">
+                            {product.category_name || "-"}
+                          </td>
                           <td className="p-2 md:p-3">{product.stock ?? "-"}</td>
-                          <td className="p-2 md:p-3">{formatNumber(product.price)}</td>
+                          <td className="p-2 md:p-3">
+                            {formatNumber(product.price)}
+                          </td>
                           <td className="p-2 md:p-3 text-gray-600 text-xs md:text-sm">
                             {product.description || "-"}
                           </td>
@@ -1163,7 +1182,9 @@ const ProductPage = () => {
               {/* Card List (mobile) */}
               <div className="block sm:hidden space-y-4 mb-4">
                 {filteredProducts.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6">No products found</div>
+                  <div className="text-center text-gray-500 py-6">
+                    No products found
+                  </div>
                 ) : (
                   filteredProducts.map((product: Product) => (
                     <Card key={product.id} className="rounded-lg shadow-sm">
@@ -1197,13 +1218,25 @@ const ProductPage = () => {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="font-bold text-base truncate">{product.name}</div>
-                          <div className="text-xs text-gray-500 truncate">SKU: {product.sku || product.code || '-'}</div>
-                          <div className="text-xs text-gray-500 truncate">{product.category_name || '-'}</div>
-                          <div className="text-sm mt-1 line-clamp-2">{product.description || '-'}</div>
+                          <div className="font-bold text-base truncate">
+                            {product.name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            SKU: {product.sku || product.code || "-"}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {product.category_name || "-"}
+                          </div>
+                          <div className="text-sm mt-1 line-clamp-2">
+                            {product.description || "-"}
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-2">
-                            <Badge variant="secondary">Rp {formatNumber(product.price)}</Badge>
-                            <Badge variant="outline">Stok: {product.stock}</Badge>
+                            <Badge variant="secondary">
+                              Rp {formatNumber(product.price)}
+                            </Badge>
+                            <Badge variant="outline">
+                              Stok: {product.stock}
+                            </Badge>
                           </div>
                         </div>
                       </CardContent>
@@ -1246,7 +1279,9 @@ const ProductPage = () => {
             <CardContent className="p-6">
               <h2 className="text-xl font-bold mb-4">Check Knowledge to AI</h2>
               <div className="mb-4 max-w-md">
-                <label className="block mb-2 font-medium">Select AI Agent</label>
+                <label className="block mb-2 font-medium">
+                  Select AI Agent
+                </label>
                 {isLoadingAgents ? (
                   <div className="text-gray-500">Loading agents...</div>
                 ) : addToAIError ? (
@@ -1258,14 +1293,24 @@ const ProductPage = () => {
                     disabled={isLoadingAgents || aiAgents.length === 0}
                   >
                     <SelectTrigger className="w-full max-w-md">
-                      <SelectValue placeholder={aiAgents.length === 0 ? 'No AI agent found' : 'Select AI agent'} />
+                      <SelectValue
+                        placeholder={
+                          aiAgents.length === 0
+                            ? "No AI agent found"
+                            : "Select AI agent"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {aiAgents.length === 0 ? (
-                        <SelectItem value="" disabled>No AI agent found</SelectItem>
+                        <SelectItem value="" disabled>
+                          No AI agent found
+                        </SelectItem>
                       ) : (
-                        aiAgents.map(agent => (
-                          <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                        aiAgents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.name}
+                          </SelectItem>
                         ))
                       )}
                     </SelectContent>
@@ -1278,7 +1323,9 @@ const ProductPage = () => {
                   <ExistingKnowledgeList agentId={selectedAgentId} />
                 </div>
               ) : (
-                <div className="text-gray-500 mt-8">Pilih AI agent untuk melihat knowledge.</div>
+                <div className="text-gray-500 mt-8">
+                  Pilih AI agent untuk melihat knowledge.
+                </div>
               )}
             </CardContent>
           </Card>
@@ -1678,6 +1725,67 @@ const ProductPage = () => {
                   required
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <Label>Image</Label>
+                {editForm.image_url ? (
+                  <div>
+                    <img
+                      src={editForm.image_url}
+                      alt="Product Preview"
+                      className="max-h-32 rounded border mb-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleEditFormChange("image_url", "")}
+                      className="mb-2"
+                    >
+                      Ganti Gambar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="edit-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setImageFile(e.target.files[0]);
+                          setImageUploadError("");
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        if (!imageFile) return;
+                        setIsUploadingImage(true);
+                        setImageUploadError("");
+                        try {
+                          const res = await uploadImageToS3(imageFile);
+                          handleEditFormChange("image_url", res.url);
+                          setImageFile(null);
+                        } catch (err: any) {
+                          setImageUploadError(
+                            err?.message || "Failed to upload image"
+                          );
+                        } finally {
+                          setIsUploadingImage(false);
+                        }
+                      }}
+                      disabled={!imageFile || isUploadingImage}
+                    >
+                      {isUploadingImage ? "Uploading..." : "Upload Image"}
+                    </Button>
+                  </div>
+                )}
+                {imageUploadError && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {imageUploadError}
+                  </div>
+                )}
+              </div>
               <div>
                 <Label>Price</Label>
                 <Input
@@ -1740,6 +1848,16 @@ const ProductPage = () => {
                 </div>
                 <div>
                   <strong>Description:</strong> {viewProduct.description}
+                </div>
+                <div>
+                  <strong>Image:</strong>
+                  <div className="mt-2">
+                    <img
+                      src={viewProduct.image_url}
+                      alt={viewProduct.name}
+                      className="max-h-32 rounded border"
+                    />
+                  </div>
                 </div>
                 <div>
                   <strong>Stock:</strong> {viewProduct.stock}
