@@ -46,6 +46,7 @@ import MainLayout from "@/main-layout";
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
 import whatsappService from "@/services/whatsappService";
+import { Toast } from "@/components/ui/toast";
 
 interface Contact {
   id: string;
@@ -93,6 +94,16 @@ export default function ContactsPage() {
   const [, setWhatsAppPlatforms] = useState<any[]>([]);
   const [, setWhatsAppPlatformsLoading] = useState(false);
   const [, setWhatsAppPlatformsError] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    targetId?: string;
+  }>({ open: false });
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
 
   // API call to fetch contacts
   const fetchContacts = async (page: number = 1, perPage: number = 100) => {
@@ -181,7 +192,12 @@ export default function ContactsPage() {
   const handleWhatsAppSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedContact || !whatsAppForm.phone || !whatsAppForm.message) {
-      alert("Contact, phone, dan pesan wajib diisi");
+      setToast({
+        show: true,
+        type: "error",
+        title: "Form Tidak Lengkap",
+        description: "Contact, phone, dan pesan wajib diisi",
+      });
       return;
     }
     try {
@@ -190,23 +206,37 @@ export default function ContactsPage() {
         number: whatsAppForm.phone,
         message: whatsAppForm.message,
       });
-      alert("Pesan berhasil dikirim!");
+      setToast({
+        show: true,
+        type: "success",
+        title: "Pesan Terkirim",
+        description: "Pesan berhasil dikirim!",
+      });
       setIsWhatsAppModalOpen(false);
     } catch (err: any) {
-      alert(err.message || "Gagal mengirim pesan WhatsApp");
+      setToast({
+        show: true,
+        type: "error",
+        title: "Gagal Mengirim Pesan",
+        description: err.message || "Gagal mengirim pesan WhatsApp",
+      });
     }
   };
 
   const handleAddContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // POST to /v1/contacts
     try {
       if (
         !addContactForm.id_platform ||
         !addContactForm.phone ||
         !addContactForm.name
       ) {
-        alert("Platform, nomor telepon, dan nama wajib diisi");
+        setToast({
+          show: true,
+          type: "error",
+          title: "Form Tidak Lengkap",
+          description: "Platform, nomor telepon, dan nama wajib diisi",
+        });
         return;
       }
       const body = {
@@ -222,23 +252,47 @@ export default function ContactsPage() {
         name: "",
       });
       fetchContacts(currentPage, itemsPerPage);
+      setToast({
+        show: true,
+        type: "success",
+        title: "Kontak Ditambahkan",
+        description: "Kontak berhasil ditambahkan.",
+      });
     } catch (err: any) {
-      alert(
-        err.response?.data?.message || err.message || "Gagal menambah kontak"
-      );
+      setToast({
+        show: true,
+        type: "error",
+        title: "Gagal Menambah Kontak",
+        description: err.response?.data?.message || err.message || "Gagal menambah kontak",
+      });
     }
   };
 
   // Handler untuk hapus kontak
-  const handleDeleteContact = async (id: string) => {
-    if (!window.confirm("Yakin ingin menghapus kontak ini?")) return;
+  const handleDeleteContact = (id: string) => {
+    setDeleteDialog({ open: true, targetId: id });
+  };
+
+  const confirmDeleteContact = async () => {
+    if (!deleteDialog.targetId) return;
     try {
-      await contactService.deleteContact(id);
+      await contactService.deleteContact(deleteDialog.targetId);
+      setToast({
+        show: true,
+        type: "success",
+        title: "Kontak Dihapus",
+        description: "Kontak berhasil dihapus.",
+      });
       fetchContacts(currentPage, itemsPerPage);
     } catch (err: any) {
-      alert(
-        err.response?.data?.message || err.message || "Gagal menghapus kontak"
-      );
+      setToast({
+        show: true,
+        type: "error",
+        title: "Gagal Menghapus",
+        description: err.response?.data?.message || err.message || "Gagal menghapus kontak",
+      });
+    } finally {
+      setDeleteDialog({ open: false });
     }
   };
 
@@ -951,6 +1005,34 @@ export default function ContactsPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Toast Notification */}
+      {toast?.show && (
+        <div className="mb-4">
+          <Toast
+            type={toast.type}
+            title={toast.title}
+            description={toast.description}
+            onClose={() => setToast(null)}
+          />
+        </div>
+      )}
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent>
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold">Hapus Kontak?</h2>
+            <p>Apakah Anda yakin ingin menghapus kontak ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="destructive" onClick={confirmDeleteContact}>
+                Hapus
+              </Button>
+              <Button variant="outline" onClick={() => setDeleteDialog({ open: false })}>
+                Batal
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </MainLayout>

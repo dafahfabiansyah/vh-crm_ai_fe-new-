@@ -139,7 +139,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               >
                 <td className="py-3 px-4">
                   <img
-                    src={product.image}
+                    src={product.image_url}
                     alt={product.name}
                     className="h-10 w-10 object-cover rounded"
                   />
