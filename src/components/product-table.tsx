@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,33 @@ const ProductTable: React.FC<ProductTableProps> = ({
   onDelete,
   onView,
 }) => {
+  // State untuk force refresh gambar per product
+  const [refreshKeys, setRefreshKeys] = useState<Record<string, number>>({});
+  
+  // Force refresh gambar hanya untuk product yang berubah
+  useEffect(() => {
+    const newRefreshKeys: Record<string, number> = {};
+    products.forEach(product => {
+      const currentKey = refreshKeys[product.id] || 0;
+      // Hanya increment jika updated_at berubah
+      if (product.updated_at) {
+        const timestamp = new Date(product.updated_at).getTime();
+        const lastTimestamp = refreshKeys[`${product.id}_timestamp`] || 0;
+        if (timestamp > lastTimestamp) {
+          newRefreshKeys[product.id] = currentKey + 1;
+          newRefreshKeys[`${product.id}_timestamp`] = timestamp;
+        } else {
+          newRefreshKeys[product.id] = currentKey;
+          newRefreshKeys[`${product.id}_timestamp`] = lastTimestamp;
+        }
+      } else {
+        newRefreshKeys[product.id] = currentKey;
+      }
+    });
+    setRefreshKeys(newRefreshKeys);
+    // console.log('Refresh keys updated:', newRefreshKeys);
+  }, [products]);
+  
   // Filter products based on search term
   const filteredProducts = products.filter(
     (product) =>
@@ -138,11 +165,27 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 className="border-b hover:bg-gray-50"
               >
                 <td className="py-3 px-4">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="h-10 w-10 object-cover rounded"
-                  />
+                  {product.image_url || product.image ? (
+                    <img
+                      key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
+                      src={`${product.image_url || product.image}?v=${refreshKeys[product.id] || 0}`}
+                      alt={product.name}
+                      className="h-10 w-10 object-cover rounded"
+                      onError={(e) => {
+                        // Fallback jika gambar gagal load
+                        const target = e.target as HTMLImageElement;
+                        // console.log('Image failed to load:', target.src);
+                        target.style.display = 'none';
+                      }}
+                      // onLoad={() => {
+                      //   console.log('Image loaded successfully:', product.image_url || product.image);
+                      // }}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
+                      <span className="text-xs text-gray-500">No Image</span>
+                    </div>
+                  )}
                 </td>
                 <td className="py-3 px-4">
                   <Badge variant="outline">{product.sku}</Badge>
@@ -163,7 +206,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 </td>
                 <td className="py-3 px-4">
                   <Badge variant="secondary">
-                    {product.description}
+                    {product.category_name}
                   </Badge>
                 </td>
                 <td className="py-3 px-4">
@@ -250,11 +293,23 @@ const ProductTable: React.FC<ProductTableProps> = ({
         {filteredProducts.map((product: any) => (
           <Card key={product.id} className="rounded-lg shadow-sm">
             <CardContent className="flex gap-3 p-4">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-16 w-16 object-cover rounded border"
-              />
+              {product.image_url || product.image ? (
+                <img
+                  key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
+                  src={`${product.image_url || product.image}?v=${refreshKeys[product.id] || 0}`}
+                  alt={product.name}
+                  className="h-16 w-16 object-cover rounded border"
+                  onError={(e) => {
+                    // Fallback jika gambar gagal load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="h-16 w-16 bg-gray-200 rounded border flex items-center justify-center">
+                  <span className="text-xs text-gray-500">No Image</span>
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-base truncate">{product.name}</div>
                 <div className="text-xs text-gray-500 truncate">SKU: {product.sku}</div>

@@ -309,7 +309,7 @@ const ProductPage = () => {
       // API call
       const response = await productService.createProduct(productData as any);
 
-      console.log("Created product response:", response);
+      // console.log("Created product response:", response);
 
       // Create local product object
       const newProduct: Product = {
@@ -502,13 +502,19 @@ const ProductPage = () => {
         status: editForm.status, // boolean
         image: editForm.image_url, // <-- gunakan key 'image' sesuai backend
       };
+      
+      console.log('Updating product with payload:', updatePayload);
+      
       const updated = await productService.updateProduct(
         editProduct.id,
         updatePayload
       );
-      setProducts((prev) =>
-        prev.map((p) => (p.id === editProduct.id ? { ...p, ...updated } : p))
-      );
+      
+      console.log('API response after update:', updated);
+      
+      // Re-fetch products untuk memastikan data terbaru
+      await fetchProducts();
+      
       setIsEditModalOpen(false);
       setEditProduct(null);
     } catch (err: any) {
@@ -1624,6 +1630,7 @@ const ProductPage = () => {
                 {formData.image && (
                   <div className="mt-2">
                     <img
+                      key={`create-${formData.image}-${Date.now()}`}
                       src={formData.image}
                       alt="Product Preview"
                       className="max-h-32 rounded border"
@@ -1754,6 +1761,7 @@ const ProductPage = () => {
                 {editForm.image_url ? (
                   <div>
                     <img
+                      key={`edit-${editForm.image_url}-${Date.now()}`}
                       src={editForm.image_url}
                       alt="Product Preview"
                       className="max-h-32 rounded border mb-2"
