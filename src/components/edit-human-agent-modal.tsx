@@ -238,7 +238,7 @@ export default function EditHumanAgentModal({
                   <SelectValue placeholder={loadingDepartments ? "Loading..." : "Select department"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="" disabled>
+                  <SelectItem value="placeholder" disabled>
                     Pilih department...
                   </SelectItem>
                   {departments.length === 0 && !loadingDepartments ? (
