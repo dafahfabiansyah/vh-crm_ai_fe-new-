@@ -118,7 +118,7 @@ const TicketPage = () => {
       icon: <MessageSquare className="h-4 w-4 text-blue-600" />,
     },
     {
-      id: "in-progress",
+      id: "in_progress",
       name: "In Progress",
       color: "yellow",
       icon: <Clock className="h-4 w-4 text-yellow-600" />,
