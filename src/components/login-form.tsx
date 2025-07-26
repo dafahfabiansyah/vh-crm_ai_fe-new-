@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { loginUser, clearError } from "@/store/authSlice";
@@ -34,6 +34,61 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
+  const turnstileWidgetRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Ensure Turnstile script is loaded
+    if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log("Turnstile script loaded successfully");
+      };
+      script.onerror = (error) => {
+        console.error("Failed to load Turnstile script:", error);
+      };
+      document.head.appendChild(script);
+    }
+
+    // Define callback globally
+    // @ts-ignore
+    window.onTurnstileSuccess = (token: string) => {
+      console.log("Turnstile success, token:", token);
+      setTurnstileToken(token);
+    };
+
+    // @ts-ignore
+    window.onTurnstileError = (error: any) => {
+      console.error("Turnstile error:", error);
+      setErrors({ general: "CAPTCHA verification failed. Please try again." });
+    };
+
+    // @ts-ignore
+    window.onTurnstileExpired = () => {
+      console.log("Turnstile expired");
+      setTurnstileToken(null);
+    };
+
+    return () => {
+      // @ts-ignore
+      window.onTurnstileSuccess = undefined;
+      // @ts-ignore
+      window.onTurnstileError = undefined;
+      // @ts-ignore
+      window.onTurnstileExpired = undefined;
+    };
+  }, []);
+
+  // Optional: Reset Turnstile widget after logout
+  useEffect(() => {
+    // Listen for logout event (if you have a global logout event or Redux state)
+    // Example: if (!isAuthenticated) setTurnstileKey((prev) => prev + 1);
+    // You can implement this based on your app's logout logic
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -61,6 +116,11 @@ export default function LoginForm() {
 
     if (!validateForm()) return;
 
+    if (!turnstileToken) {
+      setErrors({ general: "Please complete the CAPTCHA challenge." });
+      return;
+    }
+
     // Clear any existing errors
     setErrors({});
     dispatch(clearError());
@@ -69,6 +129,7 @@ export default function LoginForm() {
       const result = await dispatch(loginUser({
         email: formData.email,
         password: formData.password,
+        turnstile_token: turnstileToken, // snake_case agar cocok dengan backend
       })).unwrap();
 
       // Login successful
@@ -79,6 +140,9 @@ export default function LoginForm() {
     } catch (error: any) {
       console.error("Login error:", error);
       setErrors({ general: error.message || "Login failed. Please try again." });
+      // Reset Turnstile widget on login error
+      setTurnstileKey((prev) => prev + 1);
+      setTurnstileToken(null);
     }
   };
 
@@ -258,6 +322,18 @@ export default function LoginForm() {
         >
           Forgot password?
         </button>
+      </div>
+
+      <div className="my-4 flex justify-center">
+        <div
+          key={turnstileKey}
+          ref={turnstileWidgetRef}
+          className="cf-turnstile"
+          data-sitekey="0x4AAAAAABmlXQKNe1JjeYFt"
+          data-callback="onTurnstileSuccess"
+          data-error-callback="onTurnstileError"
+          data-expired-callback="onTurnstileExpired"
+        ></div>
       </div>
 
       <Button
