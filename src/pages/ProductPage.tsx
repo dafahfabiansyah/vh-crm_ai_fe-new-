@@ -899,18 +899,16 @@ const ProductPage = () => {
                                     })}
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
+                                    <div
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteCategory(category.id);
                                       }}
-                                      disabled={isLoading}
-                                      className="w-full md:w-auto"
+                                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer"
+                                      style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
                                     >
                                       <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

@@ -3,6 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Search, Edit, Trash2, Eye, Package } from "lucide-react";
 import type { Category, Product } from "@/types";
 import type { CategoryAttribute } from "@/services/productService";
@@ -43,7 +51,6 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const newRefreshKeys: Record<string, number> = {};
     products.forEach(product => {
       const currentKey = refreshKeys[product.id] || 0;
-      // Hanya increment jika updated_at berubah
       if (product.updated_at) {
         const timestamp = new Date(product.updated_at).getTime();
         const lastTimestamp = refreshKeys[`${product.id}_timestamp`] || 0;
@@ -59,16 +66,10 @@ const ProductTable: React.FC<ProductTableProps> = ({
       }
     });
     setRefreshKeys(newRefreshKeys);
-    // console.log('Refresh keys updated:', newRefreshKeys);
   }, [products]);
   
-  // Filter products based on search term
-  const filteredProducts = products.filter(
-    (product) =>
-      (product.name?.toLowerCase?.() || "").includes(searchTerm.toLowerCase()) 
-    // ||
-    //   (product.code?.toLowerCase?.() || "").includes(searchTerm.toLowerCase()) ||
-    //   (product.category_name?.toLowerCase?.() || "").includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter((product) =>
+    (product.name?.toLowerCase?.() || "").includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -142,29 +143,26 @@ const ProductTable: React.FC<ProductTableProps> = ({
       </Card>
 
       {/* Products Table (desktop/tablet) */}
-      <div className="overflow-x-auto hidden sm:block">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-3 px-4">Image</th>
-              <th className="text-left py-3 px-4">SKU</th>
-              <th className="text-left py-3 px-4">Name</th>
-              <th className="text-left py-3 px-4">Description</th>
-              <th className="text-left py-3 px-4">Category</th>
-              <th className="text-left py-3 px-4">Price</th>
-              <th className="text-left py-3 px-4">Stock</th>
-              <th className="text-left py-3 px-4">Status</th>
-              <th className="text-left py-3 px-4">Attributes</th>
-              <th className="text-left py-3 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="hidden sm:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Image</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Attributes</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredProducts.map((product: any) => (
-              <tr
-                key={product.id}
-                className="border-b hover:bg-gray-50"
-              >
-                <td className="py-3 px-4">
+              <TableRow key={product.id}>
+                <TableCell>
                   {product.image_url || product.image ? (
                     <img
                       key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
@@ -172,26 +170,21 @@ const ProductTable: React.FC<ProductTableProps> = ({
                       alt={product.name}
                       className="h-10 w-10 object-cover rounded"
                       onError={(e) => {
-                        // Fallback jika gambar gagal load
                         const target = e.target as HTMLImageElement;
-                        // console.log('Image failed to load:', target.src);
                         target.style.display = 'none';
                       }}
-                      // onLoad={() => {
-                      //   console.log('Image loaded successfully:', product.image_url || product.image);
-                      // }}
                     />
                   ) : (
                     <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
                       <span className="text-xs text-gray-500">No Image</span>
                     </div>
                   )}
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   <Badge variant="outline">{product.sku}</Badge>
-                </td>
-                <td className="py-3 px-4">{product.name}</td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>
                   {product.description && product.description.length > 30 ? (
                     <span
                       className="text-blue-600 cursor-pointer hover:underline"
@@ -203,21 +196,21 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   ) : (
                     <span>{product.description || '-'}</span>
                   )}
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   <Badge variant="secondary">
                     {product.category_name}
                   </Badge>
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   <span className="font-medium">
                     Rp {formatNumber(Number(product.price))}
                   </span>
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   {formatNumber(product.stock)}
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   <Badge
                     variant={
                       product.status ? "default" : "destructive"
@@ -225,8 +218,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   >
                     {product.status ? "Active" : "Inactive"}
                   </Badge>
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   {Array.isArray(product.attributes) &&
                   product.attributes.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
@@ -256,8 +249,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   ) : (
                     <span className="text-sm text-gray-500">-</span>
                   )}
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell>
                   <div className="flex items-center gap-2">
                     <Button 
                       variant="outline" 
@@ -281,11 +274,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Products Card List (mobile) */}
