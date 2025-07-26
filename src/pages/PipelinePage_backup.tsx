@@ -41,6 +41,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const PipelinePage = () => {
   const [searchParams] = useSearchParams();
@@ -188,7 +189,7 @@ const PipelinePage = () => {
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Error deleting pipeline:", error);
-      alert(error.message || "Failed to delete pipeline. Please try again.");
+      toast.error(error.message || "Failed to delete pipeline. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -220,7 +221,7 @@ const PipelinePage = () => {
         setPipelineData(mappedStages);
       }
     } catch (err) {
-      alert("Gagal menghapus stage");
+      toast.error("Gagal menghapus stage");
     }
   };
 

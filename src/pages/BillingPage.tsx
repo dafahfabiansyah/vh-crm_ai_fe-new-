@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { toast } from "sonner";
 
 export default function BillingPage() {
   const [, setSelectedPlan] = useState<string | null>(null);
@@ -81,7 +82,7 @@ export default function BillingPage() {
 
   const handlePayment = async () => {
     if (!selectedPlanData?.id) {
-      alert("No plan selected");
+      toast.error("No plan selected");
       return;
     }
     try {
@@ -94,11 +95,11 @@ export default function BillingPage() {
       setCouponCode("");
       setTimeout(() => {
         setIsProcessingDialogOpen(false);
-        alert("Transaksi berhasil! Silakan cek status pembayaran Anda.");
+        toast.success("Transaksi berhasil! Silakan cek status pembayaran Anda.");
       }, 1200);
     } catch (err) {
       setIsProcessingDialogOpen(false);
-      alert("Gagal melakukan transaksi. Silakan coba lagi.");
+      toast.error("Gagal melakukan transaksi. Silakan coba lagi.");
     }
   };
 
@@ -112,12 +113,12 @@ export default function BillingPage() {
         setOriginalPrice(selectedPlanData.price);
         setDiscountedPrice("IDR 0");
         setIsDiscountApplied(true);
-        alert("Coupon applied successfully! Harga menjadi gratis.");
+        toast.success("Coupon applied successfully! Harga menjadi gratis.");
       } else {
-        alert("Invalid plan price");
+        toast.error("Invalid plan price");
       }
     } else {
-      alert("Invalid coupon code");
+      toast.error("Invalid coupon code");
     }
   };
 

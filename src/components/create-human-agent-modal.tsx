@@ -19,6 +19,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import { DepartmentService } from "@/services/departmentService";
 import React from "react";
+import { toast } from "sonner";
 
 interface CreateHumanAgentModalProps {
   isOpen: boolean;
@@ -104,7 +105,7 @@ export default function CreateHumanAgentModal({
         onAgentCreated();
       }
       // Show success message
-      alert("Agent created successfully!");
+      toast.success("Agent created successfully!");
     } catch (err: any) {
       setError(err.message || "Failed to create agent");
       console.error("Error creating agent:", err);
@@ -240,6 +241,9 @@ export default function CreateHumanAgentModal({
                   <SelectValue placeholder={loadingDepartments ? "Loading..." : "Select department"} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="" disabled>
+                    Pilih department...
+                  </SelectItem>
                   {departments.length === 0 && !loadingDepartments ? (
                     <SelectItem value="no-departments" disabled>
                       No departments found

@@ -40,7 +40,6 @@ import {
   User,
   Settings,
   LogOut,
-  CreditCard,
   Shield,
   CheckCircle,
   AlertCircle,
@@ -49,6 +48,7 @@ import {
 } from "lucide-react";
 import { getCurrentSubscription } from "@/services/transactionService";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 // Notification type for state
 type Notification = {
@@ -205,10 +205,10 @@ export default function Topbar({
       setIsHelpModalOpen(false);
 
       // Show success message (you can replace with a toast notification)
-      alert("Pengaduan berhasil dikirim!");
+      toast.success("Pengaduan berhasil dikirim!");
     } catch (error) {
       console.error("Error submitting help ticket:", error);
-      alert("Gagal mengirim pengaduan. Silakan coba lagi.");
+      toast.error("Gagal mengirim pengaduan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -437,10 +437,6 @@ export default function Topbar({
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <CreditCard className="mr-2 h-4 w-4" />
-              <span>Billing</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />

@@ -2,6 +2,7 @@
 import { useState } from "react"
 import NavigationSidebar from "@/components/navigation-sidebar"
 import Topbar from "@/components/topbar"
+import { Toaster } from "@/components/ui/sonner"
 import type { MainLayoutProps } from "@/types"
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -25,6 +26,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {/* Main Content */}
         <main className="flex-1 overflow-auto bg-muted/30">{children}</main>
       </div>
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   )
 }

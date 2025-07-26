@@ -9,6 +9,7 @@ import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Load
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
 import { ContactsService } from "@/services/contactsService"
+import { toast } from "sonner"
 
 
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
@@ -155,7 +156,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       }
     } catch (error: any) {
       console.error("Failed to takeover conversation:", error)
-      alert(error.message || "Failed to takeover conversation")
+      toast.error(error.message || "Failed to takeover conversation")
     } finally {
       setIsLoading(false)
     }
@@ -172,7 +173,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       console.log("Conversation resolved")
     } catch (error: any) {
       console.error("Failed to resolve conversation:", error)
-      alert(error.message || "Failed to resolve conversation")
+      toast.error(error.message || "Failed to resolve conversation")
     } finally {
       setIsLoading(false)
     }
@@ -194,7 +195,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       setTimeout(() => scrollToBottom(), 100)
     } catch (error: any) {
       console.error("Failed to send message:", error)
-      alert(error.message || "Failed to send message")
+      toast.error(error.message || "Failed to send message")
     } finally {
       setIsSending(false)
     }

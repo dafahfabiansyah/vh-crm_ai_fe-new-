@@ -36,7 +36,7 @@ import ProductTable from "@/components/product-table";
 import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
 import { KnowledgeService } from "@/services/knowledgeService";
-import { Toast } from "@/components/ui/toast";
+import { toast as showToast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -155,12 +155,7 @@ const ProductPage = () => {
     open: boolean;
     targetId?: string;
   }>({ open: false });
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description: string;
-  } | null>(null);
+
 
   const handleInputChange =
     (field: keyof ProductFormData) =>
@@ -354,7 +349,7 @@ const ProductPage = () => {
       setImageUploadError("");
     } catch (error: any) {
       console.error("Error creating product:", error);
-      alert(`Failed to create product: ${error.message}`);
+      showToast.error(`Failed to create product: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -364,12 +359,7 @@ const ProductPage = () => {
     e.preventDefault();
 
     if (!categoryFormData.name) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Form Tidak Lengkap",
-        description: "Please enter a category name",
-      });
+      showToast.error("Please enter a category name");
       return;
     }
 
@@ -414,20 +404,10 @@ const ProductPage = () => {
         description: "",
         attributes: [],
       });
-      setToast({
-        show: true,
-        type: "success",
-        title: "Category Created",
-        description: "Category created successfully.",
-      });
+      showToast.success("Category created successfully.");
     } catch (error: any) {
       console.error("Error creating category:", error);
-      setToast({
-        show: true,
-        type: "error",
-        title: "Create Failed",
-        description: error.message || "Failed to create category.",
-      });
+      showToast.error(error.message || "Failed to create category.");
     } finally {
       setIsLoading(false);
     }
@@ -451,20 +431,10 @@ const ProductPage = () => {
         newMap.delete(deleteCategoryDialog.targetId!);
         return newMap;
       });
-      setToast({
-        show: true,
-        type: "success",
-        title: "Category Deleted",
-        description: "Category deleted successfully.",
-      });
-    } catch (error: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Delete Failed",
-        description: error.message || "Failed to delete category.",
-      });
-    } finally {
+      showToast.success("Category deleted successfully.");
+          } catch (error: any) {
+        showToast.error(error.message || "Failed to delete category.");
+      } finally {
       setIsLoading(false);
       setDeleteCategoryDialog({ open: false });
     }
@@ -518,7 +488,7 @@ const ProductPage = () => {
       setIsEditModalOpen(false);
       setEditProduct(null);
     } catch (err: any) {
-      alert("Failed to update product: " + (err?.message || "Unknown error"));
+      showToast.error("Failed to update product: " + (err?.message || "Unknown error"));
     } finally {
       setIsEditLoading(false);
     }
@@ -544,7 +514,7 @@ const ProductPage = () => {
       setIsDeleteModalOpen(false);
       setDeleteProduct(null);
     } catch (err: any) {
-      alert("Failed to delete product: " + (err?.message || "Unknown error"));
+      showToast.error("Failed to delete product: " + (err?.message || "Unknown error"));
     } finally {
       setIsDeleteLoading(false);
     }
@@ -771,11 +741,6 @@ const ProductPage = () => {
               Check Knowledge to AI
             </button>
           </div>
-          {categories.length === 0 && (
-            <p className="text-sm text-gray-500 mt-2">
-              Create at least one category before adding products
-            </p>
-          )}
         </div>
 
         {/* Categories Tab Content */}
@@ -1035,8 +1000,11 @@ const ProductPage = () => {
                         />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="placeholder" disabled>
+                          Pilih AI agent...
+                        </SelectItem>
                         {aiAgents.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-agents" disabled>
                             No AI agent found
                           </SelectItem>
                         ) : (
@@ -1284,16 +1252,7 @@ const ProductPage = () => {
               >
                 {addToAILoading ? "Adding..." : "Add Selected Products to AI"}
               </Button>
-              {/* Toast Success Bottom Left */}
-              {addToAISuccess && (
-                <div className="fixed bottom-4 left-4 z-50 w-[90vw] max-w-xs md:max-w-sm">
-                  <Toast
-                    type="success"
-                    title="Success"
-                    description={addToAISuccess}
-                  />
-                </div>
-              )}
+
               {addToAIError && (
                 <div className="text-red-600 mt-2">{addToAIError}</div>
               )}
@@ -1307,7 +1266,7 @@ const ProductPage = () => {
             <CardContent className="p-6">
               <h2 className="text-xl font-bold mb-4">Check Knowledge to AI</h2>
               <div className="mb-4 max-w-md">
-                <label className="block mb-2 font-medium">
+                <label className="block mb-2 font-medium text-xs md:text-sm">
                   Select AI Agent
                 </label>
                 {isLoadingAgents ? (
@@ -1330,8 +1289,11 @@ const ProductPage = () => {
                       />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="placeholder" disabled>
+                        Pilih AI agent...
+                      </SelectItem>
                       {aiAgents.length === 0 ? (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-agents" disabled>
                           No AI agent found
                         </SelectItem>
                       ) : (
@@ -1981,17 +1943,7 @@ const ProductPage = () => {
             )}
           </DialogContent>
         </Dialog>
-        {/* Toast Notification */}
-        {toast?.show && (
-          <div className="mb-4">
-            <Toast
-              type={toast.type}
-              title={toast.title}
-              description={toast.description}
-              onClose={() => setToast(null)}
-            />
-          </div>
-        )}
+
         {/* Delete Category Confirmation Dialog */}
         <Dialog open={deleteCategoryDialog.open} onOpenChange={(open) => setDeleteCategoryDialog((prev) => ({ ...prev, open }))}>
           <DialogContent>

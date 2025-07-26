@@ -19,6 +19,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services";
 import { DepartmentService } from "@/services/departmentService";
+import { toast } from "sonner";
 
 
 interface EditHumanAgentModalProps {
@@ -125,7 +126,7 @@ export default function EditHumanAgentModal({
       if (onAgentUpdated) {
         onAgentUpdated();
       }
-      alert("Agent updated successfully!");
+      toast.success("Agent updated successfully!");
     } catch (err: any) {
       setError(err.message || "Failed to update agent");
       console.error("Error updating agent:", err);
@@ -237,6 +238,9 @@ export default function EditHumanAgentModal({
                   <SelectValue placeholder={loadingDepartments ? "Loading..." : "Select department"} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="" disabled>
+                    Pilih department...
+                  </SelectItem>
                   {departments.length === 0 && !loadingDepartments ? (
                     <SelectItem value="no-departments" disabled>
                       No departments found

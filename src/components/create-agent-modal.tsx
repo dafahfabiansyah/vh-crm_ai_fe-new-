@@ -202,6 +202,9 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
                 <SelectValue placeholder="Pilih template untuk AI agent Anda" />
               </SelectTrigger>
               <SelectContent className="w-full max-w-[calc(100vw-2rem)] sm:min-w-[400px]">
+                <SelectItem value="" disabled>
+                  Pilih template...
+                </SelectItem>
                 {Object.entries(AGENT_TEMPLATES).map(([key, template]) => (
                   <SelectItem
                     key={key}
