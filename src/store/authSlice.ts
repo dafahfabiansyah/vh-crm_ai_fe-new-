@@ -74,7 +74,7 @@ const authSlice = createSlice({
       const token = AuthService.getStoredToken();
       const isAuthenticated = AuthService.isAuthenticated();
       
-      console.log('🔄 Syncing with cookies:', { user: !!user, token: !!token, isAuthenticated });
+      // console.log('🔄 Syncing with cookies:', { user: !!user, token: !!token, isAuthenticated });
       
       state.user = user;
       state.token = token;
