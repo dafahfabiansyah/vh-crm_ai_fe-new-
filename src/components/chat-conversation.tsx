@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -10,6 +10,7 @@ import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
 import { ContactsService } from "@/services/contactsService"
 import { toast } from "sonner"
+
 
 
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
@@ -60,15 +61,56 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     }
   }
 
-  // Fungsi utilitas untuk memecah setiap 50 karakter
-  function breakEvery50Chars(text: string): string {
-    const result = [];
-    let i = 0;
-    while (i < text.length) {
-      result.push(text.slice(i, i + 50));
-      i += 50;
+  // Fungsi untuk parsing WhatsApp style (bold, italic, strikethrough, monospace)
+  function parseWhatsAppStyle(text: string): React.ReactNode[] {
+    let elements: React.ReactNode[] = [];
+    let regex = /(`[^`]+`|\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        elements.push(text.slice(lastIndex, match.index));
+      }
+      const matchText = match[0];
+      if (matchText.startsWith('`')) {
+        elements.push(<code key={match.index}>{matchText.slice(1, -1)}</code>);
+      } else if (matchText.startsWith('*')) {
+        elements.push(<b key={match.index}>{matchText.slice(1, -1)}</b>);
+      } else if (matchText.startsWith('_')) {
+        elements.push(<i key={match.index}>{matchText.slice(1, -1)}</i>);
+      } else if (matchText.startsWith('~')) {
+        elements.push(<s key={match.index}>{matchText.slice(1, -1)}</s>);
+      }
+      lastIndex = match.index + matchText.length;
     }
-    return result.join('\n');
+    if (lastIndex < text.length) {
+      elements.push(text.slice(lastIndex));
+    }
+    return elements;
+  }
+
+  // Fungsi utilitas untuk memecah kata super panjang saja
+  function breakLongWords(text: string, maxLen = 50): string {
+    return text.split(' ').map(word => {
+      if (word.length > maxLen) {
+        const parts = [];
+        for (let i = 0; i < word.length; i += maxLen) {
+          parts.push(word.slice(i, i + maxLen));
+        }
+        return parts.join(' ');
+      }
+      return word;
+    }).join(' ');
+  }
+
+  function renderMessageWithLineBreaks(text: string) {
+    const lines = text.split('\n');
+    return lines.map((line, idx) => (
+      <React.Fragment key={idx}>
+        {parseWhatsAppStyle(breakLongWords(line))}
+        {idx !== lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
   }
 
   useEffect(() => {
@@ -452,19 +494,16 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
               }}
               className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4 transition-colors duration-500`}
             >
-              <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[75%] sm:max-w-[60%]`}>
+                <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[350px]`}>
                 <div className={`${
                   chatLog.from_me
                     ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
                     : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
                   } px-3 py-2 shadow-sm`}>
                   <p className="text-sm leading-relaxed break-words">
-                    {breakEvery50Chars(chatLog.message).split('\n').map((line, idx, arr) => (
-                      <span key={idx}>
-                        {searchQuery ? highlightText(line, searchQuery) : line}
-                        {idx !== arr.length - 1 && <br />}
-                      </span>
-                    ))}
+                    {searchQuery
+                      ? highlightText(breakLongWords(chatLog.message), searchQuery)
+                      : renderMessageWithLineBreaks(chatLog.message)}
                   </p>
                 </div>
                 <div className={`flex items-center gap-1 mt-1 px-2 text-xs text-muted-foreground ${chatLog.from_me ? "flex-row-reverse" : "flex-row"}`}>
