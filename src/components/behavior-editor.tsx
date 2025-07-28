@@ -31,13 +31,11 @@ export function BehaviorEditor({
   onChange,
   activatedIntegrations = [],
   maxLength = 10000,
-  className = ''
 }: BehaviorEditorProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 });
   const [filteredIntegrations, setFilteredIntegrations] = useState<AutocompleteItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [currentQuery, setCurrentQuery] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const autocompleteRef = useRef<HTMLDivElement>(null);
@@ -65,15 +63,15 @@ export function BehaviorEditor({
   // Insert formatting helpers
   const insertFormatting = (format: string) => {
     if (!textareaRef.current) return;
-    
+
     const textarea = textareaRef.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end);
-    
+
     let newText = '';
     let cursorOffset = 0;
-    
+
     switch (format) {
       case 'bold':
         newText = selectedText ? `**${selectedText}**` : '**bold text**';
@@ -92,10 +90,10 @@ export function BehaviorEditor({
         cursorOffset = 0;
         break;
     }
-    
+
     const newValue = value.substring(0, start) + newText + value.substring(end);
     onChange(newValue);
-    
+
     // Set cursor position
     setTimeout(() => {
       const newCursorPos = start + newText.length + cursorOffset;
@@ -117,7 +115,6 @@ export function BehaviorEditor({
 
     if (integrationMatch) {
       const query = integrationMatch[1] || '';
-      setCurrentQuery(query);
 
       // Filter integrations based on query (search in both id and name)
       const filtered = allIntegrations.filter(item =>
@@ -137,33 +134,33 @@ export function BehaviorEditor({
         measureSpan.style.whiteSpace = 'pre';
         measureSpan.style.font = getComputedStyle(textarea).font;
         document.body.appendChild(measureSpan);
-        
+
         const rect = textarea.getBoundingClientRect();
         const style = getComputedStyle(textarea);
         const lineHeight = parseInt(style.lineHeight) || 20;
         const paddingLeft = parseInt(style.paddingLeft) || 0;
         const paddingTop = parseInt(style.paddingTop) || 0;
-        
+
         // Calculate exact cursor position
         const lines = textBeforeCursor.split('\n');
         const currentLineIndex = lines.length - 1;
         const currentLineText = lines[currentLineIndex];
-        
+
         // Measure the actual width of text before cursor on current line
         measureSpan.textContent = currentLineText;
         const textWidth = measureSpan.offsetWidth;
-        
+
         // Clean up the measurement element
         document.body.removeChild(measureSpan);
-        
+
         // Position dropdown right next to the cursor
         const topOffset = paddingTop + (currentLineIndex * lineHeight) + lineHeight + 5;
         const leftOffset = paddingLeft + textWidth + 5;
-        
+
         // Ensure dropdown doesn't go off-screen
         const maxLeft = window.innerWidth - 400;
         const finalLeft = Math.min(rect.left + leftOffset, maxLeft);
-        
+
         setAutocompletePosition({
           top: rect.top + topOffset + window.scrollY,
           left: finalLeft + window.scrollX
@@ -218,7 +215,7 @@ export function BehaviorEditor({
     if (!integrationMatch) return;
 
     const matchStart = cursorPosition - integrationMatch[0].length;
-    
+
     // Create the integration text with custom fields (only field names)
     let integrationText = `@integration:${integration.id}`;
     if (integration.custom_integration_fields && Object.keys(integration.custom_integration_fields).length > 0) {
@@ -230,7 +227,7 @@ export function BehaviorEditor({
       const fieldsJson = JSON.stringify(fieldsObject, null, 2);
       integrationText += `\n${fieldsJson}`;
     }
-    
+
     const newText =
       value.substring(0, matchStart) +
       integrationText +
@@ -341,14 +338,14 @@ export function BehaviorEditor({
         </div>
 
         <Textarea
-           ref={textareaRef}
-           value={value}
-           onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            className="behavior-textarea min-h-[200px] resize-none"
-            maxLength={maxLength}
-            placeholder="Describe the AI agent's behavior and use @integration: to add integrations..."
-         />
+          ref={textareaRef}
+          value={value}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          className="behavior-textarea min-h-[200px] resize-none"
+          maxLength={maxLength}
+          placeholder="Describe the AI agent's behavior and use @integration: to add integrations..."
+        />
 
 
 
@@ -371,52 +368,51 @@ export function BehaviorEditor({
                 </Badge>
               </div>
               {filteredIntegrations.map((integration, index) => (
-                 <div
-                   key={integration.uniqueKey || `${integration.id}_${index}`}
-                   className={`px-4 py-4 cursor-pointer rounded-lg transition-all duration-200 border ${
-                     index === selectedIndex
-                       ? 'bg-blue-50 border-blue-200 shadow-sm'
-                       : 'hover:bg-gray-50 border-transparent'
-                   }`}
-                   onClick={() => insertIntegration(integration)}
-                 >
-                   <div className="space-y-3">
-                     <div className="flex items-center space-x-2">
-                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                         <Zap className="w-4 h-4 text-white" />
-                       </div>
-                       <div className="flex-1">
-                         <div className="font-semibold text-sm text-gray-900">
-                           {integration.name}
-                         </div>
-                         <div className="text-xs text-gray-500">
-                           @integration:{integration.id}
-                         </div>
-                       </div>
-                     </div>
-                     
-                     <div className="text-xs text-gray-600">
-                       {integration.description}
-                     </div>
-                     
-                     {integration.custom_integration_fields && Object.keys(integration.custom_integration_fields).length > 0 && (
-                       <div className="bg-gray-50 rounded-md p-3 border">
-                         <div className="text-xs font-medium text-gray-700 mb-2 flex items-center space-x-1">
-                           <Code className="w-3 h-3" />
-                           <span>Custom Fields</span>
-                         </div>
-                         <div className="flex flex-wrap gap-1">
-                           {Object.keys(integration.custom_integration_fields).map((fieldName, idx) => (
-                             <span key={idx} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-mono">
-                               {fieldName}
-                             </span>
-                           ))}
-                         </div>
-                       </div>
-                     )}
-                   </div>
-                 </div>
-               ))}
+                <div
+                  key={integration.uniqueKey || `${integration.id}_${index}`}
+                  className={`px-4 py-4 cursor-pointer rounded-lg transition-all duration-200 border ${index === selectedIndex
+                      ? 'bg-blue-50 border-blue-200 shadow-sm'
+                      : 'hover:bg-gray-50 border-transparent'
+                    }`}
+                  onClick={() => insertIntegration(integration)}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm text-gray-900">
+                          {integration.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          @integration:{integration.id}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-gray-600">
+                      {integration.description}
+                    </div>
+
+                    {integration.custom_integration_fields && Object.keys(integration.custom_integration_fields).length > 0 && (
+                      <div className="bg-gray-50 rounded-md p-3 border">
+                        <div className="text-xs font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                          <Code className="w-3 h-3" />
+                          <span>Custom Fields</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.keys(integration.custom_integration_fields).map((fieldName, idx) => (
+                            <span key={idx} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-mono">
+                              {fieldName}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
               <div className="mt-3 pt-2 border-t text-xs text-gray-500">
                 💡 Use ↑↓ to navigate, Enter to select, Esc to close
               </div>

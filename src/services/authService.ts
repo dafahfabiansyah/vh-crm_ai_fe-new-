@@ -121,6 +121,7 @@ export class AuthService {
         body: JSON.stringify({
           email: credentials.email,
           password: credentials.password,
+          turnstile_token: credentials.turnstile_token, 
         }),
       });
 

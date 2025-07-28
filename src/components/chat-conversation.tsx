@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -8,14 +8,17 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
-import type { ChatLog } from "@/services"
 import { ContactsService } from "@/services/contactsService"
+import { toast } from "sonner"
+
 
 
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [isTakenOver, setIsTakenOver] = useState(false)
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
+  const [searchResults, setSearchResults] = useState<number[]>([])
 
   // Check if conversation is already assigned
   const isAssigned = selectedContact?.lead_status === 'assigned'
@@ -23,22 +26,17 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Fetch chat logs for the selected contact
   const { chatLogs, loading, error } = useChatLogs(selectedContactId)
-  const [localChatLogs, setLocalChatLogs] = useState<ChatLog[]>([])
-
-  // Sync local chat logs with the hook's chat logs
-  useEffect(() => {
-    setLocalChatLogs(chatLogs)
-  }, [chatLogs])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   // Format timestamp to display time difference
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: string): string => {
     // Convert UTC timestamp to UTC+7 (WIB - Western Indonesia Time)
     const date = new Date(timestamp)
     const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000)
@@ -63,16 +61,134 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     }
   }
 
+  // Fungsi untuk parsing WhatsApp style (bold, italic, strikethrough, monospace)
+  function parseWhatsAppStyle(text: string): React.ReactNode[] {
+    let elements: React.ReactNode[] = [];
+    let regex = /(`[^`]+`|\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        elements.push(text.slice(lastIndex, match.index));
+      }
+      const matchText = match[0];
+      if (matchText.startsWith('`')) {
+        elements.push(<code key={match.index}>{matchText.slice(1, -1)}</code>);
+      } else if (matchText.startsWith('*')) {
+        elements.push(<b key={match.index}>{matchText.slice(1, -1)}</b>);
+      } else if (matchText.startsWith('_')) {
+        elements.push(<i key={match.index}>{matchText.slice(1, -1)}</i>);
+      } else if (matchText.startsWith('~')) {
+        elements.push(<s key={match.index}>{matchText.slice(1, -1)}</s>);
+      }
+      lastIndex = match.index + matchText.length;
+    }
+    if (lastIndex < text.length) {
+      elements.push(text.slice(lastIndex));
+    }
+    return elements;
+  }
+
+  // Fungsi utilitas untuk memecah kata super panjang saja
+  function breakLongWords(text: string, maxLen = 50): string {
+    return text.split(' ').map(word => {
+      if (word.length > maxLen) {
+        const parts = [];
+        for (let i = 0; i < word.length; i += maxLen) {
+          parts.push(word.slice(i, i + maxLen));
+        }
+        return parts.join(' ');
+      }
+      return word;
+    }).join(' ');
+  }
+
+  function renderMessageWithLineBreaks(text: string) {
+    const lines = text.split('\n');
+    return lines.map((line, idx) => (
+      <React.Fragment key={idx}>
+        {parseWhatsAppStyle(breakLongWords(line))}
+        {idx !== lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  }
+
   useEffect(() => {
     scrollToBottom()
-  }, [localChatLogs])
+  }, [chatLogs])
+
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setSearchResults([])
+      setCurrentSearchIndex(-1)
+      return
+    }
+
+    const results: number[] = []
+    chatLogs.forEach((chatLog, index) => {
+      if (chatLog.message.toLowerCase().includes(searchQuery.toLowerCase())) {
+        results.push(index)
+      }
+    })
+
+    setSearchResults(results)
+    if (results.length > 0) {
+      setCurrentSearchIndex(0)
+      scrollToMessage(results[0])
+    } else {
+      setCurrentSearchIndex(-1)
+    }
+  }, [searchQuery, chatLogs])
+
+  const scrollToMessage = (messageIndex: number) => {
+    const messageElement = messageRefs.current[messageIndex]
+    if (messageElement) {
+      messageElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      })
+      // Add highlight effect
+      messageElement.style.backgroundColor = '#fef3c7'
+      setTimeout(() => {
+        messageElement.style.backgroundColor = ''
+      }, 2000)
+    }
+  }
+
+  const navigateSearch = (direction: 'next' | 'prev') => {
+    if (searchResults.length === 0) return
+
+    let newIndex
+    if (direction === 'next') {
+      newIndex = currentSearchIndex < searchResults.length - 1 ? currentSearchIndex + 1 : 0
+    } else {
+      newIndex = currentSearchIndex > 0 ? currentSearchIndex - 1 : searchResults.length - 1
+    }
+
+    setCurrentSearchIndex(newIndex)
+    scrollToMessage(searchResults[newIndex])
+  }
+
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text
+
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+
+    return parts.map((part, index) =>
+      regex.test(part) ?
+        <mark key={index} className="bg-yellow-200 text-yellow-900">{part}</mark> :
+        part
+    )
+  }
 
   const handleTakeOver = async () => {
     if (!selectedContactId) return
 
     setIsLoading(true)
     try {
-      await ContactsService.takeoverConversation(selectedContactId!)
+      await ContactsService.takeoverConversation(selectedContactId)
       setIsTakenOver(true)
       console.log("Chat taken over by agent")
 
@@ -82,7 +198,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       }
     } catch (error: any) {
       console.error("Failed to takeover conversation:", error)
-      alert(error.message || "Failed to takeover conversation")
+      toast.error(error.message || "Failed to takeover conversation")
     } finally {
       setIsLoading(false)
     }
@@ -93,13 +209,13 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
     setIsLoading(true)
     try {
-      await ContactsService.resolveConversation(selectedContactId!)
+      await ContactsService.resolveConversation(selectedContactId)
       // Reset takeover state, but assigned contacts will still show message input based on lead_status
       setIsTakenOver(false)
       console.log("Conversation resolved")
     } catch (error: any) {
       console.error("Failed to resolve conversation:", error)
-      alert(error.message || "Failed to resolve conversation")
+      toast.error(error.message || "Failed to resolve conversation")
     } finally {
       setIsLoading(false)
     }
@@ -108,41 +224,20 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedContact) return
 
-    const messageToSend = newMessage.trim()
-    const tempId = `temp-${Date.now()}`
-
-    // Create optimistic message
-    const optimisticMessage: ChatLog = {
-      id: tempId,
-      id_contact: selectedContactId ?? '',
-      message: messageToSend,
-      type: 'text',
-      media: '',
-      from_me: true,
-      sent_at: new Date().toISOString()
-    }
-
-    // Add message optimistically to local state
-    setLocalChatLogs(prev => [...prev, optimisticMessage])
-    setNewMessage("")
     setIsSending(true)
-
     try {
       await ContactsService.sendMessage(
-        selectedContact!.platform_inbox_id!,
-        selectedContact!.contact_identifier,
-        messageToSend
+        selectedContact.platform_inbox_id as string,
+        selectedContact.contact_identifier,
+        newMessage
       )
-      console.log("Message sent:", messageToSend)
+      setNewMessage("")
+      console.log("Message sent:", newMessage)
       // Scroll to bottom after sending message
       setTimeout(() => scrollToBottom(), 100)
     } catch (error: any) {
       console.error("Failed to send message:", error)
-      // Remove optimistic message on error
-      setLocalChatLogs(prev => prev.filter(msg => msg.id !== tempId))
-      // Restore the message in input
-      setNewMessage(messageToSend)
-      alert(error.message || "Failed to send message")
+      toast.error(error.message || "Failed to send message")
     } finally {
       setIsSending(false)
     }
@@ -189,16 +284,16 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
               <Avatar className="h-10 w-10 flex-shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {selectedContact!.push_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  {selectedContact.push_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
               <div className="min-w-0 flex-1">
-                <h2 className="font-semibold text-foreground truncate text-sm">{selectedContact!.push_name}</h2>
+                <h2 className="font-semibold text-foreground truncate text-sm">{selectedContact.push_name}</h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{selectedContact!.contact_identifier}</span>
+                  <span className="text-xs text-muted-foreground">{selectedContact.contact_identifier}</span>
                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                    {selectedContact!.lead_status}
+                    {selectedContact.lead_status}
                   </Badge>
                 </div>
               </div>
@@ -270,15 +365,15 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-primary/10 text-primary">
-                {selectedContact!.push_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {selectedContact.push_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <h2 className="font-semibold text-foreground truncate">{selectedContact!.push_name}</h2>
+              <h2 className="font-semibold text-foreground truncate">{selectedContact.push_name}</h2>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{selectedContact!.contact_identifier}</span>
+                <span className="text-sm text-muted-foreground">{selectedContact.contact_identifier}</span>
                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  {selectedContact!.lead_status}
+                  {selectedContact.lead_status}
                 </Badge>
               </div>
             </div>
@@ -325,8 +420,31 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
                 placeholder="Cari Percakapan"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 pr-20 w-80"
               />
+              {searchResults.length > 0 && (
+                <div className="absolute right-2 top-2 flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>{currentSearchIndex + 1}/{searchResults.length}</span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigateSearch('prev')}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigateSearch('next')}
+                    >
+                      ↓
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Info Button - Hidden on desktop since info sidebar is always visible */}
@@ -363,19 +481,29 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           </div>
-        ) : localChatLogs.length === 0 ? (
+        ) : chatLogs.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground">No messages yet</p>
           </div>
         ) : (
-          localChatLogs.map((chatLog: ChatLog) => (
-            <div key={chatLog.id} className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4`}>
-              <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[75%] sm:max-w-[60%]`}>
+          chatLogs.map((chatLog, index) => (
+            <div
+              key={chatLog.id}
+              ref={(el) => {
+                messageRefs.current[index] = el
+              }}
+              className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4 transition-colors duration-500`}
+            >
+              <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[350px]`}>
                 <div className={`${chatLog.from_me
-                  ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
-                  : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
+                    ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
+                    : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
                   } px-3 py-2 shadow-sm`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{chatLog.message}</p>
+                  <p className="text-sm leading-relaxed break-words">
+                    {searchQuery
+                      ? highlightText(breakLongWords(chatLog.message), searchQuery)
+                      : renderMessageWithLineBreaks(chatLog.message)}
+                  </p>
                 </div>
                 <div className={`flex items-center gap-1 mt-1 px-2 text-xs text-muted-foreground ${chatLog.from_me ? "flex-row-reverse" : "flex-row"}`}>
                   <span>{formatTimestamp(chatLog.sent_at)}</span>

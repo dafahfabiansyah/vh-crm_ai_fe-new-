@@ -458,7 +458,7 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                     <SelectValue placeholder="Select a product" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" disabled>
+                    <SelectItem value="placeholder" disabled>
                       Pilih produk...
                     </SelectItem>
                     {products.map((p) => (
