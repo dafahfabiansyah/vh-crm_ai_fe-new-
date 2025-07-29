@@ -188,7 +188,7 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string, newStageOrder?: number, id_agent?: string) => {
+  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string, id_agent?: string) => {
     setPipelineData((prev) => {
       const newData = [...prev];
       const stageIndex = newData.findIndex((stage) => stage.id === stageId);

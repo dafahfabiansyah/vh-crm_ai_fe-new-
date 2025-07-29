@@ -35,8 +35,7 @@ export const PipelineStageColumn: React.FC<{
     stageId: string,
     newName: string,
     newDescription?: string,
-    newStageOrder?: number,
-    newAgentId?: string
+    id_agent?: string
   ) => void;
   onDeleteStage: (stageId: string) => void;
   onLeadClick: (lead: Lead) => void;
@@ -56,7 +55,7 @@ export const PipelineStageColumn: React.FC<{
   const [editStageDescription, setEditStageDescription] = useState(
     stage.description || ""
   );
-  const [editStageOrder, setEditStageOrder] = useState<number>(
+  const [, setEditStageOrder] = useState<number>(
     stage.stage_order ?? 0
   );
   const [editAgents, setEditAgents] = useState<any[]>([]);
@@ -200,7 +199,6 @@ export const PipelineStageColumn: React.FC<{
                     stage.id,
                     editStageName.trim(),
                     editStageDescription.trim(),
-                    editStageOrder,
                     editSelectedAgent
                   );
                   setShowEditDialog(false);
