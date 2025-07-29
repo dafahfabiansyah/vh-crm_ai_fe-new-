@@ -127,7 +127,7 @@ export const whatsappService = {
 
   sendMessage: async ({ session, number, message }: { session: string; number: string; message: string }) => {
     try {
-      const response = await axiosInstance.post(`http://localhost:3000/send-message`, {
+      const response = await axiosInstance.post(`${API_BASE_URL}/send-message`, {
         session,
         number,
         message,
