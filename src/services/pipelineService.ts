@@ -202,12 +202,13 @@ export class PipelineService {
   /**
    * Update a stage by ID
    */
-  static async updateStage(id: string, data: { name: string; description: string; stage_order: number }): Promise<any> {
+  static async updateStage(id: string, data: { name: string; description: string; stage_order: number; id_agent?: string }): Promise<any> {
     try {
       const response = await axiosInstance.patch(`/v1/stages/${id}`, {
         name: data.name,
         description: data.description,
         stage_order: data.stage_order,
+        ...(data.id_agent ? { id_agent: data.id_agent } : {}),
       });
       return response.data;
     } catch (error: any) {
