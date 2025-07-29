@@ -118,12 +118,20 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
         let processedIntegrations: IntegrationExecution[] | undefined = undefined
         
         if (response.integration_executions && response.integration_executions.length > 0) {
+          console.log('🔍 Integration executions received:', response.integration_executions)
           processedIntegrations = response.integration_executions.map(integration => {
+            console.log(`🔍 Processing integration: ${integration.integration_name}`, {
+              success: integration.success,
+              response_body: integration.response_body,
+              error_message: integration.error_message
+            })
+            
             // Try to parse the response_body if it's a JSON string
             let parsedResponse = undefined
             if (integration.response_body) {
               try {
                 parsedResponse = JSON.parse(integration.response_body)
+                console.log('🔍 Parsed response:', parsedResponse)
               } catch (e) {
                 // If parsing fails, leave it as is
                 console.log('Failed to parse integration response:', e)

@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog";
 import { Toast } from "@/components/ui/toast";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
+import { BehaviorEditor } from "@/components/behavior-editor";
 import MainLayout from "@/main-layout";
 import { AgentsService } from "@/services/agentsService";
 import KnowledgeTab from "@/components/knowledge-tab";
@@ -145,7 +146,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [activatedIntegrations, setActivatedIntegrations] = useState<any[]>([]);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [activateIntegration,setActivateIntegration ] = useState<any>(null);
+  const [activateIntegration, setActivateIntegration] = useState<any>(null);
   const [editIntegration, setEditIntegration] = useState<any>(null);
   const [activateLoading, setActivateLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
@@ -185,15 +186,49 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   // Fetch activated integrations for this agent
   useEffect(() => {
     if (!actualAgentId) return;
-    
+
     axios.get(`/v1/ai-agents/${actualAgentId}/integrations`)
-      .then(res => {
-        setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
+      .then(async res => {
+        const activatedIntegrations = Array.isArray(res.data) ? res.data : [];
+        
+        // Enhance activated integrations with custom fields from integration definitions
+        const enhancedIntegrations = await Promise.all(
+          activatedIntegrations.map(async (activated) => {
+            try {
+              // Find the corresponding custom integration to get field definitions
+              const customIntegration = customIntegrations.find(ci => ci.id === activated.id_integration);
+              if (customIntegration && customIntegration.fields) {
+                // Convert fields array to a more usable format for the behavior editor
+                const fieldsObject = customIntegration.fields.reduce((acc, field) => {
+                  acc[field.field_name] = {
+                    type: field.field_type,
+                    required: field.is_required,
+                    description: field.description,
+                    enum_values: field.enum_values,
+                    default_value: field.default_value
+                  };
+                  return acc;
+                }, {} as any);
+                
+                return {
+                  ...activated,
+                  custom_integration_fields: fieldsObject
+                };
+              }
+              return activated;
+            } catch (error) {
+              console.error('Error enhancing integration:', activated.id_integration, error);
+              return activated;
+            }
+          })
+        );
+        
+        setActivatedIntegrations(enhancedIntegrations);
       })
       .catch(err => {
         console.error('Failed to load activated integrations:', err);
       });
-  }, [actualAgentId]);
+  }, [actualAgentId, customIntegrations]);
 
   const handleInputChange = (
     field: keyof AIAgentData,
@@ -270,13 +305,13 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
         execution_order: executionOrder,
         depends_on_integration: dependsOnIntegration,
       });
-      
+
       // Refresh activated integrations
       const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
       setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
-      
+
       setEditModalOpen(false);
-      
+
       // Show success message
       setToast({
         show: true,
@@ -297,7 +332,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     setDeleteLoading(true);
     try {
       await axios.delete(`/v1/ai-agents/${actualAgentId}/${integrationId}/integrations`);
-      
+
       // Refresh activated integrations
       const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
       setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
@@ -537,13 +572,14 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Textarea
+                        <BehaviorEditor
                           value={agentData.behaviour}
-                          onChange={(e) =>
-                            handleInputChange("behaviour", e.target.value)
+                          onChange={(value) =>
+                            handleInputChange("behaviour", value)
                           }
-                          className="min-h-[120px] resize-none"
+                          activatedIntegrations={activatedIntegrations}
                           maxLength={10000}
+                          className="min-h-[120px]"
                         />
                         <div className="flex justify-between items-center text-sm text-muted-foreground">
                           <span>{behaviorCharacterCount}/10,000</span>
@@ -645,9 +681,8 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                             Additional Settings
                           </span>
                           <ChevronDown
-                            className={`h-4 w-4 transition-transform ${
-                              isAdditionalSettingsOpen ? "rotate-180" : ""
-                            }`}
+                            className={`h-4 w-4 transition-transform ${isAdditionalSettingsOpen ? "rotate-180" : ""
+                              }`}
                           />
                         </Button>
                       </CollapsibleTrigger>
@@ -975,36 +1010,34 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                               {customIntegrations.map((integration: any) => {
                                 const isActivated = isIntegrationActivated(integration.id);
                                 const activatedIntegration = isActivated ? getActivatedIntegration(integration.id) : null;
-                                
+
                                 return (
-                                  <Card 
+                                  <Card
                                     key={integration.id || integration.name}
-                                    className={`relative ${
-                                      isActivated 
-                                        ? activatedIntegration?.is_enabled 
-                                          ? 'border-green-500 justify-between bg-green-50' 
-                                          : 'border-gray-300 justify-between bg-gray-50 opacity-75'
-                                        : ' justify-between hover:shadow-md transition-shadow'
-                                    }`}
+                                    className={`relative ${isActivated
+                                      ? activatedIntegration?.is_enabled
+                                        ? 'border-green-500 justify-between bg-green-50'
+                                        : 'border-gray-300 justify-between bg-gray-50 opacity-75'
+                                      : ' justify-between hover:shadow-md transition-shadow'
+                                      }`}
                                   >
                                     {isActivated && (
                                       <div className="absolute top-3 right-3">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                          activatedIntegration?.is_enabled ? 'bg-green-500' : 'bg-gray-400'
-                                        }`}></div>
+                                        <div className={`w-2 h-2 rounded-full ${activatedIntegration?.is_enabled ? 'bg-green-500' : 'bg-gray-400'
+                                          }`}></div>
                                       </div>
                                     )}
                                     <CardHeader className="pb-3">
                                       <CardTitle className="text-sm font-semibold text-gray-900">{integration.name}</CardTitle>
                                       <CardDescription className="text-xs text-gray-600 line-clamp-2">
-                                        {integration.description && integration.description.length > 80 
-                                          ? integration.description.substring(0, 80) + '...' 
+                                        {integration.description && integration.description.length > 80
+                                          ? integration.description.substring(0, 80) + '...'
                                           : integration.description}
                                       </CardDescription>
                                       {isActivated && activatedIntegration && (
                                         <div className="mt-2 space-y-1">
                                           <div className="text-xs text-gray-600">
-                                            <span className="font-medium">Trigger:</span> 
+                                            <span className="font-medium">Trigger:</span>
                                             <span className="truncate block max-w-full" title={activatedIntegration.trigger_condition || '-'}>
                                               {activatedIntegration.trigger_condition && activatedIntegration.trigger_condition.length > 50
                                                 ? activatedIntegration.trigger_condition.substring(0, 50) + '...'
@@ -1012,11 +1045,10 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                                             </span>
                                           </div>
                                           <div className="text-xs">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                              activatedIntegration.is_enabled 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-gray-100 text-gray-800'
-                                            }`}>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${activatedIntegration.is_enabled
+                                              ? 'bg-green-100 text-green-800'
+                                              : 'bg-gray-100 text-gray-800'
+                                              }`}>
                                               {activatedIntegration.is_enabled ? 'Active' : 'Inactive'}
                                             </span>
                                           </div>
@@ -1242,17 +1274,17 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                     depends_on_integration: dependsOnIntegration,
                     is_active: false,
                   });
-                  
+
                   // Refresh activated integrations
                   const res = await axios.get(`/v1/ai-agents/${actualAgentId}/integrations`);
                   setActivatedIntegrations(Array.isArray(res.data) ? res.data : []);
-                  
+
                   setActivateModalOpen(false);
                 } catch (err: any) {
                   setActivateError(
                     err?.response?.data?.message ||
-                      err.message ||
-                      "Gagal mengaktifkan integration"
+                    err.message ||
+                    "Gagal mengaktifkan integration"
                   );
                 } finally {
                   setActivateLoading(false);
@@ -1282,16 +1314,16 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
               <label htmlFor="edit_is_enabled" className="ml-2">Aktifkan Integration</label>
             </div>
             <div>
-               <label htmlFor="edit_trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
-               <textarea
-                 id="edit_trigger_condition"
-                 value={triggerCondition}
-                 onChange={e => setTriggerCondition(e.target.value)}
-                 placeholder="Masukkan trigger condition"
-                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                 rows={3}
-               />
-             </div>
+              <label htmlFor="edit_trigger_condition" className="block mb-1 text-sm">Trigger Condition</label>
+              <textarea
+                id="edit_trigger_condition"
+                value={triggerCondition}
+                onChange={e => setTriggerCondition(e.target.value)}
+                placeholder="Masukkan trigger condition"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                rows={3}
+              />
+            </div>
             <div>
               <label htmlFor="edit_cooldown_minutes" className="block mb-1 text-sm">Cooldown Minutes</label>
               <input
@@ -1363,7 +1395,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Are you sure you want to delete the integration <strong>{integrationToDelete?.name}</strong>? 
+              Are you sure you want to delete the integration <strong>{integrationToDelete?.name}</strong>?
               This action cannot be undone and will remove all associated configurations.
             </p>
           </div>

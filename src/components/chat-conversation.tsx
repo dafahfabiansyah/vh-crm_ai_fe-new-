@@ -131,7 +131,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
         results.push(index)
       }
     })
-    
+
     setSearchResults(results)
     if (results.length > 0) {
       setCurrentSearchIndex(0)
@@ -144,9 +144,9 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const scrollToMessage = (messageIndex: number) => {
     const messageElement = messageRefs.current[messageIndex]
     if (messageElement) {
-      messageElement.scrollIntoView({ 
-        behavior: "smooth", 
-        block: "center" 
+      messageElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
       })
       // Add highlight effect
       messageElement.style.backgroundColor = '#fef3c7'
@@ -158,27 +158,27 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
   const navigateSearch = (direction: 'next' | 'prev') => {
     if (searchResults.length === 0) return
-    
+
     let newIndex
     if (direction === 'next') {
       newIndex = currentSearchIndex < searchResults.length - 1 ? currentSearchIndex + 1 : 0
     } else {
       newIndex = currentSearchIndex > 0 ? currentSearchIndex - 1 : searchResults.length - 1
     }
-    
+
     setCurrentSearchIndex(newIndex)
     scrollToMessage(searchResults[newIndex])
   }
 
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text
-    
+
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     const parts = text.split(regex)
-    
-    return parts.map((part, index) => 
-      regex.test(part) ? 
-        <mark key={index} className="bg-yellow-200 text-yellow-900">{part}</mark> : 
+
+    return parts.map((part, index) =>
+      regex.test(part) ?
+        <mark key={index} className="bg-yellow-200 text-yellow-900">{part}</mark> :
         part
     )
   }
@@ -191,7 +191,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       await ContactsService.takeoverConversation(selectedContactId)
       setIsTakenOver(true)
       console.log("Chat taken over by agent")
-      
+
       // Switch to assigned tab when chat is taken over
       if (onSwitchToAssignedTab) {
         onSwitchToAssignedTab()
@@ -487,16 +487,15 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
           </div>
         ) : (
           chatLogs.map((chatLog, index) => (
-            <div 
-              key={chatLog.id} 
+            <div
+              key={chatLog.id}
               ref={(el) => {
                 messageRefs.current[index] = el
               }}
               className={`flex ${chatLog.from_me ? "justify-end" : "justify-start"} mb-4 transition-colors duration-500`}
             >
-                <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[350px]`}>
-                <div className={`${
-                  chatLog.from_me
+              <div className={`flex flex-col ${chatLog.from_me ? "items-end" : "items-start"} max-w-[350px]`}>
+                <div className={`${chatLog.from_me
                     ? "bg-primary text-primary-foreground rounded-l-xl rounded-tr-xl rounded-br-md"
                     : "bg-muted text-foreground rounded-r-xl rounded-tl-xl rounded-bl-md"
                   } px-3 py-2 shadow-sm`}>
