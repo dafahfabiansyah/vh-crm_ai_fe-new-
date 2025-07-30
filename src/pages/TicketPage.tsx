@@ -14,7 +14,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import {
-  ArrowLeft,
   MessageSquare,
   Clock,
   CheckCircle,
@@ -24,7 +23,6 @@ import {
   Calendar,
   Tag,
 } from "lucide-react";
-import { Link } from "react-router";
 import { TicketService } from "@/services/ticketService";
 import { Button } from "@/components/ui/button";
 
@@ -336,21 +334,7 @@ const TicketPage = () => {
       <div className="p-6">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.back();
-                }}
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="text-sm font-medium">Back</span>
-              </Link>
-            </div>
-          </div>
+         
 
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
