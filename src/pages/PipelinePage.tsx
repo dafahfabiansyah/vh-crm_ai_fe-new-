@@ -188,7 +188,7 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string) => {
+  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string, id_agent?: string) => {
     setPipelineData((prev) => {
       const newData = [...prev];
       const stageIndex = newData.findIndex((stage) => stage.id === stageId);
@@ -197,6 +197,7 @@ const PipelinePage = () => {
           ...newData[stageIndex],
           name: newName,
           description: newDescription ?? newData[stageIndex].description,
+          ...(id_agent ? { agent_id: id_agent, id_agent } : {}),
         };
       }
       return newData;
@@ -209,6 +210,7 @@ const PipelinePage = () => {
           name: newName,
           description:  stage.description ?? "",
           stage_order: stage.stage_order ?? 0,
+          ...(id_agent ? { id_agent } : {}),
         });
       } catch (err) {
         // TODO: tampilkan error jika perlu

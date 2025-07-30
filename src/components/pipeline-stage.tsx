@@ -14,6 +14,15 @@ import {
   DialogFooter,
   DialogClose,
 } from "./ui/dialog";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "./ui/select";
+import { Bot } from "lucide-react";
 
 const ITEM_TYPE = "LEAD";
 
@@ -26,7 +35,7 @@ export const PipelineStageColumn: React.FC<{
     stageId: string,
     newName: string,
     newDescription?: string,
-    newStageOrder?: number
+    id_agent?: string
   ) => void;
   onDeleteStage: (stageId: string) => void;
   onLeadClick: (lead: Lead) => void;
@@ -46,9 +55,13 @@ export const PipelineStageColumn: React.FC<{
   const [editStageDescription, setEditStageDescription] = useState(
     stage.description || ""
   );
-  const [editStageOrder, setEditStageOrder] = useState<number>(
+  const [, setEditStageOrder] = useState<number>(
     stage.stage_order ?? 0
   );
+  const [editAgents, setEditAgents] = useState<any[]>([]);
+  const [editSelectedAgent, setEditSelectedAgent] = useState<string>(stage.agent_id || stage.id_agent || "");
+  const [editAgentsLoading, setEditAgentsLoading] = useState(false);
+  const [editAgentsError, setEditAgentsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAgentName = async () => {
@@ -83,6 +96,22 @@ export const PipelineStageColumn: React.FC<{
     };
     fetchAgentName();
   }, [stage.id_agent, stage.agent_id]);
+
+  useEffect(() => {
+    if (!showEditDialog) return;
+    setEditAgentsLoading(true);
+    setEditAgentsError(null);
+    setEditAgents([]);
+    AgentsService.getAgentDetails()
+      .then((response) => {
+        const items = Array.isArray(response)
+          ? response
+          : (response as any)?.items || [];
+        setEditAgents(items);
+      })
+      .catch((err) => setEditAgentsError(err.message || "Gagal memuat data agent"))
+      .finally(() => setEditAgentsLoading(false));
+  }, [showEditDialog]);
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ITEM_TYPE,
@@ -139,6 +168,7 @@ export const PipelineStageColumn: React.FC<{
                   setEditStageName(stage.name);
                   setEditStageDescription(stage.description || "");
                   setEditStageOrder(stage.stage_order ?? 0);
+                  setEditSelectedAgent(stage.agent_id || stage.id_agent || "");
                   setShowEditDialog(true);
                 }}
                 size="icon"
@@ -169,7 +199,7 @@ export const PipelineStageColumn: React.FC<{
                     stage.id,
                     editStageName.trim(),
                     editStageDescription.trim(),
-                    editStageOrder
+                    editSelectedAgent
                   );
                   setShowEditDialog(false);
                 }}
@@ -197,6 +227,38 @@ export const PipelineStageColumn: React.FC<{
                     onChange={(e) => setEditStageDescription(e.target.value)}
                     className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-stage-agent">Pilih Agent</Label>
+                  <Select
+                    value={editSelectedAgent}
+                    onValueChange={setEditSelectedAgent}
+                    disabled={editAgentsLoading || editAgents.length === 0}
+                  >
+                    <SelectTrigger className="w-full" id="edit-stage-agent">
+                      <SelectValue placeholder={editAgentsLoading ? "Memuat agent..." : "Pilih agent"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editAgents.map((agent: any) => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          <div className="flex items-center gap-2">
+                            {agent.agent_type === "AI" ? (
+                              <Bot className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <User className="h-4 w-4 text-blue-600" />
+                            )}
+                            <span>{agent.name}</span>
+                            <span className="text-xs text-gray-500 ml-auto">
+                              {agent.agent_type === "AI" ? "AI" : "Human"}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editAgentsError && (
+                    <div className="text-red-600 text-xs mt-1">{editAgentsError}</div>
+                  )}
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>

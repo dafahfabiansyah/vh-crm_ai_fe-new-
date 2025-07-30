@@ -23,7 +23,7 @@ const AUTH_TOKEN_COOKIE = 'auth_bearer';
 const ENCRYPTION_KEY = import.meta.env.VITE_PUBLIC_ENCRYPTION_KEY || 'vh-crm-secret-key';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_BASE_URL || 'http://localhost:8080/v1';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080') + '/v1';
 
 export class AuthService {
   /**
@@ -121,7 +121,7 @@ export class AuthService {
         body: JSON.stringify({
           email: credentials.email,
           password: credentials.password,
-          turnstile_token: credentials.turnstile_token, 
+          // turnstile_token: credentials.turnstile_token, 
         }),
       });
 
