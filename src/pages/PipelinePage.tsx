@@ -8,7 +8,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { ArrowLeft, Plus, TrendingUp, Users, Trash, Bot, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  TrendingUp,
+  Users,
+  Trash,
+  Bot,
+  User,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
 import { PipelineStageColumn } from "@/components/pipeline-stage";
@@ -33,7 +41,10 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { ContactsService } from "@/services/contactsService";
-import type { LeadTransferHistoryItem, LeadTransferHistoryResponse } from "@/types/interface";
+import type {
+  LeadTransferHistoryItem,
+  LeadTransferHistoryResponse,
+} from "@/types/interface";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import { Toast } from "@/components/ui/toast";
 
@@ -64,9 +75,13 @@ const PipelinePage = () => {
   );
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [contacts, setContacts] = useState<any[]>([]);
-  const [leadTransferHistory, setLeadTransferHistory] = useState<LeadTransferHistoryItem[]>([]);
+  const [leadTransferHistory, setLeadTransferHistory] = useState<
+    LeadTransferHistoryItem[]
+  >([]);
   const [agentNames, setAgentNames] = useState<{ [id: string]: string }>({});
-  const [humanAgentNames, setHumanAgentNames] = useState<{ [id: string]: string }>({});
+  const [humanAgentNames, setHumanAgentNames] = useState<{
+    [id: string]: string;
+  }>({});
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -138,7 +153,7 @@ const PipelinePage = () => {
         // Add to target stage
         if (leadToMove) {
           // Update moved_by/source to 'human' di state lokal
-          const updatedLead = { ...leadToMove, source: 'human' };
+          const updatedLead = { ...leadToMove, source: "human" };
           const targetStage = newData.find(
             (stage) => stage.id === targetStageId
           );
@@ -153,16 +168,18 @@ const PipelinePage = () => {
       // PATCH ke backend
       try {
         // Cari agent_id dari stage tujuan
-        const targetStage = pipelineData.find((stage) => stage.id === targetStageId);
+        const targetStage = pipelineData.find(
+          (stage) => stage.id === targetStageId
+        );
         const assigned_to = targetStage?.agent_id || null;
         await PipelineService.moveLeadCard(leadId, {
           id_stage: targetStageId,
-          moved_by: 'Human',
+          moved_by: "Human",
           assigned_to: assigned_to,
         });
       } catch (err) {
         // TODO: tampilkan error jika perlu
-        console.error('Failed to move lead card:', err);
+        console.error("Failed to move lead card:", err);
       }
     },
     [pipelineData]
@@ -188,35 +205,44 @@ const PipelinePage = () => {
     });
   }, []);
 
-  const handleUpdateStage = useCallback(async (stageId: string, newName: string, newDescription?: string, id_agent?: string) => {
-    setPipelineData((prev) => {
-      const newData = [...prev];
-      const stageIndex = newData.findIndex((stage) => stage.id === stageId);
-      if (stageIndex >= 0) {
-        newData[stageIndex] = {
-          ...newData[stageIndex],
-          name: newName,
-          description: newDescription ?? newData[stageIndex].description,
-          ...(id_agent ? { agent_id: id_agent, id_agent } : {}),
-        };
+  const handleUpdateStage = useCallback(
+    async (
+      stageId: string,
+      newName: string,
+      newDescription?: string,
+      id_agent?: string
+    ) => {
+      setPipelineData((prev) => {
+        const newData = [...prev];
+        const stageIndex = newData.findIndex((stage) => stage.id === stageId);
+        if (stageIndex >= 0) {
+          newData[stageIndex] = {
+            ...newData[stageIndex],
+            name: newName,
+            description: newDescription ?? newData[stageIndex].description,
+            ...(id_agent ? { agent_id: id_agent, id_agent } : {}),
+          };
+        }
+        return newData;
+      });
+      // Update ke backend
+      const stage = pipelineData.find((s) => s.id === stageId);
+      if (stage) {
+        try {
+          await PipelineService.updateStage(stageId, {
+            name: newName,
+            description: stage.description ?? "",
+            stage_order: stage.stage_order ?? 0,
+            ...(id_agent ? { id_agent } : {}),
+          });
+        } catch (err) {
+          // TODO: tampilkan error jika perlu
+          console.error("Failed to update stage:", err);
+        }
       }
-      return newData;
-    });
-    // Update ke backend
-    const stage = pipelineData.find((s) => s.id === stageId);
-    if (stage) {
-      try {
-        await PipelineService.updateStage(stageId, {
-          name: newName,
-          description:  stage.description ?? "",
-          stage_order: stage.stage_order ?? 0,
-          ...(id_agent ? { id_agent } : {}),
-        });
-      } catch (err) {
-        // TODO: tampilkan error jika perlu
-      }
-    }
-  }, [pipelineData]);
+    },
+    [pipelineData]
+  );
 
   const handleDeletePipeline = () => {
     if (!pipelineId || !pipelineInfo) return;
@@ -240,7 +266,8 @@ const PipelinePage = () => {
         show: true,
         type: "error",
         title: "Delete Failed",
-        description: error.message || "Failed to delete pipeline. Please try again.",
+        description:
+          error.message || "Failed to delete pipeline. Please try again.",
       });
     } finally {
       setIsDeleting(false);
@@ -262,27 +289,11 @@ const PipelinePage = () => {
         title: "Stage Deleted",
         description: `Stage berhasil dihapus.`,
       });
-      if (pipelineId) {
-        const stages = await PipelineService.getStages({ id_pipeline: pipelineId });
-        const mappedStages = stages.map((stage: any, idx: number) => ({
-          id: stage.id,
-          name: stage.name,
-          description: stage.description,
-          color: [
-            "bg-blue-100 text-blue-800",
-            "bg-yellow-100 text-yellow-800",
-            "bg-orange-100 text-orange-800",
-            "bg-green-100 text-green-800",
-            "bg-purple-100 text-purple-800",
-            "bg-red-100 text-red-800",
-          ][idx % 6],
-          leads: [],
-          count: 0,
-          value: 0,
-          stage_order: stage.stage_order ?? idx,
-        }));
-        setPipelineData(mappedStages);
-      }
+
+      // Update state lokal terlebih dahulu untuk menghindari delay
+      setPipelineData((prev) =>
+        prev.filter((stage) => stage.id !== deleteDialog.targetId)
+      );
     } catch (err: any) {
       setToast({
         show: true,
@@ -311,52 +322,66 @@ const PipelinePage = () => {
 
     try {
       // Fetch pipeline info by ID
-      const pipeline = await PipelineService.getPipelineById(
-        pipelineId
-      );
+      const pipeline = await PipelineService.getPipelineById(pipelineId);
       setPipelineInfo(pipeline);
 
       // Fetch stages dari backend (sudah filter by id_pipeline, tapi filter manual juga)
       let stages = await PipelineService.getStages({ id_pipeline: pipelineId });
       stages = stages.filter((stage: any) => stage.id_pipeline === pipelineId);
 
+      // Jika tidak ada stages, set array kosong dan return
+      if (stages.length === 0) {
+        setPipelineData([]);
+        return;
+      }
+
       // Fetch leads per stage, filter manual juga
       const leadsByStage = {} as Record<string, any[]>;
       const stageLeadsResults = await Promise.all(
         stages.map((stage: any) =>
           PipelineService.getLeadsByStageId
-            ? PipelineService.getLeadsByStageId(stage.id).then((leads: any[]) => {
-                // Filter leads yang id_pipeline-nya sama
-                const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
-                return { stageId: stage.id, leads: filteredLeads };
-              })
-            : PipelineService.getLeads({ id_stage: stage.id }).then((leads: any[]) => {
-                // Filter leads yang id_pipeline-nya sama
-                const filteredLeads = (leads || []).filter((lead: any) => lead.id_pipeline === pipelineId);
-                return { stageId: stage.id, leads: filteredLeads };
-              })
+            ? PipelineService.getLeadsByStageId(stage.id).then(
+                (leads: any[]) => {
+                  // Filter leads yang id_pipeline-nya sama
+                  const filteredLeads = (leads || []).filter(
+                    (lead: any) => lead.id_pipeline === pipelineId
+                  );
+                  return { stageId: stage.id, leads: filteredLeads };
+                }
+              )
+            : PipelineService.getLeads({ id_stage: stage.id }).then(
+                (leads: any[]) => {
+                  // Filter leads yang id_pipeline-nya sama
+                  const filteredLeads = (leads || []).filter(
+                    (lead: any) => lead.id_pipeline === pipelineId
+                  );
+                  return { stageId: stage.id, leads: filteredLeads };
+                }
+              )
         )
       );
-      stageLeadsResults.forEach(({ stageId, leads }: { stageId: string; leads: any[] }) => {
-        leadsByStage[stageId] = leads.map((lead: any) => ({
-          id: lead.id,
-          name: lead.name,
-          phone: lead.phone || "",
-          value: lead.potential_value || 0,
-          source: lead.moved_by || "unknown",
-          moved_by: lead.moved_by || "unknown",
-          daysAgo: 0,
-          status: lead.status || "unknown",
-          email: lead.email || "",
-          company: lead.company || "",
-          location: lead.location || "",
-          notes: lead.notes || "",
-          createdAt: lead.created_at,
-          lastActivity: lead.updated_at,
-          timeline: lead.timeline || [],
-          id_contact: lead.id_contact,
-        }));
-      });
+      stageLeadsResults.forEach(
+        ({ stageId, leads }: { stageId: string; leads: any[] }) => {
+          leadsByStage[stageId] = leads.map((lead: any) => ({
+            id: lead.id,
+            name: lead.name,
+            phone: lead.phone || "",
+            value: lead.potential_value || 0,
+            source: lead.moved_by || "unknown",
+            moved_by: lead.moved_by || "unknown",
+            daysAgo: 0,
+            status: lead.status || "unknown",
+            email: lead.email || "",
+            company: lead.company || "",
+            location: lead.location || "",
+            notes: lead.notes || "",
+            createdAt: lead.created_at,
+            lastActivity: lead.updated_at,
+            timeline: lead.timeline || [],
+            id_contact: lead.id_contact,
+          }));
+        }
+      );
       // Mapping ke struktur PipelineStage
       const mappedStagesFinal = stages.map((stage: any, idx: number) => {
         const stageLeads = leadsByStage[stage.id] || [];
@@ -405,7 +430,8 @@ const PipelinePage = () => {
     setSelectedAgent("");
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
-      axiosInstance.get("/v1/agents/details")
+      axiosInstance
+        .get("/v1/agents/details")
         .then((response) => {
           const items = response.data?.items || response.data || [];
           // Pastikan items adalah array
@@ -413,7 +439,9 @@ const PipelinePage = () => {
           // Tampilkan SEMUA agent_type, tidak perlu filter
           setAgents(agentsArray);
         })
-        .catch((err) => setAddStageError(err.message || "Gagal memuat data agent"));
+        .catch((err) =>
+          setAddStageError(err.message || "Gagal memuat data agent")
+        );
     });
   }, [isAddStageOpen]);
 
@@ -422,7 +450,9 @@ const PipelinePage = () => {
     import("@/services/humanAgentsService").then(({ HumanAgentsService }) => {
       HumanAgentsService.getHumanAgents()
         .then((allAgents) => {
-          const aiAgents = allAgents.filter(agent => agent.agent_type === "AI");
+          const aiAgents = allAgents.filter(
+            (agent) => agent.agent_type === "AI"
+          );
           setAiAgents(aiAgents);
         })
         .catch(() => setAiAgents([]));
@@ -433,12 +463,14 @@ const PipelinePage = () => {
   useEffect(() => {
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
-      axiosInstance.get("/v1/agents/human")
+      axiosInstance
+        .get("/v1/agents/human")
         .then((response) => {
           const items = response.data?.items || [];
           const mapping: { [id: string]: string } = {};
           items.forEach((agent: any) => {
-            mapping[agent.id] = agent.user?.name || agent.identifier || agent.id;
+            mapping[agent.id] =
+              agent.user?.name || agent.identifier || agent.id;
           });
           setHumanAgentNames(mapping);
         })
@@ -469,20 +501,24 @@ const PipelinePage = () => {
     // Get lead notes from the selected lead data
     setIsLoadingNotes(true);
     setNotesError(null);
-    
+
     // Find the selected lead and get its notes
     let selectedLead = null;
-    for (const stage of pipelineData) {
-      const lead = stage.leads.find(l => l.id === selectedLeadId);
-      if (lead) {
-        selectedLead = lead;
-        break;
+    if (pipelineData.length > 0) {
+      for (const stage of pipelineData) {
+        const lead = stage.leads.find((l) => l.id === selectedLeadId);
+        if (lead) {
+          selectedLead = lead;
+          break;
+        }
       }
     }
-    
+
     if (selectedLead && selectedLead.notes) {
       // Split notes by newlines to create separate note entries
-      const notesArray = selectedLead.notes.split('\n').filter(note => note.trim() !== '');
+      const notesArray = selectedLead.notes
+        .split("\n")
+        .filter((note) => note.trim() !== "");
       setLeadNotes(notesArray.length > 0 ? notesArray : []);
     } else {
       setLeadNotes([]);
@@ -494,38 +530,60 @@ const PipelinePage = () => {
     if (!agentId || agentNames[agentId]) return;
     try {
       const agent = await HumanAgentsService.getHumanAgent(agentId);
-      setAgentNames((prev) => ({ ...prev, [agentId]: agent.name || agent.identifier || agentId }));
+      setAgentNames((prev) => ({
+        ...prev,
+        [agentId]: agent.name || agent.identifier || agentId,
+      }));
     } catch {
       setAgentNames((prev) => ({ ...prev, [agentId]: agentId }));
     }
   };
 
-  function LeadTransferTimeline({ history }: { history: LeadTransferHistoryItem[] }) {
+  function LeadTransferTimeline({
+    history,
+  }: {
+    history: LeadTransferHistoryItem[];
+  }) {
     return (
       <div className="max-h-100 overflow-y-auto pr-2">
         <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
           {history
             .slice()
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )
             .map((item) => {
-              if (item.moved_by_agent_id && !agentNames[item.moved_by_agent_id]) {
+              if (
+                item.moved_by_agent_id &&
+                !agentNames[item.moved_by_agent_id]
+              ) {
                 fetchAgentName(item.moved_by_agent_id);
               }
               return (
                 <li className="mb-6 ml-4" key={item.id}>
                   <div className="absolute w-3 h-3 bg-emerald-200 border-2 border-emerald-500 rounded-full -left-1.5 mt-1.5"></div>
-                  <div className="text-xs text-gray-500 mb-1">{new Date(item.created_at).toLocaleString()}</div>
+                  <div className="text-xs text-gray-500 mb-1">
+                    {new Date(item.created_at).toLocaleString()}
+                  </div>
                   <div className="text-sm font-medium text-gray-900 mb-1">
                     {item.from_stage_name} ➔ {item.to_stage_name}
                   </div>
                   <div className="text-xs text-gray-700 mb-1">
-                    Pipeline: {item.from_pipeline_name} ➔ {item.to_pipeline_name}
+                    Pipeline: {item.from_pipeline_name} ➔{" "}
+                    {item.to_pipeline_name}
                   </div>
                   <div className="text-xs text-gray-700 mb-1">
                     Agent: {item.from_agent_name} ➔ {item.to_agent_name}
                   </div>
                   <div className="text-xs text-gray-700">
-                    Dipindahkan oleh: {item.moved_by} {item.moved_by_agent_id ? `(${humanAgentNames[item.moved_by_agent_id] || "Memuat..."})` : ""}
+                    Dipindahkan oleh: {item.moved_by}{" "}
+                    {item.moved_by_agent_id
+                      ? `(${
+                          humanAgentNames[item.moved_by_agent_id] || "Memuat..."
+                        })`
+                      : ""}
                   </div>
                 </li>
               );
@@ -689,12 +747,12 @@ const PipelinePage = () => {
                 </Card>
               </div>
               {/* Pipeline Stages - FIXED VERSION */}
-              {pipelineData.length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Pipeline Stages
-                  </h2>
-                  {/* Container dengan fixed width dan scroll */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Pipeline Stages
+                </h2>
+                {pipelineData.length > 0 ? (
+                  /* Container dengan fixed width dan scroll */
                   <div className="relative">
                     <div
                       className="overflow-x-auto overflow-y-hidden pb-4"
@@ -716,8 +774,28 @@ const PipelinePage = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  /* Empty state ketika tidak ada stage */
+                  <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <div className="max-w-md mx-auto">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Plus className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Belum ada stage
+                      </h3>
+                      <p className="text-gray-500 mb-4">
+                        Pipeline ini belum memiliki stage. Buat stage pertama
+                        untuk mulai mengelola lead.
+                      </p>
+                      <Button onClick={handleOpenAddStage}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Tambah Stage Pertama
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               {/* Drawer and Dialog components remain the same */}
               <Drawer
                 open={!!selectedContactId}
@@ -760,10 +838,12 @@ const PipelinePage = () => {
                                 Belum ada riwayat transfer.
                               </div>
                             ) : (
-                              <LeadTransferTimeline history={leadTransferHistory} />
+                              <LeadTransferTimeline
+                                history={leadTransferHistory}
+                              />
                             )}
                           </div>
-                          
+
                           {/* Lead Notes Section */}
                           <div className="mt-6">
                             <h3 className="font-semibold text-base mb-2">
@@ -784,17 +864,22 @@ const PipelinePage = () => {
                             ) : (
                               <div className="max-h-32 overflow-y-auto space-y-2">
                                 {leadNotes.map((note: any, index: number) => (
-                                  <div key={index} className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
+                                  <div
+                                    key={index}
+                                    className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg"
+                                  >
                                     {note.content || note.text || note}
                                   </div>
                                 ))}
                               </div>
                             )}
                           </div>
-                          
+
                           {selectedContact && selectedContact.notes && (
                             <div className="space-y-2 mt-4">
-                              <h3 className="font-semibold text-gray-900">Contact Notes</h3>
+                              <h3 className="font-semibold text-gray-900">
+                                Contact Notes
+                              </h3>
                               <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
                                 {selectedContact.notes}
                               </p>
@@ -821,7 +906,9 @@ const PipelinePage = () => {
               <Dialog open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
                 <DialogContent>
                   <form onSubmit={handleSubmitAddStage} className="space-y-4">
-                    <h2 className="text-lg font-bold mb-4">Tambah Stage Baru</h2>
+                    <h2 className="text-lg font-bold mb-4">
+                      Tambah Stage Baru
+                    </h2>
                     <div className="space-y-2">
                       <Label htmlFor="stage-name">Nama Stage</Label>
                       <Input
@@ -844,12 +931,22 @@ const PipelinePage = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="stage-agent">Pilih Agent</Label>
-                      <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isSubmittingStage || agents.length === 0}>
+                      <Select
+                        value={selectedAgent}
+                        onValueChange={setSelectedAgent}
+                        disabled={isSubmittingStage || agents.length === 0}
+                      >
                         <SelectTrigger className="w-full" id="stage-agent">
-                          <SelectValue placeholder={agents.length === 0 ? "Memuat agent..." : "Pilih agent"} />
+                          <SelectValue
+                            placeholder={
+                              agents.length === 0
+                                ? "Memuat agent..."
+                                : "Pilih agent"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          {agents.map(agent => (
+                          {agents.map((agent) => (
                             <SelectItem key={agent.id} value={agent.id}>
                               <div className="flex items-center gap-2">
                                 {agent.agent_type === "AI" ? (
@@ -868,7 +965,9 @@ const PipelinePage = () => {
                       </Select>
                     </div>
                     {addStageError && (
-                      <div className="text-red-600 text-sm">{addStageError}</div>
+                      <div className="text-red-600 text-sm">
+                        {addStageError}
+                      </div>
                     )}
                     <DialogFooter>
                       <Button type="submit" disabled={isSubmittingStage}>
@@ -902,7 +1001,12 @@ const PipelinePage = () => {
           </div>
         )}
         {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+        <Dialog
+          open={deleteDialog.open}
+          onOpenChange={(open) =>
+            setDeleteDialog((prev) => ({ ...prev, open }))
+          }
+        >
           <DialogContent>
             <div className="space-y-4">
               <h2 className="text-lg font-bold">
@@ -918,7 +1022,11 @@ const PipelinePage = () => {
               <DialogFooter>
                 <Button
                   variant="destructive"
-                  onClick={deleteDialog.type === "pipeline" ? confirmDeletePipeline : confirmDeleteStage}
+                  onClick={
+                    deleteDialog.type === "pipeline"
+                      ? confirmDeletePipeline
+                      : confirmDeleteStage
+                  }
                   disabled={isDeleting}
                 >
                   {isDeleting ? "Menghapus..." : "Hapus"}

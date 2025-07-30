@@ -47,7 +47,7 @@ export const PipelineStageColumn: React.FC<{
   onDeleteStage,
   onLeadClick,
 }) => {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [agentName, setAgentName] = useState<string>("");
   // State untuk edit dialog
@@ -180,9 +180,9 @@ export const PipelineStageColumn: React.FC<{
             <Button
               type="button"
               title="Hapus stage"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => onDeleteStage(stage.id)}
               size="icon"
-              className="ml-2 bg-green-500 hover:bg-green-600 text-white w-8 h-8 p-0 flex-shrink-0"
+              className="ml-2 bg-red-500 hover:bg-red-600 text-white w-8 h-8 p-0 flex-shrink-0"
             >
               <Trash className="w-4 h-4" />
             </Button>
@@ -273,31 +273,7 @@ export const PipelineStageColumn: React.FC<{
               </form>
             </DialogContent>
           </Dialog>
-          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Hapus Stage</DialogTitle>
-              </DialogHeader>
-              <p>Apakah Anda yakin ingin menghapus stage ini?</p>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline" type="button">
-                    Batalkan
-                  </Button>
-                </DialogClose>
-                <Button
-                  variant="destructive"
-                  type="button"
-                  onClick={() => {
-                    onDeleteStage(stage.id);
-                    setShowDeleteDialog(false);
-                  }}
-                >
-                  Hapus
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+
           {!isOver && canDrop && (
             <div className="text-xs text-gray-500 mb-2 ml-1 truncate max-w-full">
               {stage.description}
