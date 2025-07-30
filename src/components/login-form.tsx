@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface LoginFormData {
   email: string;
@@ -162,7 +163,7 @@ export default function LoginForm() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Simulate successful password reset
-      alert("Password reset link sent to your email!");
+      toast.success("Password reset link sent to your email!");
       setShowForgotPassword(false);
     } catch (error) {
       console.error("Password reset failed:", error);
@@ -314,7 +315,7 @@ export default function LoginForm() {
         )}
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <button
           type="button"
           onClick={() => setShowForgotPassword(true)}

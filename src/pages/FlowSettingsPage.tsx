@@ -27,6 +27,7 @@ import {
   ChefHat
 } from 'lucide-react'
 import { Link } from 'react-router'
+import { toast } from 'sonner'
 
 // Initial nodes for cooking scrambled eggs flow
 const initialNodes: Node[] = [
@@ -396,7 +397,7 @@ const FlowSettingsPage = () => {
       timestamp: new Date().toISOString(),
     }
     console.log('Saving flow:', flowData)
-    alert('Flow berhasil disimpan!')
+    toast.success('Flow berhasil disimpan!')
   }
 
   const nodeTypes = useMemo(() => ({}), [])

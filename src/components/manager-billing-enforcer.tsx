@@ -12,7 +12,7 @@ const ManagerBillingEnforcer: React.FC = () => {
   useEffect(() => {
     getCurrentSubscription()
       .then((res) => {
-        console.log('Subscription response:', res.data);
+        // console.log('Subscription response:', res.data);
         if (res?.data && res.data.package_name) {
           setHasActiveSubscription(true);
         } else {

@@ -458,6 +458,9 @@ export default function KnowledgeTab({ agentId }: KnowledgeTabProps) {
                     <SelectValue placeholder="Select a product" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="placeholder" disabled>
+                      Pilih produk...
+                    </SelectItem>
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name} {p.sku ? `(${p.sku})` : ""}

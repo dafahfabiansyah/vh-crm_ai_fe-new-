@@ -46,18 +46,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // PRODUCTION MODE: Normal protection logic
   // Jika belum diinisialisasi atau sedang loading, tampilkan loading
   if (!isInitialized || isLoading) {
-    console.log('🔄 ProtectedRoute: Loading or not initialized');
+    // console.log('🔄 ProtectedRoute: Loading or not initialized');
     return <Loading />;
   }
 
   // Double check dengan AuthService - jika cookie tidak ada, paksa logout
   const hasValidAuth = AuthService.isAuthenticated();
   
-  console.log('🔐 ProtectedRoute Auth Check:', {
-    reduxAuthenticated: isAuthenticated,
-    cookieAuthenticated: hasValidAuth,
-    currentPath: location.pathname
-  });
+  // console.log('🔐 ProtectedRoute Auth Check:', {
+  //   reduxAuthenticated: isAuthenticated,
+  //   cookieAuthenticated: hasValidAuth,
+  //   currentPath: location.pathname
+  // });
   
   // Jika tidak authenticated di Redux ATAU cookie hilang, redirect ke login
   if (!isAuthenticated || !hasValidAuth) {

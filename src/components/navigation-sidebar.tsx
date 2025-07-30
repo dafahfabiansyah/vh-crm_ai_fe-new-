@@ -153,7 +153,7 @@ export default function NavigationSidebar({
           onOpenChange={() => shouldShowExpanded && toggleExpanded(item.id)}
         >
           <CollapsibleTrigger asChild>
-          <Button
+            <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",

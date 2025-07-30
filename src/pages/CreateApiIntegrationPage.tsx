@@ -11,6 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { createCustomIntegration } from "@/services/customIntegrationService";
+import { toast } from "sonner";
 // import axios from 'axios'
 
 interface AiInput {
@@ -94,10 +95,10 @@ const CreateApiIntegrationPage = () => {
         })),
       };
       await createCustomIntegration(payload);
-      alert("Tool created successfully!");
+      toast.success("Tool created successfully!");
       // Optionally reset form or redirect
     } catch (e) {
-      alert("Failed to create tool!");
+      toast.error("Failed to create tool!");
     } finally {
       setLoading(false);
     }

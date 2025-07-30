@@ -39,15 +39,15 @@ axiosInstance.interceptors.request.use(
       token = (token as { access_token?: string }).access_token || null;
     }
     
-    console.log('🔑 Token from Redux/Cookies/localStorage:', token ? 'Token exists' : 'No token');
-    console.log('🔑 Auth state:', { 
-      isAuthenticated: state.auth.isAuthenticated,
-      hasToken: !!token 
-    });
+    // console.log('🔑 Token from Redux/Cookies/localStorage:', token ? 'Token exists' : 'No token');
+    // console.log('🔑 Auth state:', { 
+    //   isAuthenticated: state.auth.isAuthenticated,
+    //   hasToken: !!token 
+    // });
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ Authorization header added');
+      // console.log('✅ Authorization header added');
     } else {
       console.log('❌ No token found');
     }

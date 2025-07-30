@@ -23,7 +23,7 @@ const AUTH_TOKEN_COOKIE = 'auth_bearer';
 const ENCRYPTION_KEY = import.meta.env.VITE_PUBLIC_ENCRYPTION_KEY || 'vh-crm-secret-key';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_BASE_URL || 'http://localhost:8080/v1';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080') + '/v1';
 
 export class AuthService {
   /**
@@ -208,12 +208,12 @@ export class AuthService {
     const token = this.getStoredToken();
     const user = this.getStoredUser();
     
-    console.log('🔍 AuthService.isAuthenticated() check:', {
-      hasToken: !!token,
-      hasUser: !!user,
-      tokenLength: token?.length || 0,
-      userValid: user ? !!(user.id && user.email) : false
-    });
+    // console.log('🔍 AuthService.isAuthenticated() check:', {
+    //   hasToken: !!token,
+    //   hasUser: !!user,
+    //   tokenLength: token?.length || 0,
+    //   userValid: user ? !!(user.id && user.email) : false
+    // });
     
     // Both token and user must exist
     if (!token || !user) {
@@ -233,7 +233,7 @@ export class AuthService {
       return false;
     }
     
-    console.log('✅ AuthService: Authentication valid');
+    // console.log('✅ AuthService: Authentication valid');
     return true;
   }
 
@@ -257,7 +257,7 @@ export class AuthService {
       );
       const data = JSON.parse(jsonPayload);
       const role = data.role || null;
-      console.log('🔑 Decoded JWT role:', role, data);
+      // console.log('🔑 Decoded JWT role:', role, data);
       return role;
     } catch (e) {
       console.error('Failed to decode JWT:', e);

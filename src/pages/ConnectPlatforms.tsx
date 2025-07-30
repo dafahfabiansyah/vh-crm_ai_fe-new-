@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Plus,
@@ -42,6 +43,7 @@ import {
   X,
   ArrowLeft,
   GitBranch,
+  Copy,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import type { AIAgent, PlatformInbox } from "@/types";
@@ -85,6 +87,12 @@ export default function ConnectedPlatformsPage() {
   const [mobileSelectedPlatform, setMobileSelectedPlatform] =
     useState<PlatformInbox | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [platformToDelete, setPlatformToDelete] = useState<PlatformInbox | null>(null);
+
+
 
   // Check if screen is mobile
   useEffect(() => {
@@ -461,6 +469,9 @@ export default function ConnectedPlatformsPage() {
         console.error('Failed to refresh human agents:', err);
       }
       const mapped = (refreshedData || []).map((item: any) => {
+        // Find active AI agent mapping specifically
+        const activeAiMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active && mapping.agent_type === 'AI');
+        // Find any active mapping for teams (could be AI or Human)
         const activeMapping = item.platform_mappings?.find((mapping: any) => mapping.is_active);
         const mappedItem = {
           id: item.id,
@@ -476,7 +487,7 @@ export default function ConnectedPlatformsPage() {
           timestamp: item.updated_at,
           isConnected: item.is_connected,
           isLoggedIn: item.is_connected,
-          aiAgent: activeMapping?.agent_name || undefined,
+          aiAgent: activeAiMapping?.agent_name || undefined,
           teams: activeMapping ? [activeMapping.agent_type] : undefined,
           pipeline: item.id_pipeline || undefined,
           platformMappings: item.platform_mappings || [],
@@ -524,26 +535,47 @@ export default function ConnectedPlatformsPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedPlatform) return;
+  const handleDelete = () => {
+    const currentPlatform = showMobileDetail ? mobileSelectedPlatform : selectedPlatform;
+    if (!currentPlatform) {
+      return;
+    }
+    
+    setPlatformToDelete(currentPlatform);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!platformToDelete) return;
+    
     try {
-      await platformsInboxService.deletePlatformInbox(selectedPlatform.id);
+      await platformsInboxService.deletePlatformInbox(platformToDelete.id);
       setPlatformInboxs((prev) =>
-        prev.filter((p: PlatformInbox) => p.id !== selectedPlatform.id)
+        prev.filter((p: PlatformInbox) => p.id !== platformToDelete.id)
       );
       const remainingPlatforms = PlatformInboxs.filter(
-        (p: PlatformInbox) => p.id !== selectedPlatform.id
+        (p: PlatformInbox) => p.id !== platformToDelete.id
       );
-      if (remainingPlatforms.length > 0) {
-        setSelectedPlatform(remainingPlatforms[0]);
+      
+      // Handle platform selection after deletion
+      if (showMobileDetail) {
+        // If in mobile view, go back to list
+        setShowMobileDetail(false);
+        setMobileSelectedPlatform(null);
       } else {
-        setSelectedPlatform(null);
+        // If in desktop view, select next platform or clear selection
+        if (remainingPlatforms.length > 0) {
+          setSelectedPlatform(remainingPlatforms[0]);
+        } else {
+          setSelectedPlatform(null);
+        }
       }
+      
       setToast({
         show: true,
         type: "success",
         title: "Platform Deleted",
-        description: `Platform ${selectedPlatform.name} berhasil dihapus.`,
+        description: `Platform ${platformToDelete.name} berhasil dihapus.`,
       });
     } catch (err: any) {
       setToast({
@@ -552,7 +584,15 @@ export default function ConnectedPlatformsPage() {
         title: "Delete Failed",
         description: err.message || "Gagal menghapus platform.",
       });
+    } finally {
+      setShowDeleteModal(false);
+      setPlatformToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setPlatformToDelete(null);
   };
 
   // Handle platform click - different behavior for mobile vs desktop
@@ -656,8 +696,8 @@ export default function ConnectedPlatformsPage() {
                   className={`${
                     platform.type === "whatsapp"
                       ? "bg-green-100 text-green-700"
-                      : platform.type === "instagram"
-                      ? "bg-pink-100 text-pink-700"
+                      : platform.type === "webchat"
+                      ? "bg-blue-100 text-blue-700"
                       : "bg-gray-100 text-gray-700"
                   }`}
                 >
@@ -725,17 +765,17 @@ export default function ConnectedPlatformsPage() {
             </TabsList>
             <TabsContent value="basic" className="space-y-4">
               <div className="space-y-4">
-                {/* WhatsApp Number Field */}
+                {/* Platform Identifier Field */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-foreground">
-                    WhatsApp Number
+                    {platform.type === "whatsapp" ? "WhatsApp Number" : "Platform Identifier"}
                   </Label>
                   <Input
-                    value={platform.phone || ""}
-                    readOnly
-                    className="bg-gray-50 text-sm"
-                    placeholder="No phone number available"
-                  />
+                      value={platform.phone || platform.id || ""}
+                      readOnly
+                      className="bg-gray-50 text-sm"
+                      placeholder={platform.type === "whatsapp" ? "No phone number available" : "No platform identifier available"}
+                    />
                 </div>
 
                 {/* AI Agent */}
@@ -925,13 +965,14 @@ export default function ConnectedPlatformsPage() {
               </div>
             </TabsContent>
             <TabsContent value="flow" className="space-y-4">
-              <div className="text-center py-8">
-                <Settings className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-base font-semibold text-foreground mb-2">
+              <div className="text-center py-8 sm:py-12">
+                <Settings className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
                   Flow Configuration
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Configure conversation flows and automation rules here.
+                  Configure conversation flows and automation rules
+                  here.
                 </p>
               </div>
             </TabsContent>
@@ -1239,8 +1280,8 @@ export default function ConnectedPlatformsPage() {
                         className={`${
                           selectedPlatform.type === "whatsapp"
                             ? "bg-green-100 text-green-700"
-                            : selectedPlatform.type === "instagram"
-                            ? "bg-pink-100 text-pink-700"
+                            : selectedPlatform.type === "webchat"
+                            ? "bg-blue-100 text-blue-700"
                             : "bg-gray-100 text-gray-700"
                         }`}
                       >
@@ -1298,22 +1339,30 @@ export default function ConnectedPlatformsPage() {
               <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                 <div className="w-full">
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-                    <TabsList className="w-full flex flex-row  rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                    <TabsList className="w-full flex flex-row rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                       <TabsTrigger
                         value="basic"
-                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-l-lg "
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-l-lg"
                       >
                         Basic
                       </TabsTrigger>
                       <TabsTrigger
                         value="flow"
-                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg "
+                        className="text-sm col-span-1 w-full py-2 pb-3"
                       >
                         Flow
                       </TabsTrigger>
+                      {selectedPlatform.description === 'webchat' && (
+                        <TabsTrigger
+                          value="webchat"
+                          className="text-sm col-span-1 w-full py-2 pb-3"
+                        >
+                          Webchat
+                        </TabsTrigger>
+                      )}
                       <TabsTrigger
                         value="pipeline"
-                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg "
+                        className="text-sm col-span-1 w-full py-2 pb-3 rounded-r-lg"
                       >
                         Pipeline
                       </TabsTrigger>
@@ -1324,16 +1373,16 @@ export default function ConnectedPlatformsPage() {
                     >
                       {/* Responsive Grid Layout */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        {/* WhatsApp Number Field */}
+                        {/* Platform Identifier Field */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">
-                            WhatsApp Number
+                            {selectedPlatform.type === "whatsapp" ? "WhatsApp Number" : "Platform Identifier"}
                           </Label>
                           <Input
-                            value={selectedPlatform.phone || ""}
+                            value={selectedPlatform.phone || selectedPlatform.id || ""}
                             readOnly
                             className="bg-gray-50 text-sm"
-                            placeholder="No phone number available"
+                            placeholder={selectedPlatform.type === "whatsapp" ? "No phone number available" : "No platform identifier available"}
                           />
                         </div>
                         {/* AI Agent */}
@@ -1574,6 +1623,204 @@ export default function ConnectedPlatformsPage() {
                         </p>
                       </div>
                     </TabsContent>
+                    {selectedPlatform.description === 'webchat' && (
+                      <TabsContent
+                        value="webchat"
+                        className="space-y-4 sm:space-y-6"
+                      >
+                        <div className="space-y-4 sm:space-y-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            {/* Primary Color */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-foreground">
+                                Primary Color
+                              </Label>
+                              <Input
+                                type="color"
+                                value="#007bff"
+                                className="h-10 w-full"
+                              />
+                            </div>
+                            
+                            {/* Welcome Message */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-foreground">
+                                Welcome Message
+                              </Label>
+                              <Input
+                                placeholder="Welcome! How can we help you today?"
+                                className="text-sm"
+                              />
+                            </div>
+                            
+                            {/* Input Placeholder */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-foreground">
+                                Input Placeholder
+                              </Label>
+                              <Input
+                                placeholder="Type your message..."
+                                className="text-sm"
+                              />
+                            </div>
+                            
+                            {/* Widget Position */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-foreground">
+                                Widget Position
+                              </Label>
+                              <Select defaultValue="bottom-right">
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                                  <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {/* Show Agent Avatar */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium text-foreground">
+                                  Show Agent Avatar
+                                </Label>
+                                <Switch defaultChecked />
+                              </div>
+                            </div>
+                            
+                            {/* Allow File Upload */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium text-foreground">
+                                  Allow File Upload
+                                </Label>
+                                <Switch defaultChecked />
+                              </div>
+                            </div>
+                            
+                            {/* Ask for Customer Info */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium text-foreground">
+                                  Ask for Customer Info
+                                </Label>
+                                <Switch defaultChecked={false} />
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                When enabled, the webchat will ask for customer's name and phone number before starting the conversation
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Webchat URL */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground">
+                              Webchat URL
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={`${window.location.origin}/webchat/${selectedPlatform.phone || 'your-platform-id'}`}
+                                readOnly
+                                className="flex-1 text-sm bg-gray-50"
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const url = `${window.location.origin}/webchat/${selectedPlatform.phone || 'your-platform-id'}`;
+                                  navigator.clipboard.writeText(url);
+                                }}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Direct link to your webchat widget for testing
+                            </p>
+                          </div>
+                          
+                          {/* Embed Code */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground">
+                              Embed Code
+                            </Label>
+                            <div className="space-y-2">
+                              <Textarea
+                                value={`<!-- Webchat Widget -->
+<div id="webchat-${selectedPlatform.phone || 'your-platform-id'}"></div>
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${window.location.origin}/webchat-widget.js';
+    script.onload = function() {
+      WebchatWidget.init({
+        containerId: 'webchat-${selectedPlatform.phone || 'your-platform-id'}',
+        agentId: '${selectedPlatform.aiAgent || 'your-agent-id'}',
+        apiUrl: '${window.location.origin}/api',
+        config: {
+            primaryColor: '#007bff',
+            welcomeMessage: 'Welcome! How can we help you today?',
+            placeholderText: 'Type your message...',
+            position: 'bottom-right',
+            showAgentAvatar: true,
+            allowFileUpload: true,
+            askForCustomerInfo: false
+          }
+      });
+    };
+    document.head.appendChild(script);
+  })();
+</script>`}
+                                readOnly
+                                rows={8}
+                                className="text-xs font-mono bg-gray-50"
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const embedCode = `<!-- Webchat Widget -->
+<div id="webchat-${selectedPlatform.phone || 'your-platform-id'}"></div>
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${window.location.origin}/webchat-widget.js';
+    script.onload = function() {
+      WebchatWidget.init({
+        containerId: 'webchat-${selectedPlatform.phone || 'your-platform-id'}',
+        agentId: '${selectedPlatform.aiAgent || 'your-agent-id'}',
+        apiUrl: '${window.location.origin}/api',
+        config: {
+          primaryColor: '#007bff',
+          welcomeMessage: 'Welcome! How can we help you today?',
+          placeholderText: 'Type your message...',
+          position: 'bottom-right',
+          showAgentAvatar: true,
+          allowFileUpload: true,
+          askForCustomerInfo: false
+        }
+      });
+    };
+    document.head.appendChild(script);
+  })();
+</script>`;
+                                  navigator.clipboard.writeText(embedCode);
+                                }}
+                                className="w-full"
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy Embed Code
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Copy and paste this code into your website's HTML to add the webchat widget
+                            </p>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    )}
                     <TabsContent value="pipeline" className="space-y-4 sm:space-y-6">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">
@@ -1628,6 +1875,40 @@ export default function ConnectedPlatformsPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="w-[95vw] max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Platform Inbox
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete <strong>{platformToDelete?.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+                className="text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                className="text-sm"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Platform Modal - Using shadcn Dialog */}
       <Dialog

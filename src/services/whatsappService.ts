@@ -2,7 +2,7 @@
 // import { AuthService } from './authService';
 import axiosInstance from './axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_WHATSAPP_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_WHATSAPP_URL || 'http://localhost:3000';
 
 export interface CreateSessionRequest {
   session: string;
@@ -127,7 +127,7 @@ export const whatsappService = {
 
   sendMessage: async ({ session, number, message }: { session: string; number: string; message: string }) => {
     try {
-      const response = await axiosInstance.post(`http://localhost:3000/send-message`, {
+      const response = await axiosInstance.post(`${API_BASE_URL}/send-message`, {
         session,
         number,
         message,

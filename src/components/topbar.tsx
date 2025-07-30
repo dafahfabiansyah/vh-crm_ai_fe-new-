@@ -40,7 +40,6 @@ import {
   User,
   Settings,
   LogOut,
-  CreditCard,
   Shield,
   CheckCircle,
   AlertCircle,
@@ -56,6 +55,7 @@ type Notification = {
   id: string;
   title: string;
   message: string;
+  type: "info" | "success" | "warning" | "error";
   type: "info" | "success" | "warning" | "error";
   timestamp: string;
   isRead: boolean;
@@ -110,6 +110,9 @@ export default function Topbar({
 }: {
   onToggleMobileMenu?: () => void;
 }) {
+}: {
+  onToggleMobileMenu?: () => void;
+}) {
   // const [notifications, setNotifications] = useState(mockNotifications);
   const [notifications, setNotifications] = useState<Notification[]>([]); // No initial notifications
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -138,11 +141,11 @@ export default function Topbar({
   // Get user data from Redux state (which is loaded from cookies)
   const { user } = useAppSelector((state) => state.auth);
 
+
   // Use default values if user data is not available
   const userData = {
     name: user?.name || "User",
     email: user?.email || "user@example.com",
-    plan: "Free",
   };
 
   // Calculate unread notifications count
@@ -213,7 +216,7 @@ export default function Topbar({
       alert("Pengaduan berhasil dikirim!");
     } catch (error) {
       console.error("Error submitting help ticket:", error);
-      alert("Gagal mengirim pengaduan. Silakan coba lagi.");
+      toast.error("Gagal mengirim pengaduan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -261,8 +264,15 @@ export default function Topbar({
                   Anda Sedang berlangganan paket{" "}
                   {currentSubscription.package_name}
                 </span>
+                <span className="capitalize">
+                  Anda Sedang berlangganan paket{" "}
+                  {currentSubscription.package_name}
+                </span>
               ) : (
                 <>
+                  <span className="hidden sm:inline capitalize">
+                    Belum Berlangganan, Silakan lakukan pembelian
+                  </span>
                   <span className="hidden sm:inline capitalize">
                     Belum Berlangganan, Silakan lakukan pembelian
                   </span>
@@ -318,9 +328,15 @@ export default function Topbar({
               size="icon"
               className="relative h-8 w-8 sm:h-10 sm:w-10"
             >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-8 w-8 sm:h-10 sm:w-10"
+            >
               <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               {unreadCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
               )}
@@ -422,12 +438,6 @@ export default function Topbar({
                   <span className="text-sm font-medium text-foreground truncate max-w-24">
                     {userData.name}
                   </span>
-                  <Badge
-                    variant="secondary"
-                    className="text-xs px-2 py-0 bg-blue-100 text-blue-700 border-blue-200"
-                  >
-                    {userData.plan}
-                  </Badge>
                 </div>
               </div>
               <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
@@ -439,27 +449,18 @@ export default function Topbar({
                 <p className="text-sm font-medium leading-none">
                   {userData.name}
                 </p>
+                <p className="text-sm font-medium leading-none">
+                  {userData.name}
+                </p>
                 <p className="text-xs leading-none text-muted-foreground truncate">
                   {userData.email}
                 </p>
-                <div className="sm:hidden">
-                  <Badge
-                    variant="secondary"
-                    className="text-xs px-2 py-0 bg-blue-100 text-blue-700 border-blue-200 w-fit"
-                  >
-                    {userData.plan}
-                  </Badge>
-                </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <CreditCard className="mr-2 h-4 w-4" />
-              <span>Billing</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
@@ -496,6 +497,9 @@ export default function Topbar({
             <DialogTitle className="text-blue-600 text-lg sm:text-xl">
               Pusat Bantuan
             </DialogTitle>
+            <DialogTitle className="text-blue-600 text-lg sm:text-xl">
+              Pusat Bantuan
+            </DialogTitle>
           </DialogHeader>
 
           <p className="text-sm text-gray-600 mb-4 sm:mb-6">
@@ -504,6 +508,9 @@ export default function Topbar({
 
           <form onSubmit={handleHelpSubmit} className="space-y-4">
             <div>
+              <Label htmlFor="title" className="text-sm font-medium">
+                Masalah Utama *
+              </Label>
               <Label htmlFor="title" className="text-sm font-medium">
                 Masalah Utama *
               </Label>
@@ -518,6 +525,9 @@ export default function Topbar({
             </div>
 
             <div>
+              <Label htmlFor="description" className="text-sm font-medium">
+                Deskripsi masalah *
+              </Label>
               <Label htmlFor="description" className="text-sm font-medium">
                 Deskripsi masalah *
               </Label>
@@ -539,6 +549,9 @@ export default function Topbar({
                 <Label htmlFor="priority" className="text-sm font-medium">
                   Prioritas
                 </Label>
+                <Label htmlFor="priority" className="text-sm font-medium">
+                  Prioritas
+                </Label>
                 <Select
                   value={helpForm.priority}
                   onValueChange={(value) =>
@@ -557,6 +570,9 @@ export default function Topbar({
               </div>
 
               <div>
+                <Label htmlFor="tags" className="text-sm font-medium">
+                  Tags
+                </Label>
                 <Label htmlFor="tags" className="text-sm font-medium">
                   Tags
                 </Label>
