@@ -12,7 +12,7 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
-  // turnstile_token?: string;
+  turnstile_token?: string;
 }
 
 // API Response types
