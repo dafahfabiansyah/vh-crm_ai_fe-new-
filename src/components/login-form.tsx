@@ -35,9 +35,16 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
   const [turnstileKey, setTurnstileKey] = useState(0);
   const turnstileWidgetRef = useRef<HTMLDivElement | null>(null);
+
+  const turnstileSitekey = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
+
+  // Validate that turnstileSitekey is a string
+  if (typeof turnstileSitekey !== 'string' || !turnstileSitekey) {
+    console.error('Turnstile sitekey is missing or invalid:', turnstileSitekey);
+  }
 
   useEffect(() => {
     // Ensure Turnstile script is loaded
@@ -71,7 +78,7 @@ export default function LoginForm() {
     // @ts-ignore
     window.onTurnstileExpired = () => {
       console.log("Turnstile expired");
-      setTurnstileToken(null);
+      setTurnstileToken(undefined);
     };
 
     return () => {
@@ -117,7 +124,7 @@ export default function LoginForm() {
 
     if (!validateForm()) return;
 
-    if (!turnstileToken) {
+    if (turnstileSitekey && !turnstileToken) {
       setErrors({ general: "Please complete the CAPTCHA challenge." });
       return;
     }
@@ -325,17 +332,19 @@ export default function LoginForm() {
         </button>
       </div> */}
 
-      <div className="my-4 flex justify-center">
-        <div
-          key={turnstileKey}
-          ref={turnstileWidgetRef}
-          className="cf-turnstile"
-          data-sitekey="0x4AAAAAABmlXQKNe1JjeYFt"
-          data-callback="onTurnstileSuccess"
-          data-error-callback="onTurnstileError"
-          data-expired-callback="onTurnstileExpired"
-        ></div>
-      </div>
+      {turnstileSitekey && (
+        <div className="my-4 flex justify-center">
+          <div
+            key={turnstileKey}
+            ref={turnstileWidgetRef}
+            className="cf-turnstile"
+            data-sitekey={turnstileSitekey}
+            data-callback="onTurnstileSuccess"
+            data-error-callback="onTurnstileError"
+            data-expired-callback="onTurnstileExpired"
+          ></div>
+        </div>
+      )}
 
       <Button
         type="submit"
