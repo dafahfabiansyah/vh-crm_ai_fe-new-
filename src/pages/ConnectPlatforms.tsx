@@ -351,28 +351,41 @@ export default function ConnectedPlatformsPage() {
       } else if (activeTab === "basic") {
         // Basic tab: Use create_platform_mappings endpoint and set id_pipeline to null
         if (currentPlatform.aiAgent) {
-          // Find the selected AI agent
-          const selectedAIAgent = aiAgents.find(
-            (agent) => agent.name === currentPlatform.aiAgent
-          );
-          if (!selectedAIAgent) {
+          if (currentPlatform.aiAgent === 'none') {
+            // Handle 'none' case - let backend handle the unmapping
+            console.log('Basic tab - unmapping AI agent (none selected)');
+            // Send 'none' to backend to handle unmapping
+            await platformsInboxService.mapAgentToPlatform('none', currentPlatform.id);
             setToast({
               show: true,
-              type: "error",
-              title: "Validation Error",
-              description: "Selected AI Agent not found.",
+              type: "success",
+              title: "AI Agent Mapping Cleared",
+              description: `AI Agent mapping cleared for platform ${currentPlatform.name}.`,
             });
-            return;
+          } else {
+            // Find the selected AI agent
+            const selectedAIAgent = aiAgents.find(
+              (agent) => agent.name === currentPlatform.aiAgent
+            );
+            if (!selectedAIAgent) {
+              setToast({
+                show: true,
+                type: "error",
+                title: "Validation Error",
+                description: "Selected AI Agent not found.",
+              });
+              return;
+            }
+            console.log('Basic tab - mapping AI agent via create_platform_mappings and setting id_pipeline to null');
+            // Use create_platform_mappings endpoint which will update platform_inbox id_pipeline to null
+            await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
+            setToast({
+              show: true,
+              type: "success",
+              title: "AI Agent Mapping Saved Successfully",
+              description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`,
+            });
           }
-          console.log('Basic tab - mapping AI agent via create_platform_mappings and setting id_pipeline to null');
-          // Use create_platform_mappings endpoint which will update platform_inbox id_pipeline to null
-          await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
-          setToast({
-            show: true,
-            type: "success",
-            title: "AI Agent Mapping Saved Successfully",
-            description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`,
-          });
         }
         
         // Handle multiple human agents mapping
@@ -803,6 +816,12 @@ export default function ConnectedPlatformsPage() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                          None
+                        </div>
+                      </SelectItem>
                       {aiAgents.map((agent) => (
                         <SelectItem key={agent.id} value={agent.name}>
                           {agent.name}
@@ -1410,6 +1429,12 @@ export default function ConnectedPlatformsPage() {
                               </div>
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none">
+                                <div className="flex items-center gap-2">
+                                  <XCircle className="h-4 w-4 text-gray-400" />
+                                  None
+                                </div>
+                              </SelectItem>
                               {aiAgents.map((agent) => (
                                 <SelectItem key={agent.id} value={agent.name}>
                                   <div className="flex items-center gap-2">
