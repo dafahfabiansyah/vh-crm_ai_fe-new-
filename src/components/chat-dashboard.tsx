@@ -105,7 +105,7 @@ export default function ChatDashboard() {
   }, [toast?.show]);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] bg-background overflow-hidden">
       {/* Desktop Layout */}
       <div className="hidden lg:flex w-full h-full">
         {/* Left Sidebar - Chat History - Fixed height, scrollable content */}
