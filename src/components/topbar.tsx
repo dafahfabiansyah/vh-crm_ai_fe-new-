@@ -257,7 +257,7 @@ export default function Topbar({
                 <span>Memuat paket...</span>
               ) : currentSubscription?.package_name ? (
                 <span className="capitalize">
-                  Anda Sedang berlangganan paket{" "}
+                  Anda berlangganan paket{" "}
                   {currentSubscription.package_name}
                 </span>
               ) : (
@@ -298,7 +298,7 @@ export default function Topbar({
       {/* Right Section - Notifications & User Menu */}
       <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         {/* Mobile Help Button */}
-        <div className="md:hidden">
+        {/* <div className="md:hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -307,7 +307,7 @@ export default function Topbar({
           >
             <HelpCircle className="h-4 w-4 text-blue-600" />
           </Button>
-        </div>
+        </div> */}
 
         {/* Notifications */}
         <DropdownMenu>

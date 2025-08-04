@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { DepartmentService } from "@/services/departmentService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
@@ -98,20 +99,22 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
           </div>
           <div className="space-y-2">
             <Label htmlFor="dept-head">Head of Department</Label>
-            <select
-              id="dept-head"
-              className="w-full border rounded px-2 py-2 bg-gray-50"
+            <Select
               value={formData.head_id}
-              onChange={e => handleInputChange("head_id", e.target.value)}
+              onValueChange={(value) => handleInputChange("head_id", value)}
               disabled={isLoading || loadingAgents}
             >
-              <option value="">Select head of department</option>
-              {agents.map(agent => (
-                <option key={agent.id} value={agent.id}>
-                  {agent.user?.name || agent.name || agent.user_email}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select head of department" />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.map(agent => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.user?.name || agent.name || agent.user_email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox

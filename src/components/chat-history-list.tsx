@@ -352,7 +352,7 @@ export default function ChatHistoryList({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="justify-between w-24 sm:w-32"
+                className="justify-between w-45 sm:w-32"
                 disabled={agentsLoading}
               >
                 <span className="truncate text-xs sm:text-sm">
