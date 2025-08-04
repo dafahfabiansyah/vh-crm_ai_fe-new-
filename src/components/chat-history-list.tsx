@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import FilterChatModal, { type FilterData } from "@/components/filter-chat-modal";
 import {
   Search,
   Filter,
@@ -71,6 +72,19 @@ export default function ChatHistoryList({
   const [agentsLoading, setAgentsLoading] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [isStartChatModalOpen, setIsStartChatModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  // Filter states
+  const [filterData, setFilterData] = useState<FilterData>({
+    dateFrom: "",
+    dateTo: "",
+    agent: "",
+    aiAgent: "",
+    status: "",
+    inbox: "",
+  });
+
+  // Date picker states - removed as they're now handled in FilterChatModal
 
   // Fetch agents data
   useEffect(() => {
@@ -134,34 +148,97 @@ export default function ChatHistoryList({
       if (!selectedAgent || selectedAgent === "all") {
         return true;
       }
-      
+
       // Get agent name from contact
       const agentName = contact.agent_name || contact.assigned_agent_name || "";
-      
-      // Debug log
-      console.log('Filtering contact:', {
-        contactName: contact.push_name,
-        agentName,
-        selectedAgent,
-        aiAgents: aiAgents.map(a => ({ id: a.id, name: a.name })),
-        humanAgents: humanAgents.map(a => ({ id: a.id, name: a.name, userName: a.user?.name }))
-      });
-      
+
       // Check if it matches AI agent
-      const matchesAiAgent = aiAgents.some(agent => 
-        `ai-${agent.id}` === selectedAgent && agent.name === agentName
+      const matchesAiAgent = aiAgents.some(
+        (agent) =>
+          `ai-${agent.id}` === selectedAgent && agent.name === agentName
       );
-      
+
       // Check if it matches human agent
-      const matchesHumanAgent = humanAgents.some(agent => 
-        `human-${agent.id}` === selectedAgent && 
-        (agent.name === agentName || agent.user?.name === agentName)
+      const matchesHumanAgent = humanAgents.some(
+        (agent) =>
+          `human-${agent.id}` === selectedAgent &&
+          (agent.name === agentName || agent.user?.name === agentName)
       );
-      
+
       return matchesAiAgent || matchesHumanAgent;
     })();
 
-    return matchesSearch && matchesTab && matchesAgent;
+    // Filter berdasarkan date range
+    const matchesDateRange = (() => {
+      if (!filterData.dateFrom && !filterData.dateTo) {
+        return true;
+      }
+
+      const contactDate = new Date(contact.last_message_at);
+      const fromDate = filterData.dateFrom
+        ? new Date(filterData.dateFrom)
+        : null;
+      const toDate = filterData.dateTo ? new Date(filterData.dateTo) : null;
+
+      if (fromDate && contactDate < fromDate) return false;
+      if (toDate && contactDate > toDate) return false;
+
+      return true;
+    })();
+
+    // Filter berdasarkan human agent dari modal filter
+    const matchesFilterAgent = (() => {
+      if (!filterData.agent || filterData.agent === "#") return true;
+
+      const agentName = contact.agent_name || contact.assigned_agent_name || "";
+      // Check if this agent exists in humanAgents list and matches filter
+      const isHumanAgent = humanAgents.some(
+        (agent) => agent.name === agentName || agent.user?.name === agentName
+      );
+      return (
+        isHumanAgent &&
+        agentName.toLowerCase().includes(filterData.agent.toLowerCase())
+      );
+    })();
+
+    // Filter berdasarkan AI agent dari modal filter
+    const matchesFilterAiAgent = (() => {
+      if (!filterData.aiAgent || filterData.aiAgent === "#") return true;
+
+      const agentName = contact.agent_name || contact.assigned_agent_name || "";
+      // Check if this agent exists in aiAgents list and matches filter
+      const isAiAgent = aiAgents.some((agent) => agent.name === agentName);
+      return (
+        isAiAgent &&
+        agentName.toLowerCase().includes(filterData.aiAgent.toLowerCase())
+      );
+    })();
+
+    // Filter berdasarkan status dari modal filter
+    const matchesFilterStatus = (() => {
+      if (!filterData.status || filterData.status === "#") return true;
+      return contact.lead_status === filterData.status;
+    })();
+
+    // Filter berdasarkan inbox/platform
+    const matchesFilterInbox = (() => {
+      if (!filterData.inbox || filterData.inbox === "#") return true;
+      const platformName = contact.platform_name || "";
+      return platformName
+        .toLowerCase()
+        .includes(filterData.inbox.toLowerCase());
+    })();
+
+    return (
+      matchesSearch &&
+      matchesTab &&
+      matchesAgent &&
+      matchesDateRange &&
+      matchesFilterAgent &&
+      matchesFilterAiAgent &&
+      matchesFilterStatus &&
+      matchesFilterInbox
+    );
   });
 
   const handleStartChatClick = () => {
@@ -175,6 +252,41 @@ export default function ChatHistoryList({
 
   const handleStartChatError = (error: string) => {
     onStartChatError?.(error);
+  };
+
+  const handleFilterClick = () => {
+    setIsFilterModalOpen(true);
+  };
+
+  const handleApplyFilter = () => {
+    setIsFilterModalOpen(false);
+  };
+
+  const handleResetFilter = () => {
+    setFilterData({
+      dateFrom: "",
+      dateTo: "",
+      agent: "",
+      aiAgent: "",
+      status: "",
+      inbox: "",
+    });
+  };
+
+  const handleFilterDataChange = (newFilterData: FilterData) => {
+    setFilterData(newFilterData);
+  };
+
+  // Check if any filter is active
+  const hasActiveFilters = () => {
+    return !!(
+      filterData.dateFrom ||
+      filterData.dateTo ||
+      filterData.agent ||
+      filterData.aiAgent ||
+      filterData.status ||
+      filterData.inbox
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -244,33 +356,43 @@ export default function ChatHistoryList({
                 disabled={agentsLoading}
               >
                 <span className="truncate text-xs sm:text-sm">
-                  {agentsLoading 
-                    ? "Loading..." 
+                  {agentsLoading
+                    ? "Loading..."
                     : selectedAgent && selectedAgent !== "all"
-                      ? (() => {
-                          // Find selected agent name
-                          const aiAgent = aiAgents.find(agent => `ai-${agent.id}` === selectedAgent);
-                          if (aiAgent) {
-                            const name = aiAgent.name;
-                            return name.length > 10 ? `${name.substring(0, 8)}...` : name;
-                          }
-                          
-                          const humanAgent = humanAgents.find(agent => `human-${agent.id}` === selectedAgent);
-                          if (humanAgent) {
-                            const name = humanAgent.name || humanAgent.user?.name || "Unknown";
-                            return name.length > 10 ? `${name.substring(0, 8)}...` : name;
-                          }
-                          
-                          return "All Agents";
-                        })()
-                      : "All Agents"
-                  }
+                    ? (() => {
+                        // Find selected agent name
+                        const aiAgent = aiAgents.find(
+                          (agent) => `ai-${agent.id}` === selectedAgent
+                        );
+                        if (aiAgent) {
+                          const name = aiAgent.name;
+                          return name.length > 10
+                            ? `${name.substring(0, 8)}...`
+                            : name;
+                        }
+
+                        const humanAgent = humanAgents.find(
+                          (agent) => `human-${agent.id}` === selectedAgent
+                        );
+                        if (humanAgent) {
+                          const name =
+                            humanAgent.name ||
+                            humanAgent.user?.name ||
+                            "Unknown";
+                          return name.length > 10
+                            ? `${name.substring(0, 8)}...`
+                            : name;
+                        }
+
+                        return "All Agents";
+                      })()
+                    : "All Agents"}
                 </span>
                 <MoreHorizontal className="h-4 w-4 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setSelectedAgent("all")}
                 className="flex items-center justify-between"
               >
@@ -280,7 +402,7 @@ export default function ChatHistoryList({
                 )}
               </DropdownMenuItem>
               {aiAgents.map((agent) => (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   key={`ai-${agent.id}`}
                   onClick={() => setSelectedAgent(`ai-${agent.id}`)}
                   className="flex items-center justify-between"
@@ -295,7 +417,7 @@ export default function ChatHistoryList({
                 </DropdownMenuItem>
               ))}
               {humanAgents.map((agent) => (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   key={`human-${agent.id}`}
                   onClick={() => setSelectedAgent(`human-${agent.id}`)}
                   className="flex items-center justify-between"
@@ -316,9 +438,31 @@ export default function ChatHistoryList({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
+              className={`h-8 w-8 sm:h-10 sm:w-10 hover:bg-primary/10 hover:text-primary transition-colors relative ${
+                hasActiveFilters()
+                  ? "bg-blue-50 border-blue-300 text-blue-700"
+                  : ""
+              }`}
+              onClick={handleFilterClick}
+              title="Filter Percakapan"
             >
               <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
+              {hasActiveFilters() && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-[8px] text-white font-bold">
+                    {
+                      [
+                        filterData.dateFrom,
+                        filterData.dateTo,
+                        filterData.agent,
+                        filterData.aiAgent,
+                        filterData.status,
+                        filterData.inbox,
+                      ].filter(Boolean).length
+                    }
+                  </span>
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -328,13 +472,6 @@ export default function ChatHistoryList({
               title="Mulai Chat Baru"
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-            >
-              <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
@@ -421,16 +558,6 @@ export default function ChatHistoryList({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {/* Tab Indicator */}
-        {/* <div className="p-3 bg-accent/30 border-b border-border">
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-medium text-foreground">
-              {activeTab === 'assigned' ? 'Assigned' : 
-               activeTab === 'unassigned' ? 'Unassigned' : 'Resolved'}
-            </span> conversations ({filteredSessions.length})
-          </p>
-        </div> */}
-
         {loading ? (
           <div className="p-8 text-center">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
@@ -553,6 +680,18 @@ export default function ChatHistoryList({
         onOpenChange={setIsStartChatModalOpen}
         onSuccess={handleStartChatSuccess}
         onError={handleStartChatError}
+      />
+
+      <FilterChatModal
+        isOpen={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        filterData={filterData}
+        onFilterChange={handleFilterDataChange}
+        onApply={handleApplyFilter}
+        onReset={handleResetFilter}
+        humanAgents={humanAgents}
+        aiAgents={aiAgents}
+        contacts={contacts}
       />
     </div>
   );
