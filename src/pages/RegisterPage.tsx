@@ -9,7 +9,8 @@ export default function RegisterPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Create account</CardTitle>
           <CardDescription className="text-center">
-            Enter your information to create your account
+            {/* Enter your information to create your account */}
+            Masukkan informasi Anda untuk membuat akun
           </CardDescription>
         </CardHeader>
         <CardContent>

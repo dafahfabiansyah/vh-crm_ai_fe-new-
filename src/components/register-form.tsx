@@ -104,7 +104,7 @@ export default function RegisterForm() {
     // Phone number validation (optional)
     if (
       formData.phoneNumber &&
-      !/^[\+]?[1-9][\d]{0,15}$/.test(
+      !/^[\+]?[0-9][\d]{0,15}$/.test(
         formData.phoneNumber.replace(/[\s\-\(\)]/g, "")
       )
     ) {
