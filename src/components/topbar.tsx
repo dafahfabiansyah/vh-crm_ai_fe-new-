@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { getCurrentSubscription } from "@/services/transactionService";
 import { useEffect } from "react";
+import { TicketService } from "@/services/ticketService";
 import { toast } from "sonner";
 
 // Notification type for state
@@ -190,12 +191,15 @@ export default function Topbar({
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Panggil API create ticket
+      await TicketService.createTicket({
+        problem: helpForm.title,
+        problem_description: helpForm.description,
+        priority: helpForm.priority,
+        tags: helpForm.tags,
+      });
 
-      console.log("Help ticket submitted:", helpForm);
-
-      // Reset form and close modal
+      // Reset form dan tutup modal
       setHelpForm({
         title: "",
         description: "",
@@ -204,8 +208,8 @@ export default function Topbar({
       });
       setIsHelpModalOpen(false);
 
-      // Show success message (you can replace with a toast notification)
-      toast.success("Pengaduan berhasil dikirim!");
+             // Tampilkan pesan sukses (bisa diganti dengan toast)
+       toast.success("Pengaduan berhasil dikirim!");
     } catch (error) {
       console.error("Error submitting help ticket:", error);
       toast.error("Gagal mengirim pengaduan. Silakan coba lagi.");
