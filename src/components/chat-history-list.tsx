@@ -440,7 +440,7 @@ export default function ChatHistoryList({
               size="icon"
               className={`h-8 w-8 sm:h-10 sm:w-10 hover:bg-primary/10 hover:text-primary transition-colors relative ${
                 hasActiveFilters()
-                  ? "bg-blue-50 border-blue-300 text-blue-700"
+                  ? "bg-green-50 border-green-300 text-primary"
                   : ""
               }`}
               onClick={handleFilterClick}
