@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "./alert"
 import { CheckCircle, XCircle, AlertCircle, X } from "lucide-react"
+import { useEffect } from "react"
 
 interface ToastProps {
   title?: string
@@ -8,6 +9,8 @@ interface ToastProps {
   type?: "success" | "error" | "warning" | "info"
   onClose?: () => void
   className?: string
+  autoClose?: boolean
+  autoCloseDelay?: number
 }
 
 const toastIcons = {
@@ -24,12 +27,31 @@ const toastVariants = {
   info: "border-blue-200 bg-blue-50 text-blue-800",
 }
 
-export function Toast({ title, description, type = "info", onClose, className }: ToastProps) {
+export function Toast({ 
+  title, 
+  description, 
+  type = "info", 
+  onClose, 
+  className,
+  autoClose = true,
+  autoCloseDelay = 5000
+}: ToastProps) {
   const Icon = toastIcons[type]
+  
+  // Auto close functionality
+  useEffect(() => {
+    if (autoClose && onClose) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, autoCloseDelay)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [autoClose, autoCloseDelay, onClose])
   
   return (
     <Alert className={cn(
-      "relative mb-4 border-l-4 pl-8",
+      "relative mb-4 border-l-4 pl-8 shadow-lg animate-in slide-in-from-right-full duration-300",
       toastVariants[type],
       className
     )}>
@@ -37,7 +59,7 @@ export function Toast({ title, description, type = "info", onClose, className }:
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute right-2 top-2 opacity-70 hover:opacity-100"
+          className="absolute right-2 top-2 opacity-70 hover:opacity-100 transition-opacity"
         >
           <X className="h-4 w-4" />
         </button>

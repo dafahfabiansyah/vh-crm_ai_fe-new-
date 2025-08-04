@@ -18,6 +18,7 @@ import {
   MessageCircle,
   Instagram,
   Globe,
+  Check,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import { AgentsService } from "@/services/agentsService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import type { AIAgent } from "@/types";
 import type { HumanAgent } from "@/services/humanAgentsService";
+import StartChatModal from "@/components/start-chat-modal";
 
 interface ChatHistoryListProps {
   selectedContactId: string | null;
@@ -39,6 +41,8 @@ interface ChatHistoryListProps {
   onSearchChange: (query: string) => void;
   activeTab?: "assigned" | "unassigned" | "resolved";
   onTabChange?: (tab: "assigned" | "unassigned" | "resolved") => void;
+  onStartChatSuccess?: (message: string) => void;
+  onStartChatError?: (error: string) => void;
 }
 
 export default function ChatHistoryList({
@@ -48,6 +52,8 @@ export default function ChatHistoryList({
   onSearchChange,
   activeTab: controlledActiveTab,
   onTabChange,
+  onStartChatSuccess,
+  onStartChatError,
 }: ChatHistoryListProps) {
   const {
     contacts,
@@ -63,6 +69,8 @@ export default function ChatHistoryList({
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [isStartChatModalOpen, setIsStartChatModalOpen] = useState(false);
 
   // Fetch agents data
   useEffect(() => {
@@ -94,6 +102,8 @@ export default function ChatHistoryList({
     } else {
       setInternalActiveTab(tab);
     }
+    // Reset agent filter when tab changes for better UX
+    setSelectedAgent("all");
   };
 
   const filteredContacts = contacts.filter((contact: Contact) => {
@@ -119,8 +129,53 @@ export default function ChatHistoryList({
       }
     })();
 
-    return matchesSearch && matchesTab;
+    // Filter berdasarkan agent yang dipilih
+    const matchesAgent = (() => {
+      if (!selectedAgent || selectedAgent === "all") {
+        return true;
+      }
+      
+      // Get agent name from contact
+      const agentName = contact.agent_name || contact.assigned_agent_name || "";
+      
+      // Debug log
+      console.log('Filtering contact:', {
+        contactName: contact.push_name,
+        agentName,
+        selectedAgent,
+        aiAgents: aiAgents.map(a => ({ id: a.id, name: a.name })),
+        humanAgents: humanAgents.map(a => ({ id: a.id, name: a.name, userName: a.user?.name }))
+      });
+      
+      // Check if it matches AI agent
+      const matchesAiAgent = aiAgents.some(agent => 
+        `ai-${agent.id}` === selectedAgent && agent.name === agentName
+      );
+      
+      // Check if it matches human agent
+      const matchesHumanAgent = humanAgents.some(agent => 
+        `human-${agent.id}` === selectedAgent && 
+        (agent.name === agentName || agent.user?.name === agentName)
+      );
+      
+      return matchesAiAgent || matchesHumanAgent;
+    })();
+
+    return matchesSearch && matchesTab && matchesAgent;
   });
+
+  const handleStartChatClick = () => {
+    setIsStartChatModalOpen(true);
+  };
+
+  const handleStartChatSuccess = (message: string) => {
+    setIsStartChatModalOpen(false);
+    onStartChatSuccess?.(message);
+  };
+
+  const handleStartChatError = (error: string) => {
+    onStartChatError?.(error);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,24 +243,70 @@ export default function ChatHistoryList({
                 className="justify-between w-24 sm:w-32"
                 disabled={agentsLoading}
               >
-                <span className="truncate">
-                  {agentsLoading ? "Loading..." : "All Agents"}
+                <span className="truncate text-xs sm:text-sm">
+                  {agentsLoading 
+                    ? "Loading..." 
+                    : selectedAgent && selectedAgent !== "all"
+                      ? (() => {
+                          // Find selected agent name
+                          const aiAgent = aiAgents.find(agent => `ai-${agent.id}` === selectedAgent);
+                          if (aiAgent) {
+                            const name = aiAgent.name;
+                            return name.length > 10 ? `${name.substring(0, 8)}...` : name;
+                          }
+                          
+                          const humanAgent = humanAgents.find(agent => `human-${agent.id}` === selectedAgent);
+                          if (humanAgent) {
+                            const name = humanAgent.name || humanAgent.user?.name || "Unknown";
+                            return name.length > 10 ? `${name.substring(0, 8)}...` : name;
+                          }
+                          
+                          return "All Agents";
+                        })()
+                      : "All Agents"
+                  }
                 </span>
                 <MoreHorizontal className="h-4 w-4 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>All Agents</DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSelectedAgent("all")}
+                className="flex items-center justify-between"
+              >
+                <span>All Agents</span>
+                {(!selectedAgent || selectedAgent === "all") && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </DropdownMenuItem>
               {aiAgents.map((agent) => (
-                <DropdownMenuItem key={`ai-${agent.id}`}>
-                  {/* <Bot className="h-3 w-3 text-primary" /> : */}
-                  {agent.name}
+                <DropdownMenuItem 
+                  key={`ai-${agent.id}`}
+                  onClick={() => setSelectedAgent(`ai-${agent.id}`)}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-3 w-3 text-blue-500" />
+                    <span>{agent.name}</span>
+                  </div>
+                  {selectedAgent === `ai-${agent.id}` && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
                 </DropdownMenuItem>
               ))}
               {humanAgents.map((agent) => (
-                <DropdownMenuItem key={`human-${agent.id}`}>
-                  {/* <UsersRound className="h-3 w-3 text-primary" /> : */}
-                  {agent.name || agent.user?.name || "Unknown"}
+                <DropdownMenuItem 
+                  key={`human-${agent.id}`}
+                  onClick={() => setSelectedAgent(`human-${agent.id}`)}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="h-3 w-3 text-green-500" />
+                    <span>{agent.name || agent.user?.name || "Unknown"}</span>
+                  </div>
+                  {selectedAgent === `human-${agent.id}` && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -222,7 +323,9 @@ export default function ChatHistoryList({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
+              className="h-8 w-8 sm:h-10 sm:w-10 hover:bg-primary/10 hover:text-primary transition-colors"
+              onClick={handleStartChatClick}
+              title="Mulai Chat Baru"
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
@@ -443,6 +546,14 @@ export default function ChatHistoryList({
           ))
         )}
       </div>
+
+      {/* Start Chat Modal */}
+      <StartChatModal
+        isOpen={isStartChatModalOpen}
+        onOpenChange={setIsStartChatModalOpen}
+        onSuccess={handleStartChatSuccess}
+        onError={handleStartChatError}
+      />
     </div>
   );
 }

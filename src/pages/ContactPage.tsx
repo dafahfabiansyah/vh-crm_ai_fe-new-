@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,10 +41,10 @@ import {
   Trash,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
+import StartChatModal from "@/components/start-chat-modal";
 
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
-import whatsappService from "@/services/whatsappService";
 import { Toast } from "@/components/ui/toast";
 
 interface Contact {
@@ -73,15 +72,6 @@ export default function ContactsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
-  const [whatsAppForm, setWhatsAppForm] = useState({
-    phone: "",
-    deviceName: "",
-    agentId: "",
-    message: "Hello, this is an initial message.",
-    title: "Customer inquiry",
-    notes: "Customer asked about product X",
-    id_platform: "", // tambahkan field ini
-  });
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [platforms, setPlatforms] = useState<any[]>([]);
   const [platformsLoading, setPlatformsLoading] = useState(false);
@@ -91,9 +81,6 @@ export default function ContactsPage() {
     phone: "",
     name: "",
   });
-  const [, setWhatsAppPlatforms] = useState<any[]>([]);
-  const [, setWhatsAppPlatformsLoading] = useState(false);
-  const [, setWhatsAppPlatformsError] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     targetId?: string;
@@ -159,68 +146,27 @@ export default function ContactsPage() {
     }
   }, [isAddContactOpen]);
 
-  // Fetch platforms when WhatsApp modal opens
-  useEffect(() => {
-    if (isWhatsAppModalOpen) {
-      setWhatsAppPlatformsLoading(true);
-      setWhatsAppPlatformsError(null);
-      platformsInboxService
-        .getPlatformInbox()
-        .then((data) => {
-          setWhatsAppPlatforms(Array.isArray(data) ? data : data.items || []);
-        })
-        .catch((err: any) => {
-          setWhatsAppPlatformsError(
-            err.message || "Gagal mengambil data platform"
-          );
-          setWhatsAppPlatforms([]);
-        })
-        .finally(() => setWhatsAppPlatformsLoading(false));
-    }
-  }, [isWhatsAppModalOpen]);
-
   const handleOpenWhatsAppModal = (contact: Contact) => {
     setSelectedContact(contact);
-    setWhatsAppForm((prev) => ({
-      ...prev,
-      phone: contact.contact_identifier || "",
-      id_platform: contact.id_platform || "",
-    }));
     setIsWhatsAppModalOpen(true);
   };
 
-  const handleWhatsAppSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedContact || !whatsAppForm.phone || !whatsAppForm.message) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Form Tidak Lengkap",
-        description: "Contact, phone, dan pesan wajib diisi",
-      });
-      return;
-    }
-    try {
-      await whatsappService.sendMessage({
-        session: selectedContact.id_platform,
-        number: whatsAppForm.phone,
-        message: whatsAppForm.message,
-      });
-      setToast({
-        show: true,
-        type: "success",
-        title: "Pesan Terkirim",
-        description: "Pesan berhasil dikirim!",
-      });
-      setIsWhatsAppModalOpen(false);
-    } catch (err: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Gagal Mengirim Pesan",
-        description: err.message || "Gagal mengirim pesan WhatsApp",
-      });
-    }
+  const handleWhatsAppSuccess = (message: string) => {
+    setToast({
+      show: true,
+      type: "success",
+      title: "Pesan Terkirim",
+      description: message,
+    });
+  };
+
+  const handleWhatsAppError = (error: string) => {
+    setToast({
+      show: true,
+      type: "error",
+      title: "Gagal Mengirim Pesan",
+      description: error,
+    });
   };
 
   const handleAddContactSubmit = async (e: React.FormEvent) => {
@@ -940,73 +886,15 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* WhatsApp Modal - Using shadcn Dialog */}
-      <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="flex items-center gap-2 text-primary text-lg">
-              <Send className="h-5 w-5" />
-              Kirim Pesan WhatsApp
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleWhatsAppSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium">
-                Nomor Telepon
-              </Label>
-              <Input
-                id="phone"
-                value={whatsAppForm.phone}
-                onChange={(e) =>
-                  setWhatsAppForm((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
-                }
-                placeholder="+628526000993731"
-                className="font-mono text-sm"
-              />
-            </div>
-            {/* Select deviceName di-nonaktifkan, karena session diambil dari contact */}
-            <div className="space-y-2">
-              <Label htmlFor="message" className="text-sm font-medium">
-                Pesan yang akan Dikirim *
-              </Label>
-              <Textarea
-                id="message"
-                value={whatsAppForm.message}
-                onChange={(e) =>
-                  setWhatsAppForm((prev) => ({
-                    ...prev,
-                    message: e.target.value,
-                  }))
-                }
-                placeholder="Hello, this is an initial message."
-                rows={3}
-                className="text-sm resize-none"
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Maksimal 1000 karakter
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsWhatsAppModalOpen(false)}
-                className="flex-1 sm:flex-none"
-              >
-                Batal
-              </Button>
-              <Button type="submit" className="flex-1 bg-primary text-white">
-                <Send className="h-4 w-4 mr-2" />
-                Kirim Pesan
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* WhatsApp Modal - Using StartChatModal Component */}
+      <StartChatModal
+        isOpen={isWhatsAppModalOpen}
+        onOpenChange={setIsWhatsAppModalOpen}
+        initialPhone={selectedContact?.contact_identifier || ""}
+        initialPlatformId={selectedContact?.id_platform || ""}
+        onSuccess={handleWhatsAppSuccess}
+        onError={handleWhatsAppError}
+      />
       {/* Toast Notification */}
       {toast?.show && (
         <div className="mb-4">

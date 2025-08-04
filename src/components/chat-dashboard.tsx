@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ChatHistoryList from "./chat-history-list"
 import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Toast } from "@/components/ui/toast"
 import type { Contact } from "@/services/contactsService"
 
 // Default welcome content
@@ -58,6 +59,12 @@ export default function ChatDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showInfo, setShowInfo] = useState(false)
   const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    description: string;
+  } | null>(null);
 
   const handleSelectContact = (contact: Contact) => {
     setSelectedContactId(contact.id)
@@ -68,8 +75,37 @@ export default function ChatDashboard() {
     setActiveTab('assigned')
   }
 
+  const handleStartChatSuccess = (message: string) => {
+    setToast({
+      show: true,
+      type: "success",
+      title: "Chat Berhasil Dikirim",
+      description: message,
+    });
+  };
+
+  const handleStartChatError = (error: string) => {
+    setToast({
+      show: true,
+      type: "error",
+      title: "Gagal Memulai Chat",
+      description: error,
+    });
+  };
+
+  // Auto-close toast after 5 seconds
+  useEffect(() => {
+    if (toast?.show) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [toast?.show]);
+
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background relative overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Layout */}
       <div className="hidden lg:flex w-full h-full">
         {/* Left Sidebar - Chat History - Fixed height, scrollable content */}
@@ -81,6 +117,8 @@ export default function ChatDashboard() {
             onSearchChange={setSearchQuery}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            onStartChatSuccess={handleStartChatSuccess}
+            onStartChatError={handleStartChatError}
           />
         </div>
 
@@ -121,6 +159,8 @@ export default function ChatDashboard() {
               onSearchChange={setSearchQuery}
               activeTab={activeTab}
               onTabChange={setActiveTab}
+              onStartChatSuccess={handleStartChatSuccess}
+              onStartChatError={handleStartChatError}
             />
           </div>
         ) : (
@@ -153,6 +193,19 @@ export default function ChatDashboard() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Toast Notification - Fixed position floating */}
+      {toast?.show && (
+        <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:max-w-md">
+          <Toast
+            type={toast.type}
+            title={toast.title}
+            description={toast.description}
+            onClose={() => setToast(null)}
+            className="shadow-lg animate-in slide-in-from-right-full duration-300"
+          />
+        </div>
+      )}
     </div>
   )
 }
