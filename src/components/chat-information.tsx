@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, Calendar, MessageSquare, Sparkles, Loader2 } from "lucide-react"
+import { User, Calendar, MessageSquare, Sparkles, Loader2, ChevronDown } from "lucide-react"
 import type { ChatInformationProps } from "@/types"
 import { PipelineService } from "@/services/pipelineService"
 import { ChatLogsService } from "@/services/chatLogsService"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
+import { AuthService } from "../services/authService"
+import { HumanAgentsService } from "../services/humanAgentsService"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   const [contactData, setContactData] = useState(chatInfo)
@@ -20,10 +28,46 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   const [isLoadingSummary, setIsLoadingSummary] = useState(false)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [customPrompt, setCustomPrompt] = useState<string>('Simpulkan keluhan customer ini')
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [humanAgents, setHumanAgents] = useState<any[]>([])
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false)
 
   useEffect(() => {
     setContactData(chatInfo)
   }, [chatInfo])
+
+  // Ambil role user sekali saja saat komponen mount
+  useEffect(() => {
+    setUserRole(AuthService.getRoleFromToken());
+  }, []);
+
+  // Fetch human agents when component mounts and user is Manager
+  useEffect(() => {
+    if (userRole?.toLowerCase() === "manager") {
+      fetchHumanAgents();
+    }
+  }, [userRole]);
+
+  const fetchHumanAgents = async () => {
+    setIsLoadingAgents(true);
+    try {
+      const agents = await HumanAgentsService.getHumanAgents();
+      // Filter only human agents with agent_type "Human"
+      const humanOnlyAgents = agents.filter(agent => agent.agent_type === "Human");
+      setHumanAgents(humanOnlyAgents);
+    } catch (error) {
+      console.error("Failed to fetch human agents:", error);
+      setHumanAgents([]);
+    } finally {
+      setIsLoadingAgents(false);
+    }
+  };
+
+  const handleAssignAgent = async (agentId: string, agentName: string) => {
+    // TODO: Implement the actual assign agent API call
+    console.log("Assigning agent:", agentId, agentName, "to contact:", contactData.id);
+    // You can add the API call here to assign the agent to the contact
+  };
 
   useEffect(() => {
     if (!contactData?.id) {
@@ -109,10 +153,65 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
           <Label className="text-sm font-medium text-foreground">Handled By</Label>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <span className="text-sm text-foreground">{contactData.assigned_agent_name || "-"}</span>
-            <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto">
-              <User className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Assign Agent</span>
-            </Button>
+            {userRole?.toLowerCase() === "manager" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto"
+                    disabled={isLoadingAgents}
+                  >
+                    <User className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">
+                      {isLoadingAgents ? "Loading..." : "Assign Agent"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {isLoadingAgents ? (
+                    <DropdownMenuItem disabled>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading agents...
+                    </DropdownMenuItem>
+                  ) : humanAgents.length === 0 ? (
+                    <DropdownMenuItem disabled>
+                      No human agents available
+                    </DropdownMenuItem>
+                  ) : (
+                    humanAgents.map((agent) => (
+                      <DropdownMenuItem
+                        key={agent.id}
+                        onClick={() => handleAssignAgent(agent.id, agent.name || agent.user?.name)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {(agent.name || agent.user?.name || "NA")
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">
+                              {agent.name || agent.user?.name || "Unknown"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {agent.user_email || agent.user?.email || "No email"}
+                            </span>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
