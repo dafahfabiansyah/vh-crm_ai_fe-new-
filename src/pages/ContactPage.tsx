@@ -625,7 +625,7 @@ export default function ContactsPage() {
                       </Button>
                       <Button
                         type="submit"
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        className="flex-1 bg-primary text-white"
                       >
                         <Phone className="h-4 w-4 mr-2" />
                         Tambah Kontak
@@ -785,18 +785,6 @@ export default function ContactsPage() {
                           }
                         )}
                       </TableCell>
-                      {/* <TableCell className="text-muted-foreground font-mono text-xs">
-                        {new Date(contact.updated_at).toLocaleDateString(
-                          "id-ID",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </TableCell> */}
                     </TableRow>
                   ))}
                 </TableBody>

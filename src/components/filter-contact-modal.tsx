@@ -266,6 +266,7 @@ export default function FilterContactModal({
           <Button
             type="button"
             onClick={onApply}
+            
             className="flex-1 bg-primary text-white"
           >
             Terapkan Filter
