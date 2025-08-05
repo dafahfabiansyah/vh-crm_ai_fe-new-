@@ -31,6 +31,7 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [humanAgents, setHumanAgents] = useState<any[]>([])
   const [isLoadingAgents, setIsLoadingAgents] = useState(false)
+  const [agentSearchQuery, setAgentSearchQuery] = useState('')
 
   useEffect(() => {
     setContactData(chatInfo)
@@ -68,6 +69,15 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
     console.log("Assigning agent:", agentId, agentName, "to contact:", contactData.id);
     // You can add the API call here to assign the agent to the contact
   };
+
+  // Filter agents based on search query
+  const filteredAgents = humanAgents.filter(agent => {
+    const agentName = (agent.name || agent.user?.name || "").toLowerCase();
+    const agentEmail = (agent.user_email || agent.user?.email || "").toLowerCase();
+    const searchTerm = agentSearchQuery.toLowerCase();
+    
+    return agentName.includes(searchTerm) || agentEmail.includes(searchTerm);
+  });
 
   useEffect(() => {
     if (!contactData?.id) {
@@ -154,12 +164,16 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <span className="text-sm text-foreground">{contactData.assigned_agent_name || "-"}</span>
             {userRole?.toLowerCase() === "manager" && (
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={(open) => {
+                if (!open) {
+                  setAgentSearchQuery(''); // Reset search when dropdown closes
+                }
+              }}>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="text-primary border-primary hover:bg-primary/10 w-full sm:w-auto"
+                    className="text-primary border-primary hover:bg-primary/10 w-50"
                     disabled={isLoadingAgents}
                   >
                     <User className="h-4 w-4 sm:mr-1" />
@@ -169,18 +183,32 @@ export default function ChatInformation({ chatInfo }: ChatInformationProps) {
                     <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-50">
+                  {/* Search Input */}
+                  <div className="p-2 border-b" onClick={(e) => e.stopPropagation()}>
+                    <Input
+                      placeholder="Cari agent..."
+                      value={agentSearchQuery}
+                      onChange={(e) => setAgentSearchQuery(e.target.value)}
+                      className="text-sm"
+                      onKeyDown={(e) => {
+                        // Prevent dropdown from closing when typing
+                        e.stopPropagation();
+                      }}
+                    />
+                  </div>
+                  
                   {isLoadingAgents ? (
                     <DropdownMenuItem disabled>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Loading agents...
                     </DropdownMenuItem>
-                  ) : humanAgents.length === 0 ? (
+                  ) : filteredAgents.length === 0 ? (
                     <DropdownMenuItem disabled>
-                      No human agents available
+                      {agentSearchQuery ? "No agents found" : "No human agents available"}
                     </DropdownMenuItem>
                   ) : (
-                    humanAgents.map((agent) => (
+                    filteredAgents.map((agent) => (
                       <DropdownMenuItem
                         key={agent.id}
                         onClick={() => handleAssignAgent(agent.id, agent.name || agent.user?.name)}
