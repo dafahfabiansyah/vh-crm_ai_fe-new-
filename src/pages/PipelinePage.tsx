@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -16,6 +16,7 @@ import {
   Trash,
   Bot,
   User,
+  ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import type { Lead, PipelineStage } from "@/types";
@@ -33,13 +34,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { ContactsService } from "@/services/contactsService";
 import type {
   LeadTransferHistoryItem,
@@ -69,6 +63,22 @@ const PipelinePage = () => {
   const [agents, setAgents] = useState<any[]>([]);
   const [isSubmittingStage, setIsSubmittingStage] = useState(false);
   const [addStageError, setAddStageError] = useState<string | null>(null);
+  const [agentSearchQuery, setAgentSearchQuery] = useState<string>("");
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
+  const agentDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter agents berdasarkan search query
+  const filteredAgents = agents.filter((agent) =>
+    agent.name?.toLowerCase().includes(agentSearchQuery.toLowerCase()) ||
+    agent.user?.name?.toLowerCase().includes(agentSearchQuery.toLowerCase())
+  );
+
+  // Get selected agent name for display
+  const getSelectedAgentName = () => {
+    if (!selectedAgent) return "Pilih agent";
+    const selectedAgentObj = agents.find(agent => agent.id === selectedAgent);
+    return selectedAgentObj ? selectedAgentObj.name : "Pilih agent";
+  };
   const [, setAiAgents] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null
@@ -428,6 +438,8 @@ const PipelinePage = () => {
     setIsSubmittingStage(false);
     setAgents([]);
     setSelectedAgent("");
+    setAgentSearchQuery(""); // Reset search query
+    setIsAgentDropdownOpen(false); // Reset dropdown state
     import("@/services/axios").then((axiosInstanceModule) => {
       const axiosInstance = axiosInstanceModule.default;
       axiosInstance
@@ -444,6 +456,20 @@ const PipelinePage = () => {
         );
     });
   }, [isAddStageOpen]);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (agentDropdownRef.current && !agentDropdownRef.current.contains(event.target as Node)) {
+        setIsAgentDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Fetch AI agents saat mount
   useEffect(() => {
@@ -598,6 +624,8 @@ const PipelinePage = () => {
     setStageDescription("");
     setSelectedAgent("");
     setAddStageError(null);
+    setAgentSearchQuery("");
+    setIsAgentDropdownOpen(false);
     setIsAddStageOpen(true);
   };
 
@@ -931,38 +959,63 @@ const PipelinePage = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="stage-agent">Pilih Agent</Label>
-                      <Select
-                        value={selectedAgent}
-                        onValueChange={setSelectedAgent}
-                        disabled={isSubmittingStage || agents.length === 0}
-                      >
-                        <SelectTrigger className="w-full" id="stage-agent">
-                          <SelectValue
-                            placeholder={
-                              agents.length === 0
-                                ? "Memuat agent..."
-                                : "Pilih agent"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              <div className="flex items-center gap-2">
-                                {agent.agent_type === "AI" ? (
-                                  <Bot className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <User className="h-4 w-4 text-blue-600" />
-                                )}
-                                <span>{agent.name}</span>
-                                <span className="text-xs text-gray-500 ml-auto">
-                                  {agent.agent_type === "AI" ? "AI" : "Human"}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="relative" ref={agentDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+                          disabled={isSubmittingStage || agents.length === 0}
+                          className="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-between"
+                        >
+                          <span className={selectedAgent ? "text-gray-900" : "text-gray-500"}>
+                            {agents.length === 0 ? "Memuat agent..." : getSelectedAgentName()}
+                          </span>
+                          <ChevronDown className={`h-4 w-4 transition-transform ${isAgentDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isAgentDropdownOpen && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
+                            <div className="p-2 border-b">
+                              <Input
+                                placeholder="Cari agent..."
+                                value={agentSearchQuery}
+                                onChange={(e) => setAgentSearchQuery(e.target.value)}
+                                className="w-full"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="max-h-48 overflow-y-auto">
+                              {filteredAgents.length === 0 && agentSearchQuery ? (
+                                <div className="p-3 text-sm text-gray-500 text-center">
+                                  Tidak ada agent yang ditemukan
+                                </div>
+                              ) : (
+                                filteredAgents.map((agent: any) => (
+                                  <button
+                                    key={agent.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedAgent(agent.id);
+                                      setIsAgentDropdownOpen(false);
+                                      setAgentSearchQuery("");
+                                    }}
+                                    className="w-full p-3 text-left hover:bg-gray-50 focus:bg-gray-50 flex items-center gap-2"
+                                  >
+                                    {agent.agent_type === "AI" ? (
+                                      <Bot className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <User className="h-4 w-4 text-blue-600" />
+                                    )}
+                                    <span className="flex-1">{agent.name}</span>
+                                    <span className="text-xs text-gray-500">
+                                      {agent.agent_type === "AI" ? "AI" : "Human"}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     {addStageError && (
                       <div className="text-red-600 text-sm">

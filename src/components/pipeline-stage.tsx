@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LeadCard } from "./lead-card";
 import { Badge } from "./ui/badge";
 import { useDrop } from "react-dnd";
 import type { Lead, PipelineStage } from "@/types";
-import { Trash, Pencil, User } from "lucide-react";
+import { Trash, Pencil, User, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { AgentsService } from "@/services/agentsService";
 import {
@@ -15,13 +15,7 @@ import {
   DialogClose,
 } from "./ui/dialog";
 import { Label } from "./ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "./ui/select";
+import { Input } from "./ui/input";
 import { Bot } from "lucide-react";
 
 const ITEM_TYPE = "LEAD";
@@ -62,6 +56,15 @@ export const PipelineStageColumn: React.FC<{
   const [editSelectedAgent, setEditSelectedAgent] = useState<string>(stage.agent_id || stage.id_agent || "");
   const [editAgentsLoading, setEditAgentsLoading] = useState(false);
   const [editAgentsError, setEditAgentsError] = useState<string | null>(null);
+  const [agentSearchQuery, setAgentSearchQuery] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter agents berdasarkan search query
+  const filteredAgents = editAgents.filter((agent) =>
+    agent.name?.toLowerCase().includes(agentSearchQuery.toLowerCase()) ||
+    agent.user?.name?.toLowerCase().includes(agentSearchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchAgentName = async () => {
@@ -102,6 +105,8 @@ export const PipelineStageColumn: React.FC<{
     setEditAgentsLoading(true);
     setEditAgentsError(null);
     setEditAgents([]);
+    setAgentSearchQuery(""); // Reset search query ketika dialog dibuka
+    setIsDropdownOpen(false); // Reset dropdown state
     AgentsService.getAgentDetails()
       .then((response) => {
         const items = Array.isArray(response)
@@ -112,6 +117,27 @@ export const PipelineStageColumn: React.FC<{
       .catch((err) => setEditAgentsError(err.message || "Gagal memuat data agent"))
       .finally(() => setEditAgentsLoading(false));
   }, [showEditDialog]);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Get selected agent name for display
+  const getSelectedAgentName = () => {
+    if (!editSelectedAgent) return "Pilih agent";
+    const selectedAgent = editAgents.find(agent => agent.id === editSelectedAgent);
+    return selectedAgent ? selectedAgent.name : "Pilih agent";
+  };
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ITEM_TYPE,
@@ -230,32 +256,63 @@ export const PipelineStageColumn: React.FC<{
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-stage-agent">Pilih Agent</Label>
-                  <Select
-                    value={editSelectedAgent}
-                    onValueChange={setEditSelectedAgent}
-                    disabled={editAgentsLoading || editAgents.length === 0}
-                  >
-                    <SelectTrigger className="w-full" id="edit-stage-agent">
-                      <SelectValue placeholder={editAgentsLoading ? "Memuat agent..." : "Pilih agent"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {editAgents.map((agent: any) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          <div className="flex items-center gap-2">
-                            {agent.agent_type === "AI" ? (
-                              <Bot className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <User className="h-4 w-4 text-blue-600" />
-                            )}
-                            <span>{agent.name}</span>
-                            <span className="text-xs text-gray-500 ml-auto">
-                              {agent.agent_type === "AI" ? "AI" : "Human"}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      disabled={editAgentsLoading || editAgents.length === 0}
+                      className="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-between"
+                    >
+                      <span className={editSelectedAgent ? "text-gray-900" : "text-gray-500"}>
+                        {editAgentsLoading ? "Memuat agent..." : getSelectedAgentName()}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
+                        <div className="p-2 border-b">
+                          <Input
+                            placeholder="Cari agent..."
+                            value={agentSearchQuery}
+                            onChange={(e) => setAgentSearchQuery(e.target.value)}
+                            className="w-full"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredAgents.length === 0 && agentSearchQuery ? (
+                            <div className="p-3 text-sm text-gray-500 text-center">
+                              Tidak ada agent yang ditemukan
+                            </div>
+                          ) : (
+                            filteredAgents.map((agent: any) => (
+                              <button
+                                key={agent.id}
+                                type="button"
+                                onClick={() => {
+                                  setEditSelectedAgent(agent.id);
+                                  setIsDropdownOpen(false);
+                                  setAgentSearchQuery("");
+                                }}
+                                className="w-full p-3 text-left hover:bg-gray-50 focus:bg-gray-50 flex items-center gap-2"
+                              >
+                                {agent.agent_type === "AI" ? (
+                                  <Bot className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <User className="h-4 w-4 text-blue-600" />
+                                )}
+                                <span className="flex-1">{agent.name}</span>
+                                <span className="text-xs text-gray-500">
+                                  {agent.agent_type === "AI" ? "AI" : "Human"}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {editAgentsError && (
                     <div className="text-red-600 text-xs mt-1">{editAgentsError}</div>
                   )}
