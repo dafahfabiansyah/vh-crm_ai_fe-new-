@@ -36,7 +36,7 @@ import ProductTable from "@/components/product-table";
 import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
 import { KnowledgeService } from "@/services/knowledgeService";
-import { toast as showToast } from "sonner";
+import { useToast } from "@/hooks";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -89,6 +89,7 @@ const ProductPage = () => {
   const [addToAIError, setAddToAIError] = useState<string>("");
   const [addToAILoading, setAddToAILoading] = useState(false);
   const [addToAISuccess, setAddToAISuccess] = useState<string>("");
+  const { success, error: showError } = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -349,7 +350,7 @@ const ProductPage = () => {
       setImageUploadError("");
     } catch (error: any) {
       console.error("Error creating product:", error);
-      showToast.error(`Failed to create product: ${error.message}`);
+      showError(`Failed to create product: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -359,7 +360,7 @@ const ProductPage = () => {
     e.preventDefault();
 
     if (!categoryFormData.name) {
-      showToast.error("Please enter a category name");
+      showError("Please enter a category name");
       return;
     }
 
@@ -404,10 +405,10 @@ const ProductPage = () => {
         description: "",
         attributes: [],
       });
-      showToast.success("Category created successfully.");
+      success("Category created successfully.");
     } catch (error: any) {
       console.error("Error creating category:", error);
-      showToast.error(error.message || "Failed to create category.");
+      showError(error.message || "Failed to create category.");
     } finally {
       setIsLoading(false);
     }
@@ -431,9 +432,9 @@ const ProductPage = () => {
         newMap.delete(deleteCategoryDialog.targetId!);
         return newMap;
       });
-      showToast.success("Category deleted successfully.");
+      success("Category deleted successfully.");
           } catch (error: any) {
-        showToast.error(error.message || "Failed to delete category.");
+        showError(error.message || "Failed to delete category.");
       } finally {
       setIsLoading(false);
       setDeleteCategoryDialog({ open: false });
@@ -488,7 +489,7 @@ const ProductPage = () => {
       setIsEditModalOpen(false);
       setEditProduct(null);
     } catch (err: any) {
-      showToast.error("Failed to update product: " + (err?.message || "Unknown error"));
+      showError("Failed to update product: " + (err?.message || "Unknown error"));
     } finally {
       setIsEditLoading(false);
     }
@@ -514,7 +515,7 @@ const ProductPage = () => {
       setIsDeleteModalOpen(false);
       setDeleteProduct(null);
     } catch (err: any) {
-      showToast.error("Failed to delete product: " + (err?.message || "Unknown error"));
+      showError("Failed to delete product: " + (err?.message || "Unknown error"));
     } finally {
       setIsDeleteLoading(false);
     }

@@ -27,7 +27,7 @@ import {
   ChefHat
 } from 'lucide-react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
+import { useToast } from "@/hooks"
 
 // Initial nodes for cooking scrambled eggs flow
 const initialNodes: Node[] = [
@@ -329,6 +329,7 @@ const FlowSettingsPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [isPlaying, setIsPlaying] = useState(false)
+  const { success } = useToast()
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -397,7 +398,7 @@ const FlowSettingsPage = () => {
       timestamp: new Date().toISOString(),
     }
     console.log('Saving flow:', flowData)
-    toast.success('Flow berhasil disimpan!')
+    success('Flow berhasil disimpan!')
   }
 
   const nodeTypes = useMemo(() => ({}), [])

@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/table";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 export default function BillingPage() {
   const [, setSelectedPlan] = useState<string | null>(null);
@@ -58,6 +58,7 @@ export default function BillingPage() {
   const [isProcessingDialogOpen, setIsProcessingDialogOpen] = useState(false);
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [topUpType, setTopUpType] = useState<null | "mau" | "responses">(null);
+  const { success, error: showError } = useToast();
   const [usageTracking, setUsageTracking] = useState<any>(null);
   const [, setLoadingUsage] = useState(true);
   const [, setUsageError] = useState<string | null>(null);
@@ -82,7 +83,7 @@ export default function BillingPage() {
 
   const handlePayment = async () => {
     if (!selectedPlanData?.id) {
-      toast.error("No plan selected");
+      showError("No plan selected");
       return;
     }
     try {
@@ -95,11 +96,11 @@ export default function BillingPage() {
       setCouponCode("");
       setTimeout(() => {
         setIsProcessingDialogOpen(false);
-        toast.success("Transaksi berhasil! Silakan cek status pembayaran Anda.");
+        success("Transaksi berhasil! Silakan cek status pembayaran Anda.");
       }, 1200);
     } catch (err) {
       setIsProcessingDialogOpen(false);
-      toast.error("Gagal melakukan transaksi. Silakan coba lagi.");
+      showError("Gagal melakukan transaksi. Silakan coba lagi.");
     }
   };
 
@@ -113,12 +114,12 @@ export default function BillingPage() {
         setOriginalPrice(selectedPlanData.price);
         setDiscountedPrice("IDR 0");
         setIsDiscountApplied(true);
-        toast.success("Coupon applied successfully! Harga menjadi gratis.");
+        success("Coupon applied successfully! Harga menjadi gratis.");
       } else {
-        toast.error("Invalid plan price");
+        showError("Invalid plan price");
       }
     } else {
-      toast.error("Invalid coupon code");
+      showError("Invalid coupon code");
     }
   };
 

@@ -47,7 +47,7 @@ import type { ContactFilterData } from "@/components/filter-contact-modal";
 
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/contexts/ToastContext";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -90,12 +90,7 @@ export default function ContactsPage() {
     open: boolean;
     targetId?: string;
   }>({ open: false });
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description: string;
-  } | null>(null);
+  const { success, error: showError } = useToast();
 
   // Filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -166,21 +161,11 @@ export default function ContactsPage() {
   };
 
   const handleWhatsAppSuccess = (message: string) => {
-    setToast({
-      show: true,
-      type: "success",
-      title: "Pesan Terkirim",
-      description: message,
-    });
+    success("Pesan Terkirim", message);
   };
 
   const handleWhatsAppError = (error: string) => {
-    setToast({
-      show: true,
-      type: "error",
-      title: "Gagal Mengirim Pesan",
-      description: error,
-    });
+    showError("Gagal Mengirim Pesan", error);
   };
 
   const handleAddContactSubmit = async (e: React.FormEvent) => {
@@ -191,12 +176,7 @@ export default function ContactsPage() {
         !addContactForm.phone ||
         !addContactForm.name
       ) {
-        setToast({
-          show: true,
-          type: "error",
-          title: "Form Tidak Lengkap",
-          description: "Platform, nomor telepon, dan nama wajib diisi",
-        });
+        showError("Form Tidak Lengkap", "Platform, nomor telepon, dan nama wajib diisi");
         return;
       }
       const body = {
@@ -212,19 +192,9 @@ export default function ContactsPage() {
         name: "",
       });
       fetchContacts(currentPage, itemsPerPage);
-      setToast({
-        show: true,
-        type: "success",
-        title: "Kontak Ditambahkan",
-        description: "Kontak berhasil ditambahkan.",
-      });
+      success("Kontak Ditambahkan", "Kontak berhasil ditambahkan.");
     } catch (err: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Gagal Menambah Kontak",
-        description: err.response?.data?.message || err.message || "Gagal menambah kontak",
-      });
+      showError("Gagal Menambah Kontak", err.response?.data?.message || err.message || "Gagal menambah kontak");
     }
   };
 
@@ -237,20 +207,10 @@ export default function ContactsPage() {
     if (!deleteDialog.targetId) return;
     try {
       await contactService.deleteContact(deleteDialog.targetId);
-      setToast({
-        show: true,
-        type: "success",
-        title: "Kontak Dihapus",
-        description: "Kontak berhasil dihapus.",
-      });
+      success("Kontak Dihapus", "Kontak berhasil dihapus.");
       fetchContacts(currentPage, itemsPerPage);
     } catch (err: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Gagal Menghapus",
-        description: err.response?.data?.message || err.message || "Gagal menghapus kontak",
-      });
+      showError("Gagal Menghapus", err.response?.data?.message || err.message || "Gagal menghapus kontak");
     } finally {
       setDeleteDialog({ open: false });
     }
@@ -325,12 +285,7 @@ export default function ContactsPage() {
   // Export contacts to Excel
   const handleExportContacts = () => {
     if (!selectedContacts || selectedContacts.length === 0) {
-      setToast({
-        show: true,
-        type: "warning",
-        title: "Tidak Ada Data",
-        description: "Silakan pilih kontak yang ingin diekspor terlebih dahulu",
-      });
+      showError("Tidak Ada Data", "Silakan pilih kontak yang ingin diekspor terlebih dahulu");
       return;
     }
 
@@ -373,20 +328,10 @@ export default function ContactsPage() {
       const fileName = `selected_contacts_${new Date().toISOString().slice(0,10)}.xlsx`;
       saveAs(file, fileName);
 
-      setToast({
-        show: true,
-        type: "success",
-        title: "Export Berhasil",
-        description: `Data ${exportData.length} kontak terpilih berhasil diekspor ke ${fileName}`,
-      });
+      success("Export Berhasil", `Data ${exportData.length} kontak terpilih berhasil diekspor ke ${fileName}`);
     } catch (error) {
       console.error("Export error:", error);
-      setToast({
-        show: true,
-        type: "error",
-        title: "Export Gagal",
-        description: "Terjadi kesalahan saat mengekspor data",
-      });
+      showError("Export Gagal", "Terjadi kesalahan saat mengekspor data");
     }
   };
 
@@ -1037,17 +982,7 @@ export default function ContactsPage() {
         onSuccess={handleWhatsAppSuccess}
         onError={handleWhatsAppError}
       />
-      {/* Toast Notification */}
-      {toast?.show && (
-        <div className="mb-4">
-          <Toast
-            type={toast.type}
-            title={toast.title}
-            description={toast.description}
-            onClose={() => setToast(null)}
-          />
-        </div>
-      )}
+      
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
         <DialogContent>

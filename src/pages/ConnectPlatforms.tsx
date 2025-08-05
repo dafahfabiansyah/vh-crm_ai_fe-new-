@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import type { AIAgent, PlatformInbox } from "@/types";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/hooks";
 import {
   distributionMethods,
   // mockHumanAgents,
@@ -65,6 +65,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ConnectedPlatformsPage() {
   const navigate = useNavigate();
+  const { success, error: showError } = useToast();
   const [selectedPlatform, setSelectedPlatform] =
     useState<PlatformInbox | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -209,14 +210,6 @@ export default function ConnectedPlatformsPage() {
       .finally(() => setHumanAgentsLoading(false));
   }, []);
 
-  // Toast notification state
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description: string;
-  } | null>(null);
-
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
@@ -279,21 +272,11 @@ export default function ConnectedPlatformsPage() {
           };
         });
         setPlatformInboxs(mapped);
-        setToast({
-          show: true,
-          type: "success",
-          title: "Platforms Refreshed",
-          description: "Platform status has been updated successfully.",
-        });
+        success("Platform status has been updated successfully.");
       })
       .catch((err) => {
         console.error("Failed to refresh platforms from API:", err);
-        setToast({
-          show: true,
-          type: "error",
-          title: "Refresh Failed",
-          description: "Failed to refresh platform data.",
-        });
+        showError("Failed to refresh platform data.");
       })
       .finally(() => setLoading(false));
   };
@@ -306,22 +289,12 @@ export default function ConnectedPlatformsPage() {
 
     // Validate required fields
     if (!currentPlatform.phone) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Validation Error",
-        description: "WhatsApp number is required.",
-      });
+      showError("WhatsApp number is required.");
       return;
     }
 
     if (!currentPlatform.deviceId) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Validation Error",
-        description: "Device ID is required.",
-      });
+      showError("Device ID is required.");
       return;
     }
 
@@ -333,19 +306,9 @@ export default function ConnectedPlatformsPage() {
         if (currentPlatform.pipeline) {
           console.log('Pipeline tab - updating id_pipeline via update_platform_inbox');
           await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
-          setToast({
-            show: true,
-            type: "success",
-            title: "Pipeline Mapping Saved Successfully",
-            description: `Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`,
-          });
+          success(`Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`);
         } else {
-          setToast({
-            show: true,
-            type: "error",
-            title: "Validation Error",
-            description: "Please select a pipeline before saving.",
-          });
+          showError("Please select a pipeline before saving.");
           return;
         }
       } else if (activeTab === "basic") {
@@ -356,35 +319,20 @@ export default function ConnectedPlatformsPage() {
             console.log('Basic tab - unmapping AI agent (none selected)');
             // Send 'none' to backend to handle unmapping
             await platformsInboxService.mapAgentToPlatform('none', currentPlatform.id);
-            setToast({
-              show: true,
-              type: "success",
-              title: "AI Agent Mapping Cleared",
-              description: `AI Agent mapping cleared for platform ${currentPlatform.name}.`,
-            });
+            success(`AI Agent mapping cleared for platform ${currentPlatform.name}.`);
           } else {
             // Find the selected AI agent
             const selectedAIAgent = aiAgents.find(
               (agent) => agent.name === currentPlatform.aiAgent
             );
             if (!selectedAIAgent) {
-              setToast({
-                show: true,
-                type: "error",
-                title: "Validation Error",
-                description: "Selected AI Agent not found.",
-              });
+              showError("Selected AI Agent not found.");
               return;
             }
             console.log('Basic tab - mapping AI agent via create_platform_mappings and setting id_pipeline to null');
             // Use create_platform_mappings endpoint which will update platform_inbox id_pipeline to null
             await platformsInboxService.mapAgentToPlatform(selectedAIAgent.id_agent, currentPlatform.id);
-            setToast({
-              show: true,
-              type: "success",
-              title: "AI Agent Mapping Saved Successfully",
-              description: `AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`,
-            });
+            success(`AI Agent berhasil di-mapping ke platform ${currentPlatform.name}.`);
           }
         }
         
@@ -429,12 +377,7 @@ export default function ConnectedPlatformsPage() {
             }
           }
           
-          setToast({
-            show: true,
-            type: "success",
-            title: "Human Agents Mapping Saved Successfully",
-            description: `${currentPlatform.humanAgentsSelected.length} Human Agent(s) berhasil di-mapping ke platform ${currentPlatform.name}.`,
-          });
+          success(`${currentPlatform.humanAgentsSelected.length} Human Agent(s) berhasil di-mapping ke platform ${currentPlatform.name}.`);
         } else {
           // No human agents selected, deactivate all existing human agent mappings
           const existingHumanMappings = (currentPlatform.allHumanAgentMappings || []);
@@ -454,12 +397,7 @@ export default function ConnectedPlatformsPage() {
         // Allow deselecting all agents - this is a valid operation to clear all mappings
         // The validation will be handled by the backend if needed
       } else {
-        setToast({
-          show: true,
-          type: "error",
-          title: "Validation Error",
-          description: "Please select either an AI Agent or Pipeline before saving.",
-        });
+        showError("Please select either an AI Agent or Pipeline before saving.");
         return;
       }
 
@@ -537,12 +475,7 @@ export default function ConnectedPlatformsPage() {
         }
       }
     } catch (error: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Mapping Failed",
-        description: error.message || "Failed to save mapping.",
-      });
+      showError(error.message || "Failed to save mapping.");
     } finally {
       setIsSaving(false);
     }
@@ -584,19 +517,9 @@ export default function ConnectedPlatformsPage() {
         }
       }
       
-      setToast({
-        show: true,
-        type: "success",
-        title: "Platform Deleted",
-        description: `Platform ${platformToDelete.name} berhasil dihapus.`,
-      });
+      success(`Platform ${platformToDelete.name} berhasil dihapus.`);
     } catch (err: any) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Delete Failed",
-        description: err.message || "Gagal menghapus platform.",
-      });
+      showError(err.message || "Gagal menghapus platform.");
     } finally {
       setShowDeleteModal(false);
       setPlatformToDelete(null);
@@ -661,8 +584,6 @@ export default function ConnectedPlatformsPage() {
     onSave,
     onDelete,
     isSaving,
-    toast,
-    setToast,
     aiAgents,
     pipelines,
     // humanAgents,
@@ -677,8 +598,6 @@ export default function ConnectedPlatformsPage() {
     onSave: () => void;
     onDelete: () => void;
     isSaving: boolean;
-    toast: any;
-    setToast: (toast: any) => void;
     aiAgents: AIAgent[];
     pipelines: PipelineListResponse[];
     humanAgents: HumanAgent[];
@@ -749,18 +668,6 @@ export default function ConnectedPlatformsPage() {
             </Button>
           </div>
         </div>
-
-        {/* Toast Notification */}
-        {toast?.show && (
-          <div className="mb-4">
-            <Toast
-              type={toast.type}
-              title={toast.title}
-              description={toast.description}
-              onClose={() => setToast(null)}
-            />
-          </div>
-        )}
 
         {/* Mobile Configuration Content */}
         <div className="flex-1 overflow-y-auto p-4">
@@ -1045,8 +952,6 @@ export default function ConnectedPlatformsPage() {
             onSave={handleSave}
             onDelete={handleDelete}
             isSaving={isSaving}
-            toast={toast}
-            setToast={setToast}
             aiAgents={aiAgents}
             pipelines={pipelines}
             humanAgents={humanAgents}
@@ -1341,18 +1246,6 @@ export default function ConnectedPlatformsPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Toast Notification */}
-              {toast?.show && (
-                <div className="mb-4">
-                  <Toast
-                    type={toast.type}
-                    title={toast.title}
-                    description={toast.description}
-                    onClose={() => setToast(null)}
-                  />
-                </div>
-              )}
 
               {/* Configuration Content */}
               <div className="flex-1 overflow-y-auto p-3 sm:p-6">

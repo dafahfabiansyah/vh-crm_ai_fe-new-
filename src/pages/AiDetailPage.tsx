@@ -44,7 +44,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/contexts/ToastContext";
 import AIAgentChatPreview from "@/components/ai-agent-chat";
 import { BehaviorEditor } from "@/components/behavior-editor";
 import MainLayout from "@/main-layout";
@@ -161,12 +161,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [requireSucess, setRequireSucess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description: string;
-  } | null>(null);
+  const { success, error: showError } = useToast();
 
   useEffect(() => {
     setCustomIntegrationsLoading(true);
@@ -313,12 +308,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
       setEditModalOpen(false);
 
       // Show success message
-      setToast({
-        show: true,
-        type: "success",
-        title: "Integration Updated Successfully",
-        description: "The integration settings have been updated.",
-      });
+      success("Integration Updated Successfully", "The integration settings have been updated.");
     } catch (err: any) {
       setEditError(err?.response?.data?.message || err.message || 'Failed to update integration');
     } finally {
@@ -437,18 +427,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
             </Button>
           </div>
         </div>
-
-        {/* Toast Notification */}
-        {toast?.show && (
-          <div className="px-3 sm:px-6 py-2">
-            <Toast
-              type={toast.type}
-              title={toast.title}
-              description={toast.description}
-              onClose={() => setToast(null)}
-            />
-          </div>
-        )}
 
         {/* Content Area - Always Scrollable */}
         <div className="px-3 sm:px-6 py-4 sm:py-6 pb-20">

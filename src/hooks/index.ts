@@ -6,4 +6,5 @@ export { useCreatePipeline, usePipelineList } from './usePipeline';
 export { useContacts } from './useContacts';
 export { useChatLogs } from './useChatLogs';
 export { useWebSocket } from './useWebSocket';
+export { useToast } from './useToast';
 // export { useWhatsAppStatus } from './useWhatsAppStatus';

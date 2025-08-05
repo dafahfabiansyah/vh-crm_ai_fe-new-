@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { createCustomIntegration } from "@/services/customIntegrationService";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 // import axios from 'axios'
 
 interface AiInput {
@@ -40,7 +40,8 @@ const CreateApiIntegrationPage = () => {
   const [aiInputs, setAiInputs] = useState<AiInput[]>([]);
   const [triggerCondition, ] = useState("");
   const [loading, setLoading] = useState(false);
-  const [testParams, setTestParams] = useState<Record<string, string>>({})
+  const [testParams, setTestParams] = useState<Record<string, string>>({});
+  const { success, error: showError } = useToast();
 
   const handleAddInput = () => {
     setAiInputs([
@@ -95,10 +96,10 @@ const CreateApiIntegrationPage = () => {
         })),
       };
       await createCustomIntegration(payload);
-      toast.success("Tool created successfully!");
+      success("Tool created successfully!");
       // Optionally reset form or redirect
     } catch (e) {
-      toast.error("Failed to create tool!");
+      showError("Failed to create tool!");
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,7 @@ import {
   type CustomIntegrationHeader,
 } from "@/services/customIntegrationService";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 interface CustomIntegrationField {
   id: string;
   field_name: string;
@@ -58,6 +58,7 @@ const EditCustomIntegration = () => {
   const [error, setError] = useState<string | null>(null);
   const [integration, setIntegration] =
     useState<CustomIntegrationDetail | null>(null);
+  const { success, error: showError } = useToast();
 
   // Form state
   const [formData, setFormData] = useState<CustomIntegrationPayload>({
@@ -188,10 +189,10 @@ const EditCustomIntegration = () => {
     setSaving(true);
     try {
       await editCustomIntegration(id, formData);
-      toast.success("Integration updated successfully!");
+      success("Integration updated successfully!");
       navigate(`/integration/api/${id}`);
     } catch (err: any) {
-      toast.error(err?.message || "Failed to update integration");
+      showError(err?.message || "Failed to update integration");
     } finally {
       setSaving(false);
     }

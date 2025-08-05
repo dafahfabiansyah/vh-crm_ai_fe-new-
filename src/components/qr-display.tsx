@@ -5,12 +5,13 @@ import { CheckCircle2, Loader2, QrCode, Smartphone } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 // QR Code Display Component
 const QRCodeDisplay = ({ sessionData }: { sessionData: any; onBack: () => void }) => {
   const [currentStatus, setCurrentStatus] = useState(sessionData.status);
   const [isChecking, setIsChecking] = useState(false);
+  const { success, error: showError } = useToast();
 
   // Polling otomatis setiap 5 detik
   useEffect(() => {
@@ -20,14 +21,14 @@ const QRCodeDisplay = ({ sessionData }: { sessionData: any; onBack: () => void }
         const statusResponse = await whatsappService.getStatus(sessionData.session);
         setCurrentStatus(statusResponse.status);
         if (statusResponse.status === "ready") {
-          toast.success("WhatsApp berhasil terhubung!");
+          success("WhatsApp berhasil terhubung!");
         }
       } catch (error) {
         // Optional: handle error silently
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [currentStatus, sessionData.session]);
+  }, [currentStatus, sessionData.session, success]);
 
   // Manual check status function
   const handleCheckStatus = async () => {
@@ -38,11 +39,11 @@ const QRCodeDisplay = ({ sessionData }: { sessionData: any; onBack: () => void }
       
       if (statusResponse.status === "ready") {
         // Tampilkan notifikasi sukses
-        toast.success("WhatsApp berhasil terhubung!");
+        success("WhatsApp berhasil terhubung!");
       }
     } catch (error) {
       console.error("Error checking status:", error);
-      toast.error("Gagal mengecek status. Silakan coba lagi.");
+      showError("Gagal mengecek status. Silakan coba lagi.");
     } finally {
       setIsChecking(false);
     }

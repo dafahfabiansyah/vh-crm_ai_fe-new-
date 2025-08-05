@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 // TypeScript declarations for Cloudflare Turnstile
 declare global {
@@ -44,6 +44,7 @@ export default function LoginForm() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector((state) => state.auth);
+  const { success } = useToast();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -232,7 +233,7 @@ export default function LoginForm() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Simulate successful password reset
-      toast.success("Password reset link sent to your email!");
+      success("Password reset link sent to your email!");
       setShowForgotPassword(false);
     } catch (error) {
       console.error("Password reset failed:", error);

@@ -19,7 +19,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import { DepartmentService } from "@/services/departmentService";
 import React from "react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 interface CreateHumanAgentModalProps {
   isOpen: boolean;
@@ -57,6 +57,7 @@ export default function CreateHumanAgentModal({
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const { success } = useToast();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -105,7 +106,7 @@ export default function CreateHumanAgentModal({
         onAgentCreated();
       }
       // Show success message
-      toast.success("Agent created successfully!");
+      success("Agent created successfully!");
     } catch (err: any) {
       setError(err.message || "Failed to create agent");
       console.error("Error creating agent:", err);

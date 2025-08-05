@@ -21,10 +21,10 @@ const toastIcons = {
 }
 
 const toastVariants = {
-  success: "border-green-200 bg-green-50 text-green-800",
-  error: "border-red-200 bg-red-50 text-red-800",
-  warning: "border-yellow-200 bg-yellow-50 text-yellow-800",
-  info: "border-blue-200 bg-blue-50 text-blue-800",
+  success: "border-green-500 bg-green-50 text-green-800 border-l-green-500",
+  error: "border-red-500 bg-red-50 text-red-800 border-l-red-500",
+  warning: "border-yellow-500 bg-yellow-50 text-yellow-800 border-l-yellow-500",
+  info: "border-blue-500 bg-blue-50 text-blue-800 border-l-blue-500",
 }
 
 export function Toast({ 
@@ -51,7 +51,7 @@ export function Toast({
   
   return (
     <Alert className={cn(
-      "relative mb-4 border-l-4 pl-8 shadow-lg animate-in slide-in-from-right-full duration-300",
+      "relative mb-4 border-l-4 pl-8 pr-10 py-3 shadow-lg animate-in slide-in-from-right-full duration-300",
       toastVariants[type],
       className
     )}>
@@ -64,8 +64,8 @@ export function Toast({
           <X className="h-4 w-4" />
         </button>
       )}
-      {title && <AlertTitle>{title}</AlertTitle>}
-      {description && <AlertDescription>{description}</AlertDescription>}
+      {title && <AlertTitle className="text-sm font-medium pr-2">{title}</AlertTitle>}
+      {description && <AlertDescription className="text-xs mt-1 pr-2">{description}</AlertDescription>}
     </Alert>
   )
 }

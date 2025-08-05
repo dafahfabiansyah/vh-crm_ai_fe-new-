@@ -19,7 +19,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { HumanAgentsService } from "@/services";
 import { DepartmentService } from "@/services/departmentService";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 
 interface EditHumanAgentModalProps {
@@ -56,6 +56,7 @@ export default function EditHumanAgentModal({
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const { success } = useToast();
 
   // Fetch and populate form when agent is available
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function EditHumanAgentModal({
       if (onAgentUpdated) {
         onAgentUpdated();
       }
-      toast.success("Agent updated successfully!");
+      success("Agent updated successfully!");
     } catch (err: any) {
       setError(err.message || "Failed to update agent");
       console.error("Error updating agent:", err);

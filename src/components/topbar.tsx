@@ -49,7 +49,7 @@ import {
 import { getCurrentSubscription } from "@/services/transactionService";
 import { useEffect } from "react";
 import { TicketService } from "@/services/ticketService";
-import { toast } from "sonner";
+import { useToast } from "@/hooks";
 
 // Notification type for state
 type Notification = {
@@ -119,6 +119,7 @@ export default function Topbar({
     priority: "",
     tags: [] as string[],
   });
+  const { success, error: showError } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
@@ -209,10 +210,10 @@ export default function Topbar({
       setIsHelpModalOpen(false);
 
              // Tampilkan pesan sukses (bisa diganti dengan toast)
-       toast.success("Pengaduan berhasil dikirim!");
+       success("Pengaduan berhasil dikirim!");
     } catch (error) {
       console.error("Error submitting help ticket:", error);
-      toast.error("Gagal mengirim pengaduan. Silakan coba lagi.");
+      showError("Gagal mengirim pengaduan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }

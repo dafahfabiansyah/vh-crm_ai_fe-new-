@@ -26,6 +26,8 @@ import ApiIntegrationPage from "./pages/ApiIntegrationPage";
 import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
 import EditCustomIntegration from "./pages/EditCustomIntegration";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { ToastContainer } from "@/components/ui/toast-container";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -45,9 +47,10 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <Routes>
-        {/* Redirect root to login */}
-        <Route path="/" element={<Navigate to="/auth/login" replace />} />
+      <ToastProvider>
+        <Routes>
+          {/* Redirect root to login */}
+          <Route path="/" element={<Navigate to="/auth/login" replace />} />
         {/* <Route path="/" element={<DashboardPage/>} /> */}
         {/* Public Auth routes - redirect to dashboard if already authenticated */}
         <Route
@@ -240,6 +243,8 @@ export default function App() {
         {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <ToastContainer />
+    </ToastProvider>
     </ErrorBoundary>
   );
 }

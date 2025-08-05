@@ -9,7 +9,7 @@ import { Search, Info, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
 import { ContactsService } from "@/services/contactsService"
-import { toast } from "sonner"
+import { useToast } from "@/hooks"
 import MediaUploader from "./media-uploader"
 
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
@@ -18,9 +18,8 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
   const [searchResults, setSearchResults] = useState<number[]>([])
   const [localLeadStatus, setLocalLeadStatus] = useState<string | null>(null)
+  const { success, error: showError } = useToast()
 
-  // Check if conversation is already assigned or resolved - show message input for both
-  // Use local status if available (for immediate UI updates), otherwise use contact status
   const currentStatus = localLeadStatus || selectedContact?.lead_status
   const isAssigned = currentStatus === 'assigned'
   const isResolved = currentStatus === 'resolved'
@@ -207,7 +206,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       }
     } catch (error: any) {
       console.error("Failed to takeover conversation:", error)
-      toast.error(error.message || "Failed to takeover conversation")
+      showError(error.message || "Failed to takeover conversation")
     } finally {
       setIsLoading(false)
     }
@@ -225,7 +224,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       setLocalLeadStatus('resolved')
     } catch (error: any) {
       console.error("Failed to resolve conversation:", error)
-      toast.error(error.message || "Failed to resolve conversation")
+      showError(error.message || "Failed to resolve conversation")
     } finally {
       setIsLoading(false)
     }
@@ -247,7 +246,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       setTimeout(() => scrollToBottom(), 100)
     } catch (error: any) {
       console.error("Failed to send message:", error)
-      toast.error(error.message || "Failed to send message")
+      showError(error.message || "Failed to send message")
     } finally {
       setIsSending(false)
     }
@@ -261,13 +260,13 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       // Here you would implement the actual file upload to your backend
       // For now, we'll just simulate sending
       console.log("Sending files:", files.map(f => f.name))
-      toast.success(`${files.length} file(s) sent successfully`)
+      success(`${files.length} file(s) sent successfully`)
       
       // Scroll to bottom after sending files
       setTimeout(() => scrollToBottom(), 100)
     } catch (error: any) {
       console.error("Failed to send files:", error)
-      toast.error(error.message || "Failed to send files")
+      showError(error.message || "Failed to send files")
     } finally {
       setIsSending(false)
     }

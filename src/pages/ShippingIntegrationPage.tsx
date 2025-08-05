@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ShippingIntegrationPage() {
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -39,12 +39,7 @@ export default function ShippingIntegrationPage() {
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [savingIntegration, setSavingIntegration] = useState(false);
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description: string;
-  } | null>(null);
+  const { success, error: showError } = useToast();
 
   // Load initial data
   useEffect(() => {
@@ -144,12 +139,7 @@ export default function ShippingIntegrationPage() {
     e.preventDefault();
     
     if (!selectedDistrict || !aiAgentId || courier.length === 0) {
-      setToast({
-        show: true,
-        type: "error",
-        title: "Form Tidak Lengkap",
-        description: "Please fill in all required fields",
-      });
+      showError("Form Tidak Lengkap", "Please fill in all required fields");
       return;
     }
     
@@ -179,21 +169,11 @@ export default function ShippingIntegrationPage() {
       // Make API call to update agent settings using the settings ID
       await AgentsService.updateAgentSettings(settingsId, requestBody);
       
-      setToast({
-        show: true,
-        type: "success",
-        title: "Integration Saved",
-        description: "Integration data saved successfully!",
-      });
+      success("Integration Saved", "Integration data saved successfully!");
       
     } catch (error: any) {
       console.error('Error saving integration data:', error);
-      setToast({
-        show: true,
-        type: "error",
-        title: "Save Failed",
-        description: error.message || 'Failed to save integration data',
-      });
+      showError("Save Failed", error.message || 'Failed to save integration data');
     } finally {
       setSavingIntegration(false);
     }
@@ -359,17 +339,6 @@ export default function ShippingIntegrationPage() {
           </div>
         </form>
       </div>
-      {/* Toast Notification */}
-      {toast?.show && (
-        <div className="mb-4">
-          <Toast
-            type={toast.type}
-            title={toast.title}
-            description={toast.description}
-            onClose={() => setToast(null)}
-          />
-        </div>
-      )}
     </MainLayout>
   );
 }
