@@ -16,13 +16,16 @@ import { toast } from "sonner"
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [isTakenOver, setIsTakenOver] = useState(false)
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
   const [searchResults, setSearchResults] = useState<number[]>([])
+  const [localLeadStatus, setLocalLeadStatus] = useState<string | null>(null)
 
-  // Check if conversation is already assigned
-  const isAssigned = selectedContact?.lead_status === 'assigned'
-  const showMessageInput = isTakenOver || isAssigned
+  // Check if conversation is already assigned or resolved - show message input for both
+  // Use local status if available (for immediate UI updates), otherwise use contact status
+  const currentStatus = localLeadStatus || selectedContact?.lead_status
+  const isAssigned = currentStatus === 'assigned'
+  const isResolved = currentStatus === 'resolved'
+  const showMessageInput = isAssigned || isResolved
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -117,6 +120,11 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     scrollToBottom()
   }, [chatLogs])
 
+  // Reset local status when contact changes
+  useEffect(() => {
+    setLocalLeadStatus(null)
+  }, [selectedContactId])
+
   // Search functionality
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -189,8 +197,10 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     setIsLoading(true)
     try {
       await ContactsService.takeoverConversation(selectedContactId)
-      setIsTakenOver(true)
       console.log("Chat taken over by agent")
+      
+      // Update local status immediately for responsive UI
+      setLocalLeadStatus('assigned')
 
       // Switch to assigned tab when chat is taken over
       if (onSwitchToAssignedTab) {
@@ -210,9 +220,10 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     setIsLoading(true)
     try {
       await ContactsService.resolveConversation(selectedContactId)
-      // Reset takeover state, but assigned contacts will still show message input based on lead_status
-      setIsTakenOver(false)
       console.log("Conversation resolved")
+      
+      // Update local status immediately for responsive UI
+      setLocalLeadStatus('resolved')
     } catch (error: any) {
       console.error("Failed to resolve conversation:", error)
       toast.error(error.message || "Failed to resolve conversation")
@@ -293,7 +304,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">{selectedContact.contact_identifier}</span>
                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                    {selectedContact.lead_status}
+                    {currentStatus}
                   </Badge>
                 </div>
               </div>
@@ -301,8 +312,8 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
             {/* Mobile Action Buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Resolve Button - Show when taken over or assigned */}
-              {showMessageInput && (
+              {/* Resolve Button - Show when assigned (not resolved) */}
+              {isAssigned && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -373,15 +384,15 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">{selectedContact.contact_identifier}</span>
                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  {selectedContact.lead_status}
+                  {currentStatus}
                 </Badge>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Resolve Button - Show when taken over or assigned */}
-            {showMessageInput && (
+            {/* Resolve Button - Show when assigned (not resolved) */}
+            {isAssigned && (
               <Button
                 variant="outline"
                 size="sm"
