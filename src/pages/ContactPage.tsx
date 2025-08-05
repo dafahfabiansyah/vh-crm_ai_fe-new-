@@ -744,9 +744,17 @@ export default function ContactsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className="bg-primary text-secondary border-blue-200 text-xs"
+                          className={`text-xs ${
+                            contact.source_type?.toLowerCase() === 'whatsapp'
+                              ? 'bg-green-100 text-green-800 border-green-300'
+                              : contact.source_type?.toLowerCase() === 'webchat'
+                              ? 'bg-blue-100 text-blue-800 border-blue-300'
+                              : contact.source_type?.toLowerCase() === 'instagram'
+                              ? 'bg-purple-100 text-purple-800 border-purple-300'
+                              : 'bg-gray-100 text-gray-800 border-gray-300'
+                          }`}
                         >
-                          Whatsapp
+                          {contact.source_type || 'Unknown'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -845,14 +853,22 @@ export default function ContactsPage() {
                             {contact.contact_identifier || "No Phone"}
                           </p>
                           <div className="mt-2">
-                            {/* <Badge
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 border-blue-200 text-xs max-w-full break-all"
-                          >
-                            <span className="break-all word-break-all">
-                              {contact.id_platform}
-                            </span>
-                          </Badge> */}
+                            <Badge
+                              variant="outline"
+                              className={`text-xs max-w-full break-all ${
+                                contact.source_type?.toLowerCase() === 'whatsapp'
+                                  ? 'bg-green-100 text-green-800 border-green-300'
+                                  : contact.source_type?.toLowerCase() === 'webchat'
+                                  ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                  : contact.source_type?.toLowerCase() === 'instagram'
+                                  ? 'bg-purple-100 text-purple-800 border-purple-300'
+                                  : 'bg-gray-100 text-gray-800 border-gray-300'
+                              }`}
+                            >
+                              <span className="break-all word-break-all">
+                                {contact.source_type || 'Unknown'}
+                              </span>
+                            </Badge>
                           </div>
                         </div>
                       </div>
