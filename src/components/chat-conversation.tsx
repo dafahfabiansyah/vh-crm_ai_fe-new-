@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Search, Info, Send, Paperclip, Smile, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
+import { Search, Info, CheckCheck, Menu, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import type { ChatConversationProps } from "@/types"
 import { useChatLogs } from "@/hooks"
 import { ContactsService } from "@/services/contactsService"
 import { toast } from "sonner"
-
-
+import MediaUploader from "./media-uploader"
 
 export default function ChatConversation({ selectedContactId, selectedContact, onToggleMobileMenu, showBackButton, onToggleInfo, showInfo, onSwitchToAssignedTab }: ChatConversationProps) {
   const [newMessage, setNewMessage] = useState("")
@@ -254,10 +253,23 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+  const handleSendFiles = async (files: File[]) => {
+    if (files.length === 0 || !selectedContact) return
+
+    setIsSending(true)
+    try {
+      // Here you would implement the actual file upload to your backend
+      // For now, we'll just simulate sending
+      console.log("Sending files:", files.map(f => f.name))
+      toast.success(`${files.length} file(s) sent successfully`)
+      
+      // Scroll to bottom after sending files
+      setTimeout(() => scrollToBottom(), 100)
+    } catch (error: any) {
+      console.error("Failed to send files:", error)
+      toast.error(error.message || "Failed to send files")
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -564,48 +576,13 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
             )}
           </Button>
         ) : (
-          <div className="flex items-start gap-2">
-            <div className="flex-1 relative">
-              <textarea
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isSending}
-                className="w-full min-h-[40px] max-h-[120px] resize-none rounded-md border border-input bg-background px-3 py-2 pr-20 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 overflow-y-auto"
-                rows={1}
-                style={{
-                  height: 'auto',
-                  minHeight: '40px',
-                  maxHeight: '120px'
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = 'auto';
-                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
-                }}
-              />
-              <div className="absolute right-2 top-2 flex gap-1">
-                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isSending}>
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isSending}>
-                  <Smile className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isSending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {isSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <MediaUploader
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            isSending={isSending}
+            onSendMessage={handleSendMessage}
+            onSendFiles={handleSendFiles}
+          />
         )}
       </div>
     </div>
