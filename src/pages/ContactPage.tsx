@@ -42,14 +42,19 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import StartChatModal from "@/components/start-chat-modal";
+import FilterContactModal from "@/components/filter-contact-modal";
+import type { ContactFilterData } from "@/components/filter-contact-modal";
 
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
 import { Toast } from "@/components/ui/toast";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 interface Contact {
   id: string;
   id_platform: string;
+  platform_name?: string;
   contact_identifier: string;
   push_name: string;
   source_type: string;
@@ -91,6 +96,15 @@ export default function ContactsPage() {
     title: string;
     description: string;
   } | null>(null);
+
+  // Filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filterData, setFilterData] = useState<ContactFilterData>({
+    dateFrom: "",
+    dateTo: "",
+    platform: "#",
+    platformType: "#",
+  });
 
   // API call to fetch contacts
   const fetchContacts = async (page: number = 1, perPage: number = 100) => {
@@ -242,12 +256,139 @@ export default function ContactsPage() {
     }
   };
 
-  // Filter contacts based on search query
-  const filteredContacts = contacts.filter(
-    (contact) =>
+  // Filter contacts based on search query and filter data
+  const filteredContacts = contacts.filter((contact) => {
+    // Search query filter
+    const matchesSearch = 
       contact.push_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.contact_identifier.includes(searchQuery)
-  );
+      contact.contact_identifier.includes(searchQuery);
+    
+    if (!matchesSearch) return false;
+
+    // Date range filter
+    if (filterData.dateFrom) {
+      const contactDate = new Date(contact.created_at);
+      const fromDate = new Date(filterData.dateFrom);
+      if (contactDate < fromDate) return false;
+    }
+    
+    if (filterData.dateTo) {
+      const contactDate = new Date(contact.created_at);
+      const toDate = new Date(filterData.dateTo);
+      toDate.setHours(23, 59, 59, 999); // Include the entire day
+      if (contactDate > toDate) return false;
+    }
+
+    // Platform filter
+    if (filterData.platform && filterData.platform !== "#") {
+      const contactPlatform = contact.platform_name || contact.id_platform;
+      if (contactPlatform !== filterData.platform) return false;
+    }
+
+    // Platform type filter
+    if (filterData.platformType && filterData.platformType !== "#") {
+      const contactSourceType = (contact.source_type || "").toLowerCase();
+      const selectedType = filterData.platformType.toLowerCase();
+      
+      if (selectedType === "whatsapp" && contactSourceType !== "whatsapp") return false;
+      if (selectedType === "instagram" && contactSourceType !== "instagram") return false;
+      if (selectedType === "webchat" && contactSourceType !== "webchat") return false;
+    }
+
+    return true;
+  });
+
+  // Check if any filters are active and count them
+  const activeFiltersCount = [
+    filterData.dateFrom,
+    filterData.dateTo,
+    filterData.platform !== "#" && filterData.platform !== "" ? filterData.platform : null,
+    filterData.platformType !== "#" && filterData.platformType !== "" ? filterData.platformType : null,
+  ].filter(Boolean).length;
+  
+  const hasActiveFilters = activeFiltersCount > 0;
+
+  // Filter handlers
+  const handleFilterApply = () => {
+    setIsFilterModalOpen(false);
+  };
+
+  const handleFilterReset = () => {
+    setFilterData({
+      dateFrom: "",
+      dateTo: "",
+      platform: "#",
+      platformType: "#",
+    });
+  };
+
+  // Export contacts to Excel
+  const handleExportContacts = () => {
+    if (!selectedContacts || selectedContacts.length === 0) {
+      setToast({
+        show: true,
+        type: "warning",
+        title: "Tidak Ada Data",
+        description: "Silakan pilih kontak yang ingin diekspor terlebih dahulu",
+      });
+      return;
+    }
+
+    try {
+      // Filter contacts berdasarkan yang dipilih
+      const selectedContactsData = filteredContacts.filter(contact => 
+        selectedContacts.includes(contact.id)
+      );
+
+      const exportData = selectedContactsData.map(contact => ({
+        ID: contact.id,
+        Name: contact.push_name || "-",
+        Phone: contact.contact_identifier || "-",
+        Platform: contact.platform_name || contact.id_platform || "-",
+        Last_Message: contact.last_message || "-",
+        Unread_Messages: contact.unread_messages,
+        Created_At: new Date(contact.created_at).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        Updated_At: new Date(contact.updated_at).toLocaleDateString("id-ID", {
+          year: "numeric", 
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+      
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+      
+      const fileName = `selected_contacts_${new Date().toISOString().slice(0,10)}.xlsx`;
+      saveAs(file, fileName);
+
+      setToast({
+        show: true,
+        type: "success",
+        title: "Export Berhasil",
+        description: `Data ${exportData.length} kontak terpilih berhasil diekspor ke ${fileName}`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      setToast({
+        show: true,
+        type: "error",
+        title: "Export Gagal",
+        description: "Terjadi kesalahan saat mengekspor data",
+      });
+    }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -297,12 +438,18 @@ export default function ContactsPage() {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
               <Button
-                variant="outline"
+                variant={hasActiveFilters ? "default" : "outline"}
                 size="sm"
-                className="flex-1 sm:flex-none"
+                className={`flex-1 sm:flex-none ${hasActiveFilters ? "bg-primary text-white" : ""}`}
+                onClick={() => setIsFilterModalOpen(true)}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
+                {hasActiveFilters && (
+                  <span className="ml-1 bg-white text-primary rounded-full px-1.5 py-0.5 text-xs font-medium">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </Button>
               <Dialog
                 open={isAddContactOpen}
@@ -487,24 +634,15 @@ export default function ContactsPage() {
                   </form>
                 </DialogContent>
               </Dialog>
-
-              {/* <Button
-                variant="outline"
-                size="sm"
-                disabled={selectedContacts.length === 0}
-                className="flex-1 sm:flex-none"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button> */}
-
               <Button
                 variant="outline"
                 size="sm"
                 className="flex-1 sm:flex-none"
+                onClick={handleExportContacts}
+                disabled={selectedContacts.length === 0}
               >
                 <Download className="h-4 w-4 mr-2" />
-                Export
+                Export {selectedContacts.length > 0 ? `(${selectedContacts.length})` : ''}
               </Button>
 
               {/* <Button
@@ -923,6 +1061,18 @@ export default function ContactsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Filter Modal */}
+      <FilterContactModal
+        isOpen={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        filterData={filterData}
+        onFilterChange={setFilterData}
+        contacts={contacts}
+        platforms={platforms}
+        onApply={handleFilterApply}
+        onReset={handleFilterReset}
+      />
     </MainLayout>
   );
 }

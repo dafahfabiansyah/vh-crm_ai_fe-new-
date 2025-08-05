@@ -22,50 +22,55 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Filter,
-  CheckCircle2,
-  User,
-  Bot,
-  MessageCircle,
-  CalendarIcon,
-} from "lucide-react";
-import type { Contact } from "@/services";
-import type { AIAgent } from "@/types";
-import type { HumanAgent } from "@/services/humanAgentsService";
+import { Filter, MessageCircle, CalendarIcon, Smartphone } from "lucide-react";
 
-interface FilterData {
-  dateFrom: string;
-  dateTo: string;
-  agent: string;
-  aiAgent: string;
-  status: string;
-  inbox: string;
+interface Contact {
+  id: string;
+  id_platform: string;
+  platform_name?: string;
+  contact_identifier: string;
+  push_name: string;
+  source_type: string;
+  last_message: string;
+  last_message_at: string;
+  unread_messages: number;
+  created_at: string;
+  updated_at: string;
 }
 
-interface FilterChatModalProps {
+interface Platform {
+  id: string;
+  platform_name: string;
+}
+
+interface ContactFilterData {
+  dateFrom: string;
+  dateTo: string;
+  platform: string;
+  platformType: string;
+}
+
+interface FilterContactModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  filterData: FilterData;
-  onFilterChange: (filterData: FilterData) => void;
+  filterData: ContactFilterData;
+  onFilterChange: (filterData: ContactFilterData) => void;
   contacts: Contact[];
-  aiAgents: AIAgent[];
-  humanAgents: HumanAgent[];
+  platforms: Platform[];
   onApply: () => void;
   onReset: () => void;
 }
 
-export default function FilterChatModal({
+export default function FilterContactModal({
   isOpen,
   onOpenChange,
   filterData,
   onFilterChange,
   contacts,
-  aiAgents,
-  humanAgents,
+  platforms,
   onApply,
   onReset,
-}: FilterChatModalProps) {
+}: FilterContactModalProps) {
   // Date picker states
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
@@ -73,61 +78,29 @@ export default function FilterChatModal({
   // Helper function to format date without timezone issues
   const formatDateForInput = (date: Date): string => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
-  // Get unique platform names for inbox filter
-  const getUniqueInboxes = () => {
-    const inboxes = contacts
-      .map((contact) => contact.platform_name)
+  // Get unique platform names for platform filter
+  const getUniquePlatforms = () => {
+    const platformsFromContacts = contacts
+      .map((contact) => contact.platform_name || contact.id_platform)
       .filter(Boolean)
       .filter(
         (value, index, self) => self.indexOf(value) === index
       ) as string[];
-    return inboxes;
-  };
 
-  // Get unique human agent names for agent filter
-  const getUniqueHumanAgents = () => {
-    const humanAgentNames = humanAgents
-      .map((agent) => agent.name || agent.user?.name)
+    const platformsFromProps = platforms
+      .map((platform) => platform.platform_name)
       .filter(Boolean) as string[];
 
-    // Also get agent names from contacts that match human agents
-    const contactAgentNames = contacts
-      .map((contact) => contact.agent_name || contact.assigned_agent_name)
-      .filter(Boolean)
-      .filter((agentName) =>
-        humanAgents.some(
-          (agent) => agent.name === agentName || agent.user?.name === agentName
-        )
-      ) as string[];
-
-    const allHumanAgents = [...humanAgentNames, ...contactAgentNames];
-    return [...new Set(allHumanAgents)]; // Remove duplicates
+    const allPlatforms = [...platformsFromContacts, ...platformsFromProps];
+    return [...new Set(allPlatforms)];
   };
 
-  // Get unique AI agent names for AI agent filter
-  const getUniqueAiAgents = () => {
-    const aiAgentNames = aiAgents
-      .map((agent) => agent.name)
-      .filter(Boolean) as string[];
-
-    // Also get agent names from contacts that match AI agents
-    const contactAgentNames = contacts
-      .map((contact) => contact.agent_name || contact.assigned_agent_name)
-      .filter(Boolean)
-      .filter((agentName) =>
-        aiAgents.some((agent) => agent.name === agentName)
-      ) as string[];
-
-    const allAiAgents = [...aiAgentNames, ...contactAgentNames];
-    return [...new Set(allAiAgents)]; // Remove duplicates
-  };
-
-  const updateFilterData = (updates: Partial<FilterData>) => {
+  const updateFilterData = (updates: Partial<ContactFilterData>) => {
     onFilterChange({ ...filterData, ...updates });
   };
 
@@ -137,7 +110,7 @@ export default function FilterChatModal({
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-2 text-primary text-lg">
             <Filter className="h-5 w-5" />
-            Filter Percakapan
+            Filter Kontak
           </DialogTitle>
         </DialogHeader>
 
@@ -185,9 +158,7 @@ export default function FilterChatModal({
                 </Popover>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">
-                  Sampai
-                </Label>
+                <Label className="text-xs text-muted-foreground">Sampai</Label>
                 <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -224,100 +195,57 @@ export default function FilterChatModal({
             </div>
           </div>
 
-          {/* 2x2 Grid for other filters */}
+          {/* 2x1 Grid for other filters */}
           <div className="space-y-3">
-            {/* Row 1: Agent, AI Agent (2 columns) */}
+            {/* Row 1: Platform, Platform Type (2 columns) */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Agent (Human) */}
+              {/* Platform */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Agent
+                  <Smartphone className="h-4 w-4" />
+                  Platform Inbox
                 </Label>
                 <Select
-                  value={filterData.agent}
-                  onValueChange={(value) => updateFilterData({ agent: value })}
+                  value={filterData.platform}
+                  onValueChange={(value) =>
+                    updateFilterData({ platform: value })
+                  }
                 >
                   <SelectTrigger className="text-sm w-full">
-                    <SelectValue placeholder="Semua Agent" />
+                    <SelectValue placeholder="Semua Platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="#">Semua Agent</SelectItem>
-                    {getUniqueHumanAgents().map((agent) => (
-                      <SelectItem key={agent} value={agent}>
-                        {agent}
+                    <SelectItem value="#">Semua Platform</SelectItem>
+                    {getUniquePlatforms().map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {platform}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* AI Agent */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Bot className="h-4 w-4" />
-                  AI Agent
-                </Label>
-                <Select
-                  value={filterData.aiAgent}
-                  onValueChange={(value) => updateFilterData({ aiAgent: value })}
-                >
-                  <SelectTrigger className="text-sm w-full">
-                    <SelectValue placeholder="Semua AI Agent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="#">Semua AI Agent</SelectItem>
-                    {getUniqueAiAgents().map((agent) => (
-                      <SelectItem key={agent} value={agent}>
-                        {agent}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Row 2: Inbox, Status (2 columns) */}
-            <div className="grid grid-cols-2 gap-3">
+              {/* Platform Type */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium flex items-center gap-2">
                   <MessageCircle className="h-4 w-4" />
-                  Inbox
+                  Platform Type
                 </Label>
                 <Select
-                  value={filterData.inbox}
-                  onValueChange={(value) => updateFilterData({ inbox: value })}
+                  key={`platform-type-${filterData.platformType}`}
+                  value={filterData.platformType}
+                  onValueChange={(value) =>
+                    updateFilterData({ platformType: value })
+                  }
                 >
                   <SelectTrigger className="text-sm w-full">
-                    <SelectValue placeholder="Semua Inbox" />
+                    <SelectValue placeholder="Semua Platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="#">Semua Inbox</SelectItem>
-                    {getUniqueInboxes().map((inbox) => (
-                      <SelectItem key={inbox} value={inbox}>
-                        {inbox}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Status
-                </Label>
-                <Select
-                  value={filterData.status}
-                  onValueChange={(value) => updateFilterData({ status: value })}
-                >
-                  <SelectTrigger className="text-sm w-full">
-                    <SelectValue placeholder="Semua Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="#">Semua Status</SelectItem>
-                    <SelectItem value="assigned">Assigned</SelectItem>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="#">Semua Platform</SelectItem>
+                    <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                    <SelectItem value="Instagram">Instagram</SelectItem>
+                    <SelectItem value="WebChat">WebChat</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -348,4 +276,4 @@ export default function FilterChatModal({
   );
 }
 
-export type { FilterData };
+export type { ContactFilterData };
