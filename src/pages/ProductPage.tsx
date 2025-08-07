@@ -18,7 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, Plus, Search, Trash2, Package } from "lucide-react";
+import { ArrowLeft, Plus, Search, Trash2, Package, Edit } from "lucide-react";
 import { Link } from "react-router";
 import {
   categoryService,
@@ -156,6 +156,14 @@ const ProductPage = () => {
     open: boolean;
     targetId?: string;
   }>({ open: false });
+
+  // Edit category state
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [editCategoryFormData, setEditCategoryFormData] = useState({
+    name: "",
+    description: "",
+  });
 
 
   const handleInputChange =
@@ -438,6 +446,58 @@ const ProductPage = () => {
       } finally {
       setIsLoading(false);
       setDeleteCategoryDialog({ open: false });
+    }
+  };
+
+  // Edit category functions
+  const handleEditCategory = (category: Category) => {
+    setEditCategory(category);
+    setEditCategoryFormData({
+      name: category.name,
+      description: category.description,
+    });
+    setIsEditCategoryModalOpen(true);
+  };
+
+  const handleEditCategoryInputChange = (field: 'name' | 'description') => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setEditCategoryFormData((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
+
+  const handleEditCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCategory) return;
+
+    try {
+      setIsLoading(true);
+      const updatedCategory = await categoryService.updateCategory(
+        editCategory.id,
+        editCategoryFormData
+      );
+
+      // Update categories list
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === editCategory.id ? { ...cat, ...updatedCategory } : cat
+        )
+      );
+
+      success("Category updated successfully.");
+      setIsEditCategoryModalOpen(false);
+      setEditCategory(null);
+      setEditCategoryFormData({
+        name: "",
+        description: "",
+      });
+    } catch (error: any) {
+      console.error("Error updating category:", error);
+      showError(error.message || "Failed to update category.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -865,6 +925,16 @@ const ProductPage = () => {
                                     })}
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditCategory(category);
+                                      }}
+                                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer"
+                                      style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </div>
                                     <div
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1458,6 +1528,58 @@ const ProductPage = () => {
                 </Button>
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? "Creating..." : "Create"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Category Modal */}
+        <Dialog
+          open={isEditCategoryModalOpen}
+          onOpenChange={setIsEditCategoryModalOpen}
+        >
+          <DialogContent className="w-full max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Category</DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleEditCategorySubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="editCategoryName">
+                  Category Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="editCategoryName"
+                  placeholder="Enter category name"
+                  value={editCategoryFormData.name}
+                  onChange={handleEditCategoryInputChange("name")}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="editCategoryDescription">Description</Label>
+                <Textarea
+                  id="editCategoryDescription"
+                  placeholder="Enter category description"
+                  value={editCategoryFormData.description}
+                  onChange={handleEditCategoryInputChange("description")}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditCategoryModalOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading} className="flex-1">
+                  {isLoading ? "Updating..." : "Update"}
                 </Button>
               </div>
             </form>
