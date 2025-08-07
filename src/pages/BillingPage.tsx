@@ -617,14 +617,25 @@ export default function BillingPage() {
                     </CardContent>
 
                     <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
-                      <Button
-                        onClick={() => handleUpgrade(plan.id)}
-                        className={
-                          "w-full h-8 sm:h-9 text-xs sm:text-sm bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                        }
-                      >
-                        Upgrade Now
-                      </Button>
+                      {currentSubscription?.package_name === plan.name ? (
+                        <Button
+                          disabled
+                          className={
+                            "w-full h-8 sm:h-9 text-xs sm:text-sm bg-primary cursor-not-allowed"
+                          }
+                        >
+                          Active
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handleUpgrade(plan.id)}
+                          className={
+                            "w-full h-8 sm:h-9 text-xs sm:text-sm bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                          }
+                        >
+                          Upgrade Now
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 );
