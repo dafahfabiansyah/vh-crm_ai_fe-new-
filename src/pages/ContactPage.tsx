@@ -642,7 +642,8 @@ export default function ContactsPage() {
                     <TableHead className="w-20">Action</TableHead>
                     <TableHead className="min-w-32">Name</TableHead>
                     <TableHead className="min-w-32">Phone</TableHead>
-                    <TableHead className="min-w-32">Platform</TableHead>
+                    <TableHead className="min-w-32">Platform Name</TableHead>
+                    <TableHead className="min-w-32">Platform Type</TableHead>
                     <TableHead className="min-w-24">Last Message</TableHead>
                     <TableHead className="min-w-24">Unread</TableHead>
                     <TableHead className="min-w-40">Created</TableHead>
@@ -689,6 +690,14 @@ export default function ContactsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
+                          className={`text-xs max-w-full break-all`}
+                        >
+                          {contact.platform_name || 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                       <Badge
+                          variant="outline"
                           className={`text-xs ${
                             contact.source_type?.toLowerCase() === 'whatsapp'
                               ? 'bg-green-100 text-green-800 border-green-300'
@@ -701,6 +710,7 @@ export default function ContactsPage() {
                         >
                           {contact.source_type || 'Unknown'}
                         </Badge>
+
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {contact.last_message 
@@ -788,6 +798,16 @@ export default function ContactsPage() {
                           <div className="mt-2">
                             <Badge
                               variant="outline"
+                              className={`text-xs max-w-full break-all`} 
+                            >
+                              <span className="break-all word-break-all">
+                                {contact.platform_name}
+                              </span>
+                            </Badge>
+                          </div>
+                          <div className="mt-2">
+                           <Badge
+                              variant="outline"
                               className={`text-xs max-w-full break-all ${
                                 contact.source_type?.toLowerCase() === 'whatsapp'
                                   ? 'bg-green-100 text-green-800 border-green-300'
@@ -802,6 +822,7 @@ export default function ContactsPage() {
                                 {contact.source_type || 'Unknown'}
                               </span>
                             </Badge>
+
                           </div>
                         </div>
                       </div>
