@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { logout } from "@/store/authSlice";
@@ -47,8 +47,8 @@ import {
   Menu,
 } from "lucide-react";
 import { getCurrentSubscription } from "@/services/transactionService";
-import { useEffect } from "react";
 import { TicketService } from "@/services/ticketService";
+import { AuthService } from "@/services/authService";
 import { useToast } from "@/hooks";
 
 // Notification type for state
@@ -60,50 +60,6 @@ type Notification = {
   timestamp: string;
   isRead: boolean;
 };
-
-// Mock notification data
-// const mockNotifications: Notification[] = [
-//   {
-//     id: "1",
-//     title: "WhatsApp Message Received",
-//     message: "New message from customer +628123456789",
-//     type: "info" as const,
-//     timestamp: "2 minutes ago",
-//     isRead: false,
-//   },
-//   {
-//     id: "2",
-//     title: "AI Agent Response",
-//     message: "AI Agent successfully handled customer inquiry",
-//     type: "success" as const,
-//     timestamp: "5 minutes ago",
-//     isRead: false,
-//   },
-//   {
-//     id: "3",
-//     title: "System Alert",
-//     message: "WhatsApp connection status updated",
-//     type: "warning" as const,
-//     timestamp: "10 minutes ago",
-//     isRead: false,
-//   },
-//   {
-//     id: "4",
-//     title: "New Customer Registration",
-//     message: "A new customer has registered on your platform",
-//     type: "info" as const,
-//     timestamp: "15 minutes ago",
-//     isRead: true,
-//   },
-//   {
-//     id: "5",
-//     title: "Agent Assignment",
-//     message: "Human agent assigned to conversation #12345",
-//     type: "success" as const,
-//     timestamp: "30 minutes ago",
-//     isRead: true,
-//   },
-// ];
 
 export default function Topbar({
   onToggleMobileMenu,
@@ -123,6 +79,7 @@ export default function Topbar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadingSubscription(true);
@@ -134,6 +91,11 @@ export default function Topbar({
       .catch(() => {
         setLoadingSubscription(false);
       });
+  }, []);
+
+  // Get user role from token
+  useEffect(() => {
+    setUserRole(AuthService.getRoleFromToken());
   }, []);
 
   // Get user data from Redux state (which is loaded from cookies)
@@ -439,11 +401,13 @@ export default function Topbar({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
+            {userRole === "Manager" && (
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>

@@ -28,6 +28,7 @@ import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
 import EditCustomIntegration from "./pages/EditCustomIntegration";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/ui/toast-container";
+import { ProfilePage } from "./pages/ProfilePage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -237,6 +238,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Profile Page */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
