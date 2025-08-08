@@ -23,7 +23,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
   const currentStatus = localLeadStatus || selectedContact?.lead_status
   const isAssigned = currentStatus === 'assigned'
   const isResolved = currentStatus === 'resolved'
-  const showMessageInput = isAssigned || isResolved
+  const showMessageInput = isAssigned
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -212,6 +212,29 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
     }
   }
 
+  const handleTakeOverFromResolved = async () => {
+    if (!selectedContactId) return
+
+    setIsLoading(true)
+    try {
+      await ContactsService.takeoverConversation(selectedContactId)
+      console.log("Chat taken over from resolved by agent")
+      
+      // Update local status immediately for responsive UI
+      setLocalLeadStatus('assigned')
+
+      // Switch to assigned tab when chat is taken over from resolved
+      if (onSwitchToAssignedTab) {
+        onSwitchToAssignedTab()
+      }
+    } catch (error: any) {
+      console.error("Failed to takeover conversation from resolved:", error)
+      showError(error.message || "Failed to takeover conversation")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleResolve = async () => {
     if (!selectedContactId) return
 
@@ -323,6 +346,24 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
 
             {/* Mobile Action Buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Takeover Button - Show when resolved */}
+              {isResolved && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTakeOverFromResolved}
+                  disabled={isLoading}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>👥</>
+                  )}
+                  <span className="hidden sm:inline ml-1">Takeover</span>
+                </Button>
+              )}
+
               {/* Resolve Button - Show when assigned (not resolved) */}
               {isAssigned && (
                 <Button
@@ -402,6 +443,8 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
           </div>
 
           <div className="flex items-center gap-2">
+
+
             {/* Resolve Button - Show when assigned (not resolved) */}
             {isAssigned && (
               <Button
@@ -559,7 +602,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
       <div className="sticky bottom-0 z-10 p-3 sm:p-4 border-t border-border bg-card">
         {!showMessageInput ? (
           <Button
-            onClick={handleTakeOver}
+            onClick={isResolved ? handleTakeOverFromResolved : handleTakeOver}
             disabled={isLoading}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
@@ -570,7 +613,7 @@ export default function ChatConversation({ selectedContactId, selectedContact, o
               </>
             ) : (
               <>
-                👥 Takeover Chat
+                👥 {isResolved ? 'Takeover Chat' : 'Takeover Chat'}
               </>
             )}
           </Button>
