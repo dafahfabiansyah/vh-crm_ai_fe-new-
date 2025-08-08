@@ -11,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Search, Edit, Trash2, Eye, Package } from "lucide-react";
 import type { Category, Product } from "@/types";
 import type { CategoryAttribute } from "@/services/productService";
@@ -46,27 +52,74 @@ const ProductTable: React.FC<ProductTableProps> = ({
   // State untuk force refresh gambar per product
   const [refreshKeys, setRefreshKeys] = useState<Record<string, number>>({});
   
+  // State untuk image modal
+  const [imageModal, setImageModal] = useState<{
+    open: boolean;
+    imageUrl: string;
+    productName: string;
+  }>({
+    open: false,
+    imageUrl: "",
+    productName: "",
+  });
+
+  // Handler untuk membuka image modal
+  const handleImageClick = (imageUrl: string, productName: string) => {
+    setImageModal({
+      open: true,
+      imageUrl,
+      productName,
+    });
+  };
+
+  // Handler untuk menutup image modal
+  const handleCloseImageModal = () => {
+    setImageModal({
+      open: false,
+      imageUrl: "",
+      productName: "",
+    });
+  };
+  
   // Force refresh gambar hanya untuk product yang berubah
   useEffect(() => {
     const newRefreshKeys: Record<string, number> = {};
     products.forEach(product => {
       const currentKey = refreshKeys[product.id] || 0;
-      if (product.updated_at) {
-        const timestamp = new Date(product.updated_at).getTime();
-        const lastTimestamp = refreshKeys[`${product.id}_timestamp`] || 0;
-        if (timestamp > lastTimestamp) {
+      const currentTimestampKey = `${product.id}_timestamp`;
+      
+      if (product.updated_at || product.created_at) {
+        // Prioritaskan updated_at, fallback ke created_at
+        const timestamp = new Date(product.updated_at || product.created_at).getTime();
+        const lastTimestamp = refreshKeys[currentTimestampKey] || 0;
+        
+        // Jika ini produk baru (tidak ada refreshKey sebelumnya) atau timestamp berubah
+        if (!(product.id in refreshKeys) || timestamp > lastTimestamp) {
           newRefreshKeys[product.id] = currentKey + 1;
-          newRefreshKeys[`${product.id}_timestamp`] = timestamp;
+          newRefreshKeys[currentTimestampKey] = timestamp;
         } else {
           newRefreshKeys[product.id] = currentKey;
-          newRefreshKeys[`${product.id}_timestamp`] = lastTimestamp;
+          newRefreshKeys[currentTimestampKey] = lastTimestamp;
         }
       } else {
-        newRefreshKeys[product.id] = currentKey;
+        // Untuk produk tanpa timestamp, berikan refreshKey default
+        if (!(product.id in refreshKeys)) {
+          newRefreshKeys[product.id] = 1;
+        } else {
+          newRefreshKeys[product.id] = currentKey;
+        }
       }
     });
-    setRefreshKeys(newRefreshKeys);
-  }, [products]);
+    
+    // Hanya update jika ada perubahan untuk mencegah infinite loop
+    const hasChanges = Object.keys(newRefreshKeys).some(key => 
+      newRefreshKeys[key] !== refreshKeys[key]
+    );
+    
+    if (hasChanges || Object.keys(refreshKeys).length === 0) {
+      setRefreshKeys(newRefreshKeys);
+    }
+  }, [products]); // Hapus refreshKeys dari dependency array
   
   const filteredProducts = products.filter((product) =>
     (product.name?.toLowerCase?.() || "").includes(searchTerm.toLowerCase())
@@ -168,7 +221,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                       key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
                       src={`${product.image_url || product.image}?v=${refreshKeys[product.id] || 0}`}
                       alt={product.name}
-                      className="h-10 w-10 object-cover rounded"
+                      className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick(product.image_url || product.image, product.name)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -291,7 +345,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
                   src={`${product.image_url || product.image}?v=${refreshKeys[product.id] || 0}`}
                   alt={product.name}
-                  className="h-16 w-16 object-cover rounded border"
+                  className="h-16 w-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => handleImageClick(product.image_url || product.image, product.name)}
                   onError={(e) => {
                     // Fallback jika gambar gagal load
                     const target = e.target as HTMLImageElement;
@@ -366,6 +421,30 @@ const ProductTable: React.FC<ProductTableProps> = ({
           </Card>
         ))}
       </div>
+
+      {/* Image Modal */}
+      <Dialog open={imageModal.open} onOpenChange={handleCloseImageModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-lg font-semibold">
+              {imageModal.productName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6">
+            <div className="relative w-full flex justify-center">
+              <img
+                src={imageModal.imageUrl}
+                alt={imageModal.productName}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder-image.png"; // Fallback image
+                }}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

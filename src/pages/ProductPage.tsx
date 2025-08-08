@@ -234,33 +234,6 @@ const ProductPage = () => {
     }));
   };
 
-  const handleCategoryChange = async (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const catId = e.target.value;
-    setFormData((prev) => ({ ...prev, category: catId }));
-    setSelectedCategoryId(catId);
-    setCategoryAttributes([]);
-    setAttributeValues({});
-    if (catId) {
-      try {
-        const detail = await categoryService.getCategoryById(catId);
-        if (detail.attributes && Array.isArray(detail.attributes)) {
-          setCategoryAttributes(detail.attributes);
-          // Inisialisasi attributeValues kosong
-          const attrInit: Record<string, string> = {};
-          detail.attributes.forEach((attr) => {
-            attrInit[attr.attribute_name] = "";
-          });
-          setAttributeValues(attrInit);
-        }
-      } catch (err) {
-        setCategoryAttributes([]);
-        setAttributeValues({});
-      }
-    }
-  };
-
   const handleAttributeValueChange = (attributeName: string, value: string) => {
     setAttributeValues((prev) => ({ ...prev, [attributeName]: value }));
   };
@@ -311,30 +284,11 @@ const ProductPage = () => {
         image: formData.image, // <-- kirim image ke backend
       };
       // API call
-      const response = await productService.createProduct(productData as any);
+      await productService.createProduct(productData as any);
 
-      // console.log("Created product response:", response);
+      // Re-fetch products untuk memastikan data terbaru dan sinkron dengan server
+      await fetchProducts();
 
-      // Create local product object
-      const newProduct: Product = {
-        id: response.id,
-        code: response.code,
-        sku: response.sku,
-        name: response.name,
-        description: response.description,
-        price: response.price,
-        weight: response.weight,
-        stock: response.stock,
-        image_url: response.image_url,
-        colors: response.colors,
-        material: response.material,
-        image: response.image, // <-- mapping image dari response
-        category_name: response.category,
-        created_at: response.created_at,
-        updated_at: response.updated_at,
-      };
-
-      setProducts((prev) => [...prev, newProduct]);
       setIsModalOpen(false);
 
       // Reset form
@@ -356,6 +310,8 @@ const ProductPage = () => {
       setImageFile(null);
       setImageUploadUrl("");
       setImageUploadError("");
+      
+      success("Product created successfully!");
     } catch (error: any) {
       console.error("Error creating product:", error);
       showError(`Failed to create product: ${error.message}`);
@@ -1637,20 +1593,44 @@ const ProductPage = () => {
                 <Label className="py-2" htmlFor="category">
                   Category <span className="text-red-500">*</span>
                 </Label>
-                <select
-                  id="category"
+                <Select
                   value={formData.category}
-                  onChange={handleCategoryChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onValueChange={async (value) => {
+                    setFormData((prev) => ({ ...prev, category: value }));
+                    setSelectedCategoryId(value);
+                    setCategoryAttributes([]);
+                    setAttributeValues({});
+                    if (value) {
+                      try {
+                        const detail = await categoryService.getCategoryById(value);
+                        if (detail.attributes && Array.isArray(detail.attributes)) {
+                          setCategoryAttributes(detail.attributes);
+                          // Inisialisasi attributeValues kosong
+                          const attrInit: Record<string, string> = {};
+                          detail.attributes.forEach((attr) => {
+                            attrInit[attr.attribute_name] = "";
+                          });
+                          setAttributeValues(attrInit);
+                        }
+                      } catch (err) {
+                        setCategoryAttributes([]);
+                        setAttributeValues({});
+                      }
+                    }
+                  }}
                   required
                 >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Render attribute fields dinamis */}
@@ -1914,16 +1894,20 @@ const ProductPage = () => {
               </div>
               <div>
                 <Label>Status</Label>
-                <select
+                <Select
                   value={editForm.status ? "active" : "inactive"}
-                  onChange={(e) =>
-                    handleEditFormChange("status", e.target.value === "active")
+                  onValueChange={(value) =>
+                    handleEditFormChange("status", value === "active")
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-3 pt-4">
                 <Button
