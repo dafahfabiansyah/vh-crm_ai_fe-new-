@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, Plus, Search, Trash2, Package, Edit } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  Trash2,
+  Package,
+  Edit,
+  Check,
+} from "lucide-react";
 import { Link } from "react-router";
 import {
   categoryService,
@@ -35,7 +43,11 @@ import type {
 import ProductTable from "@/components/product-table";
 import { AgentsService } from "@/services/agentsService";
 import type { AIAgent } from "@/types";
-import { KnowledgeService } from "@/services/knowledgeService";
+import {
+  KnowledgeService,
+  type ExistingKnowledge,
+  type KnowledgeSourceContent,
+} from "@/services/knowledgeService";
 import { useToast } from "@/hooks";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -46,6 +58,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ExistingKnowledgeList from "@/components/existing-knowledge-list";
+
+// Interface untuk knowledge dengan content
+interface KnowledgeWithContent extends ExistingKnowledge {
+  fullContent?: KnowledgeSourceContent;
+}
 
 // Utility function untuk format angka dengan pemisah ribuan
 const formatNumber = (value: number | string): string => {
@@ -89,6 +106,9 @@ const ProductPage = () => {
   const [addToAIError, setAddToAIError] = useState<string>("");
   const [addToAILoading, setAddToAILoading] = useState(false);
   const [addToAISuccess, setAddToAISuccess] = useState<string>("");
+  const [existingKnowledge, setExistingKnowledge] = useState<
+    KnowledgeWithContent[]
+  >([]);
   const { success, error: showError } = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -164,7 +184,6 @@ const ProductPage = () => {
     name: "",
     description: "",
   });
-
 
   const handleInputChange =
     (field: keyof ProductFormData) =>
@@ -310,7 +329,7 @@ const ProductPage = () => {
       setImageFile(null);
       setImageUploadUrl("");
       setImageUploadError("");
-      
+
       success("Product created successfully!");
     } catch (error: any) {
       console.error("Error creating product:", error);
@@ -397,9 +416,9 @@ const ProductPage = () => {
         return newMap;
       });
       success("Category deleted successfully.");
-          } catch (error: any) {
-        showError(error.message || "Failed to delete category.");
-      } finally {
+    } catch (error: any) {
+      showError(error.message || "Failed to delete category.");
+    } finally {
       setIsLoading(false);
       setDeleteCategoryDialog({ open: false });
     }
@@ -415,14 +434,14 @@ const ProductPage = () => {
     setIsEditCategoryModalOpen(true);
   };
 
-  const handleEditCategoryInputChange = (field: 'name' | 'description') => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setEditCategoryFormData((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
-  };
+  const handleEditCategoryInputChange =
+    (field: "name" | "description") =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setEditCategoryFormData((prev) => ({
+        ...prev,
+        [field]: e.target.value,
+      }));
+    };
 
   const handleEditCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -489,23 +508,25 @@ const ProductPage = () => {
         status: editForm.status, // boolean
         image: editForm.image_url, // <-- gunakan key 'image' sesuai backend
       };
-      
-      console.log('Updating product with payload:', updatePayload);
-      
+
+      console.log("Updating product with payload:", updatePayload);
+
       const updated = await productService.updateProduct(
         editProduct.id,
         updatePayload
       );
-      
-      console.log('API response after update:', updated);
-      
+
+      console.log("API response after update:", updated);
+
       // Re-fetch products untuk memastikan data terbaru
       await fetchProducts();
-      
+
       setIsEditModalOpen(false);
       setEditProduct(null);
     } catch (err: any) {
-      showError("Failed to update product: " + (err?.message || "Unknown error"));
+      showError(
+        "Failed to update product: " + (err?.message || "Unknown error")
+      );
     } finally {
       setIsEditLoading(false);
     }
@@ -531,7 +552,9 @@ const ProductPage = () => {
       setIsDeleteModalOpen(false);
       setDeleteProduct(null);
     } catch (err: any) {
-      showError("Failed to delete product: " + (err?.message || "Unknown error"));
+      showError(
+        "Failed to delete product: " + (err?.message || "Unknown error")
+      );
     } finally {
       setIsDeleteLoading(false);
     }
@@ -559,12 +582,103 @@ const ProductPage = () => {
       }
       setAddToAISuccess("Products successfully added to AI agent.");
       setSelectedProductIds([]);
+
+      // Show success toast
+      success(
+        `Successfully added ${selectedProducts.length} product${
+          selectedProducts.length > 1 ? "s" : ""
+        } to AI agent`
+      );
+
+      // Refresh existing knowledge untuk update badge
+      fetchExistingKnowledge();
     } catch (err: any) {
       setAddToAIError(err?.message || "Failed to add products to AI agent");
+      // Show error toast
+      showError(err?.message || "Failed to add products to AI agent");
     } finally {
       setAddToAILoading(false);
     }
   };
+
+  // Fetch existing knowledge untuk agent yang dipilih
+  const fetchExistingKnowledge = async () => {
+    if (!selectedAgentId) return;
+
+    try {
+      // setIsLoadingKnowledge(true);
+      const knowledge = await KnowledgeService.getExistingKnowledge(
+        selectedAgentId
+      );
+      setExistingKnowledge(knowledge);
+
+      // Fetch detailed content untuk setiap knowledge untuk mendapatkan product_id
+      const knowledgeWithContent = [];
+      for (const item of knowledge) {
+        try {
+          const content = await KnowledgeService.getKnowledgeSourceContent(
+            item.id
+          );
+          knowledgeWithContent.push({
+            ...item,
+            fullContent: content,
+          });
+        } catch (error) {
+          // Skip jika gagal fetch content
+          console.warn(
+            `Failed to fetch content for knowledge ${item.id}:`,
+            error
+          );
+        }
+      }
+      setExistingKnowledge(knowledgeWithContent);
+    } catch (error: any) {
+      console.error("Error fetching existing knowledge:", error);
+      // Silent error, tidak perlu toast
+    } 
+    // finally {
+    //   setIsLoadingKnowledge(false);
+    // }
+  };
+
+  // Check apakah product sudah ada di knowledge
+  const isProductInKnowledge = useCallback(
+    (productId: string): boolean => {
+      // Handle null safety
+      if (
+        !existingKnowledge ||
+        !Array.isArray(existingKnowledge) ||
+        existingKnowledge.length === 0
+      ) {
+        return false;
+      }
+
+      // Check setiap knowledge untuk mencari product dengan ID yang cocok
+      return existingKnowledge.some((knowledge) => {
+        // Check di fullContent apakah ada product dengan product_id yang cocok
+        if (knowledge.fullContent?.content?.type === "Product") {
+          const productContent = knowledge.fullContent.content.product;
+          return productContent?.product_id === productId;
+        }
+
+        // Fallback: check di contentItems jika ada
+        if (knowledge.fullContent?.contentItems) {
+          return knowledge.fullContent.contentItems.some(
+            (item) =>
+              item.content?.content?.includes(productId) ||
+              item.source_id === productId
+          );
+        }
+
+        // Fallback: check di name atau description
+        return (
+          knowledge.name?.includes(productId) ||
+          knowledge.description?.includes(productId)
+        );
+      });
+    },
+    [existingKnowledge]
+  );
 
   // Fetch categories on component mount
   const fetchCategories = async () => {
@@ -648,6 +762,13 @@ const ProductPage = () => {
         .finally(() => setIsLoadingAgents(false));
     }
   }, [activeTab]);
+
+  // Fetch existing knowledge ketika agent berubah
+  useEffect(() => {
+    if (selectedAgentId && activeTab === "addToAI") {
+      fetchExistingKnowledge();
+    }
+  }, [selectedAgentId, activeTab]);
 
   useEffect(() => {
     fetchCategories();
@@ -887,7 +1008,11 @@ const ProductPage = () => {
                                         handleEditCategory(category);
                                       }}
                                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer"
-                                      style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+                                      style={{
+                                        pointerEvents: isLoading
+                                          ? "none"
+                                          : "auto",
+                                      }}
                                     >
                                       <Edit className="h-4 w-4" />
                                     </div>
@@ -897,7 +1022,11 @@ const ProductPage = () => {
                                         handleDeleteCategory(category.id);
                                       }}
                                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer"
-                                      style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+                                      style={{
+                                        pointerEvents: isLoading
+                                          ? "none"
+                                          : "auto",
+                                      }}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </div>
@@ -1096,6 +1225,33 @@ const ProductPage = () => {
                   </span>
                 </div>
               )}
+              {/* {isLoadingKnowledge && (
+                <div className="flex justify-center items-center py-2">
+                  <svg
+                    className="animate-spin h-4 w-4 text-gray-600 mr-2"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  <span className="text-gray-600 text-sm">
+                    Loading existing knowledge...
+                  </span>
+                </div>
+              )} */}
               {/* Table (desktop/tablet) */}
               <div className="overflow-x-auto mb-4 rounded-lg shadow-sm hidden sm:block">
                 <table className="min-w-full bg-white border rounded-lg text-xs md:text-sm">
@@ -1105,19 +1261,19 @@ const ProductPage = () => {
                         <Checkbox
                           checked={
                             selectedProductIds.length ===
-                              filteredProducts.length &&
-                            filteredProducts.length > 0
+                              filteredProducts.filter(p => !isProductInKnowledge(p.id)).length &&
+                            filteredProducts.filter(p => !isProductInKnowledge(p.id)).length > 0
                           }
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedProductIds(
-                                filteredProducts.map((p) => p.id)
-                              );
+                              // Only select products that are not already added
+                              const availableProducts = filteredProducts.filter(p => !isProductInKnowledge(p.id));
+                              setSelectedProductIds(availableProducts.map((p) => p.id));
                             } else {
                               setSelectedProductIds([]);
                             }
                           }}
-                          aria-label="Select all products"
+                          aria-label="Select all available products"
                         />
                       </th>
                       <th className="p-2 md:p-3 text-left font-bold">Image</th>
@@ -1130,6 +1286,9 @@ const ProductPage = () => {
                       <th className="p-2 md:p-3 text-left font-bold">Price</th>
                       <th className="p-2 md:p-3 text-left font-bold">
                         Description
+                      </th>
+                      <th className="p-2 md:p-3 text-left font-bold">
+                        Added to AI
                       </th>
                     </tr>
                   </thead>
@@ -1147,7 +1306,11 @@ const ProductPage = () => {
                       filteredProducts.map((product: Product) => (
                         <tr
                           key={product.id}
-                          className="border-b hover:bg-gray-50"
+                          className={`border-b hover:bg-gray-50 ${
+                            isProductInKnowledge(product.id) 
+                              ? 'opacity-60 bg-gray-50' 
+                              : ''
+                          }`}
                         >
                           <td className="p-2 md:p-3">
                             <Checkbox
@@ -1164,6 +1327,7 @@ const ProductPage = () => {
                                   );
                                 }
                               }}
+                              disabled={isProductInKnowledge(product.id)}
                               aria-label={`Select product ${product.name}`}
                             />
                           </td>
@@ -1194,7 +1358,27 @@ const ProductPage = () => {
                             {formatNumber(product.price)}
                           </td>
                           <td className="p-2 md:p-3 text-gray-600 text-xs md:text-sm">
-                            {product.description || "-"}
+                            <div className="flex items-center gap-2">
+                              <span>{product.description || "-"}</span>
+                            </div>
+                          </td>
+                          <td className="p-2 md:p-3">
+                            {isProductInKnowledge(product.id) ? (
+                              <Badge
+                                variant="secondary"
+                                className="flex items-center gap-1 text-xs bg-green-100 text-green-800"
+                              >
+                                <Check className="h-3 w-3" />
+                                Added
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="flex items-center gap-1 text-xs text-gray-600"
+                              >
+                                Not Added
+                              </Badge>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -1210,7 +1394,14 @@ const ProductPage = () => {
                   </div>
                 ) : (
                   filteredProducts.map((product: Product) => (
-                    <Card key={product.id} className="rounded-lg shadow-sm">
+                    <Card 
+                      key={product.id} 
+                      className={`rounded-lg shadow-sm ${
+                        isProductInKnowledge(product.id) 
+                          ? 'opacity-60 bg-gray-50' 
+                          : ''
+                      }`}
+                    >
                       <CardContent className="flex gap-3 p-4 items-start">
                         <Checkbox
                           checked={selectedProductIds.includes(product.id)}
@@ -1226,12 +1417,13 @@ const ProductPage = () => {
                               );
                             }
                           }}
+                          disabled={isProductInKnowledge(product.id)}
                           aria-label={`Select product ${product.name}`}
                           className="mt-1"
                         />
-                        {product.image ? (
+                        {product.image_url ? (
                           <img
-                            src={product.image}
+                            src={product.image_url}
                             alt={product.name}
                             className="h-14 w-14 object-cover rounded border"
                           />
@@ -1260,6 +1452,22 @@ const ProductPage = () => {
                             <Badge variant="outline">
                               Stok: {product.stock}
                             </Badge>
+                            {isProductInKnowledge(product.id) ? (
+                              <Badge
+                                variant="default"
+                                className="flex items-center gap-1 text-xs bg-green-100 text-green-800"
+                              >
+                                <Check className="h-3 w-3" />
+                                Added to AI
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="flex items-center gap-1 text-xs text-gray-600"
+                              >
+                                Not Added
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -1602,8 +1810,13 @@ const ProductPage = () => {
                     setAttributeValues({});
                     if (value) {
                       try {
-                        const detail = await categoryService.getCategoryById(value);
-                        if (detail.attributes && Array.isArray(detail.attributes)) {
+                        const detail = await categoryService.getCategoryById(
+                          value
+                        );
+                        if (
+                          detail.attributes &&
+                          Array.isArray(detail.attributes)
+                        ) {
                           setCategoryAttributes(detail.attributes);
                           // Inisialisasi attributeValues kosong
                           const attrInit: Record<string, string> = {};
@@ -2052,18 +2265,34 @@ const ProductPage = () => {
         </Dialog>
 
         {/* Delete Category Confirmation Dialog */}
-        <Dialog open={deleteCategoryDialog.open} onOpenChange={(open) => setDeleteCategoryDialog((prev) => ({ ...prev, open }))}>
+        <Dialog
+          open={deleteCategoryDialog.open}
+          onOpenChange={(open) =>
+            setDeleteCategoryDialog((prev) => ({ ...prev, open }))
+          }
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Delete Category</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p>Are you sure you want to delete this category? This action cannot be undone.</p>
+              <p>
+                Are you sure you want to delete this category? This action
+                cannot be undone.
+              </p>
               <div className="flex gap-2 justify-end">
-                <Button variant="destructive" onClick={confirmDeleteCategory} disabled={isLoading}>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDeleteCategory}
+                  disabled={isLoading}
+                >
                   Delete
                 </Button>
-                <Button variant="outline" onClick={() => setDeleteCategoryDialog({ open: false })} disabled={isLoading}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteCategoryDialog({ open: false })}
+                  disabled={isLoading}
+                >
                   Cancel
                 </Button>
               </div>
