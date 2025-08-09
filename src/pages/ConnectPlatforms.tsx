@@ -306,29 +306,6 @@ export default function ConnectedPlatformsPage() {
         if (currentPlatform.pipeline) {
           console.log('Pipeline tab - updating id_pipeline via update_platform_inbox');
           await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
-          
-          // Deactivate all existing human agent mappings when pipeline is mapped
-          // This follows the same logic as AI agent (which gets cleared automatically by backend)
-          const existingHumanMappings = (currentPlatform.allHumanAgentMappings || []);
-          
-          for (const existingMapping of existingHumanMappings) {
-            if (existingMapping.is_active) {
-              try {
-                await platformsInboxService.updatePlatformMappingStatus(existingMapping.id, false, existingMapping.id_agent);
-                console.log(`Deactivated human agent mapping ${existingMapping.id} for pipeline mapping`);
-              } catch (error: any) {
-                console.warn(`Failed to deactivate human agent mapping ${existingMapping.id}:`, error.message);
-                // Continue with other mappings even if one fails
-              }
-            }
-          }
-          
-          // Update local state to clear human agents selection for immediate UI feedback
-          updateSelectedPlatform({ 
-            humanAgentsSelected: [],
-            aiAgent: undefined // Also clear AI agent in local state for consistency
-          });
-          
           success(`Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`);
         } else {
           showError("Please select a pipeline before saving.");
@@ -594,37 +571,6 @@ export default function ConnectedPlatformsPage() {
     updateSelectedPlatform({
       teams: currentPlatform.teams.filter((team) => team !== teamToRemove),
     });
-  };
-
-  const removeAgentMapping = async (mappingId: string, agentType: "AI" | "Human") => {
-    const currentPlatform = showMobileDetail
-      ? mobileSelectedPlatform
-      : selectedPlatform;
-    if (!currentPlatform) return;
-
-    try {
-      // Update local state immediately for better UX
-      if (agentType === "AI") {
-        updateSelectedPlatform({ aiAgent: undefined });
-      } else {
-        const mapping = currentPlatform.platformMappings?.find(m => m.id === mappingId);
-        if (mapping) {
-          const updatedHumanAgents = currentPlatform.humanAgentsSelected?.filter(
-            (id) => id !== mapping.id_agent
-          ) || [];
-          updateSelectedPlatform({ humanAgentsSelected: updatedHumanAgents });
-        }
-      }
-
-      // Call save to persist changes to backend
-      await handleSave();
-      
-      success(`${agentType} Agent mapping removed successfully.`);
-    } catch (error: any) {
-      showError(`Failed to remove ${agentType.toLowerCase()} agent mapping:`, error.message);
-      // Refresh by calling handleRefresh
-      handleRefresh();
-    }
   };
 
   const PlatformIcon = selectedPlatform
@@ -1191,17 +1137,16 @@ export default function ConnectedPlatformsPage() {
                         )}
 
                         <div className="flex items-center gap-1 sm:gap-2 mt-2 overflow-x-auto">
-                          {platform.platformMappings && platform.platformMappings.length > 0 ? (
-                            platform.platformMappings
-                              .filter((mapping) => mapping.is_active) // Only show active mappings
-                              .map((mapping) => (
+                          {/* Display platform mappings (AI and Human agents) */}
+                          {platform.platformMappings && platform.platformMappings.length > 0 && (
+                            platform.platformMappings.map((mapping) => (
                               <Badge
                                 key={mapping.id}
                                 variant="outline"
-                                className={`text-xs flex-shrink-0 cursor-pointer group ${
+                                className={`text-xs flex-shrink-0 ${
                                   mapping.agent_type === "AI"
-                                    ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                                    : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                                    : "bg-green-50 text-green-700 border-green-200"
                                 }`}
                               >
                                 {mapping.agent_type === "AI" ? (
@@ -1212,20 +1157,15 @@ export default function ConnectedPlatformsPage() {
                                 <span className="truncate max-w-16 sm:max-w-none">
                                   {mapping.agent_name}
                                 </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Handle remove mapping
-                                    removeAgentMapping(mapping.id, mapping.agent_type as "AI" | "Human");
-                                  }}
-                                  className="ml-1 opacity-0 group-hover:opacity-100 hover:bg-destructive/20 rounded-full p-0.5 transition-opacity"
-                                  title="Remove mapping"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
+                                {!mapping.is_active && (
+                                  <span className="ml-1 text-gray-400">(Inactive)</span>
+                                )}
                               </Badge>
                             ))
-                          ) : platform.sessionId ? (
+                          )}
+                          
+                          {/* Display pipeline mapping separately */}
+                          {platform.sessionId && (
                             <Badge
                               variant="outline"
                               className="text-xs bg-purple-50 text-purple-700 border-purple-200 flex-shrink-0"
@@ -1235,7 +1175,10 @@ export default function ConnectedPlatformsPage() {
                                 Pipeline Mapped
                               </span>
                             </Badge>
-                          ) : (
+                          )}
+                          
+                          {/* Display "No Agent Mapped" only if there are no mappings and no pipeline */}
+                          {(!platform.platformMappings || platform.platformMappings.length === 0) && !platform.sessionId && (
                             <Badge
                               variant="outline"
                               className="text-xs bg-gray-50 text-gray-700 border-gray-200 flex-shrink-0"
