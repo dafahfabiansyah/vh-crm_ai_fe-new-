@@ -4,8 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { DepartmentService } from "@/services/departmentService";
+import { HumanAgentsService } from "@/services/humanAgentsService";
+import React from "react";
 
 interface EditDepartmentModalProps {
   isOpen: boolean;
@@ -19,9 +22,12 @@ export default function EditDepartmentModal({ isOpen, onClose, department, onDep
     name: "",
     description: "",
     is_active: true,
+    head_ids: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
 
   useEffect(() => {
     if (department) {
@@ -29,7 +35,17 @@ export default function EditDepartmentModal({ isOpen, onClose, department, onDep
         name: department.name || "",
         description: department.description || "",
         is_active: department.is_active !== undefined ? department.is_active : true,
+        head_ids: department.head_ids || [],
       });
+    }
+  }, [department]);
+
+  React.useEffect(() => {
+    if (department) {
+      setLoadingAgents(true);
+      HumanAgentsService.getHumanAgents()
+        .then((data) => setAgents(data))
+        .finally(() => setLoadingAgents(false));
     }
   }, [department]);
 
@@ -43,6 +59,7 @@ export default function EditDepartmentModal({ isOpen, onClose, department, onDep
         name: formData.name,
         description: formData.description,
         is_active: formData.is_active,
+        head_ids: formData.head_ids,
       });
       onClose();
       if (onDepartmentUpdated) onDepartmentUpdated();
@@ -53,8 +70,24 @@ export default function EditDepartmentModal({ isOpen, onClose, department, onDep
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addHeadOfDepartment = (agentId: string) => {
+    if (!formData.head_ids.includes(agentId)) {
+      setFormData(prev => ({
+        ...prev,
+        head_ids: [...prev.head_ids, agentId]
+      }));
+    }
+  };
+
+  const removeHeadOfDepartment = (agentId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      head_ids: prev.head_ids.filter(id => id !== agentId)
+    }));
   };
 
   if (!department) return null;
@@ -91,6 +124,48 @@ export default function EditDepartmentModal({ isOpen, onClose, department, onDep
               onChange={(e) => handleInputChange("description", e.target.value)}
               disabled={isLoading}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dept-head-edit">Heads of Department</Label>
+            <Select
+              value=""
+              onValueChange={(value) => addHeadOfDepartment(value)}
+              disabled={isLoading || loadingAgents}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select heads of department" />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.filter(agent => !formData.head_ids.includes(agent.id)).map(agent => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.user?.name || agent.name || agent.user_email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formData.head_ids.length > 0 && (
+              <div className="mt-2">
+                <Label className="text-sm text-muted-foreground">Selected Heads:</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {formData.head_ids.map(headId => {
+                    const agent = agents.find(a => a.id === headId);
+                    return (
+                      <div key={headId} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                        <span>{agent?.user?.name || agent?.name || agent?.user_email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeHeadOfDepartment(headId)}
+                          className="ml-1 hover:bg-primary/20 rounded p-0.5"
+                          disabled={isLoading}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox

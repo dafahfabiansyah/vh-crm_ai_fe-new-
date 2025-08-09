@@ -21,7 +21,7 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
     name: "",
     description: "",
     is_active: true,
-    head_id: "",
+    head_ids: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +45,10 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
       await DepartmentService.createDepartment({
         name: formData.name,
         description: formData.description,
-        head_id: formData.head_id,
+        head_ids: formData.head_ids,
         // is_active: formData.is_active,
       });
-      setFormData({ name: "", description: "", is_active: true, head_id: "" });
+      setFormData({ name: "", description: "", is_active: true, head_ids: [] });
       onClose();
       if (onDepartmentCreated) onDepartmentCreated();
     } catch (err: any) {
@@ -58,8 +58,24 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addHeadOfDepartment = (agentId: string) => {
+    if (!formData.head_ids.includes(agentId)) {
+      setFormData(prev => ({
+        ...prev,
+        head_ids: [...prev.head_ids, agentId]
+      }));
+    }
+  };
+
+  const removeHeadOfDepartment = (agentId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      head_ids: prev.head_ids.filter(id => id !== agentId)
+    }));
   };
 
   if (!isOpen) return null;
@@ -98,23 +114,46 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dept-head">Head of Department</Label>
+            <Label htmlFor="dept-head">Heads of Department</Label>
             <Select
-              value={formData.head_id}
-              onValueChange={(value) => handleInputChange("head_id", value)}
+              value=""
+              onValueChange={(value) => addHeadOfDepartment(value)}
               disabled={isLoading || loadingAgents}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select head of department" />
+                <SelectValue placeholder="Select heads of department" />
               </SelectTrigger>
               <SelectContent>
-                {agents.map(agent => (
+                {agents.filter(agent => !formData.head_ids.includes(agent.id) && agent.role === "Manager").map(agent => (
                   <SelectItem key={agent.id} value={agent.id}>
                     {agent.user?.name || agent.name || agent.user_email}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {formData.head_ids.length > 0 && (
+              <div className="mt-2">
+                <Label className="text-sm text-muted-foreground">Selected Heads:</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {formData.head_ids.map(headId => {
+                    const agent = agents.find(a => a.id === headId);
+                    return (
+                      <div key={headId} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                        <span>{agent?.user?.name || agent?.name || agent?.user_email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeHeadOfDepartment(headId)}
+                          className="ml-1 hover:bg-primary/20 rounded p-0.5"
+                          disabled={isLoading}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox

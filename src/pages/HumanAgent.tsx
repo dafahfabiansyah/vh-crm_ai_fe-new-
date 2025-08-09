@@ -498,12 +498,16 @@ export default function HumanAgentsPage() {
                               </tr>
                             ) : (
                               filteredDepartments.map((dept) => {
-                                const headName = agents.find((a) => a.id === dept.head_id)?.user?.name || "";
+                                const headNames = dept.head_ids 
+                                  ? dept.head_ids.map((headId: string) => 
+                                      agents.find((a) => a.id === headId)?.user?.name || ""
+                                    ).filter(Boolean).join(", ")
+                                  : "";
                                 return (
                                   <tr key={dept.id} className="border-b hover:bg-muted/25">
                                     <td className="p-4 font-medium text-sm">{dept.name}</td>
                                     <td className="p-4 text-muted-foreground text-sm">{dept.description}</td>
-                                    <td className="p-4 text-muted-foreground text-sm">{headName}</td>
+                                    <td className="p-4 text-muted-foreground text-sm">{headNames}</td>
                                     <td className="p-4">
                                       <span className={`px-2 py-1 text-xs rounded-full ${dept.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                                         {dept.is_active ? "Active" : "Inactive"}
@@ -545,12 +549,16 @@ export default function HumanAgentsPage() {
                         ) : (
                           <div className="divide-y">
                             {filteredDepartments.map((dept) => {
-                              const headName = agents.find((a) => a.id === dept.head_id)?.user?.name || "";
+                              const headNames = dept.head_ids 
+                                ? dept.head_ids.map((headId: string) => 
+                                    agents.find((a) => a.id === headId)?.user?.name || ""
+                                  ).filter(Boolean).join(", ")
+                                : "";
                               return (
                                 <div key={dept.id} className="p-4 hover:bg-muted/25">
                                   <div className="font-medium text-sm text-foreground">{dept.name}</div>
                                   <div className="text-xs text-muted-foreground mt-1">{dept.description}</div>
-                                  <div className="text-xs text-muted-foreground mt-1">{headName}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">{headNames}</div>
                                   <div className="flex items-center gap-2 mt-2">
                                     <span className={`px-2 py-1 text-xs rounded-full ${dept.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                                       {dept.is_active ? "Active" : "Inactive"}
