@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Phone,
   Mail,
-  MapPin,
   Calendar,
   Edit3,
   MessageSquare,
@@ -26,6 +25,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Building2 } from "lucide-react";
 import MainLayout from "@/main-layout";
+import { AuthService } from "@/services/authService";
+import { useEffect } from "react";
 
 export function ProfilePage() {
   const [showPassword, setShowPassword] = React.useState(false);
@@ -33,15 +34,21 @@ export function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isManager] = React.useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [userRole, setUserRole] = React.useState<string | null>(null);
+
+  // Get user role from token
+  useEffect(() => {
+    setUserRole(AuthService.getRoleFromToken());
+  }, []);
 
   return (
     <MainLayout>
       <div className="min-h-screen bg-gray-50">
         {/* Rest of the component remains the same... */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
             {/* Left Column - Profile Info */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex flex-col space-y-6">
               <Card>
                 <CardHeader className="text-center">
                   <div className="flex justify-center ">
@@ -70,10 +77,12 @@ export function ProfilePage() {
                     onOpenChange={setIsSettingsOpen}
                   >
                     <DialogTrigger asChild>
-                      <Button className="w-full bg-green-600 hover:bg-green-700">
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Button>
+                      {userRole === "Manager" && (
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                      )}
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
@@ -325,12 +334,9 @@ export function ProfilePage() {
                     </div>
                     <div className="flex items-center text-sm">
                       <Phone className="w-4 h-4 text-gray-400 mr-3" />
-                      <span className="text-gray-600">+62 851 1974 6973</span>
+                      <span className="text-gray-600">+62 800 000 000</span>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="w-4 h-4 text-gray-400 mr-3" />
-                      <span className="text-gray-600">Jakarta, Indonesia</span>
-                    </div>
+                    
                     <div className="flex items-center text-sm">
                       <Calendar className="w-4 h-4 text-gray-400 mr-3" />
                       <span className="text-gray-600">Joined March 2023</span>
@@ -344,11 +350,11 @@ export function ProfilePage() {
               </Card>
 
               {/* Quick Stats */}
-              <Card className="mt-6">
+              <Card className="flex-1">
                 <CardHeader>
                   <CardTitle className="text-lg">Quick Stats</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-1">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Assigned Cases</span>
                     <Badge
@@ -380,17 +386,17 @@ export function ProfilePage() {
               </Card>
             </div>
 
-            {/* Right Column - Activity & Details (remains the same) */}
-            <div className="lg:col-span-2 space-y-6">
+            {/* Right Column - Activity & Details */}
+            <div className="lg:col-span-2 flex flex-col space-y-6">
               {/* Recent Activity */}
-              <Card>
+              <Card className="flex-1 min-h-[300px]">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Activity className="w-5 h-5 mr-2 text-green-600" />
                     Recent Activity
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
@@ -433,14 +439,14 @@ export function ProfilePage() {
               </Card>
 
               {/* Agent in Your Department */}
-              <Card>
+              <Card className="flex-1 min-h-[300px]">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2 text-green-600" />
                     Human Agent in Your Business
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1  overflow-y-auto">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-3">

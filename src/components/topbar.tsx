@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import { getCurrentSubscription } from "@/services/transactionService";
 import { TicketService } from "@/services/ticketService";
-import { AuthService } from "@/services/authService";
+// import { AuthService } from "@/services/authService";
 import { useToast } from "@/hooks";
 
 // Notification type for state
@@ -79,8 +79,7 @@ export default function Topbar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     setLoadingSubscription(true);
     getCurrentSubscription()
@@ -93,10 +92,6 @@ export default function Topbar({
       });
   }, []);
 
-  // Get user role from token
-  useEffect(() => {
-    setUserRole(AuthService.getRoleFromToken());
-  }, []);
 
   // Get user data from Redux state (which is loaded from cookies)
   const { user } = useAppSelector((state) => state.auth);
@@ -401,12 +396,10 @@ export default function Topbar({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {userRole === "Manager" && (
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
+           <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-            )}
             <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
