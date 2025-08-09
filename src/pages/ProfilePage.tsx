@@ -26,7 +26,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Building2 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { AuthService } from "@/services/authService";
-import { useEffect } from "react";
+import { getSubscriptionPlans } from "@/services/subscriptionService";
+import {
+  getTransactionHistory,
+  getCurrentSubscription,
+} from "@/services/transactionService";
+import { useEffect, useState } from "react";
+import TransactionHistory from "@/components/transaction-history";
+
+// Define the Transaction interface to match the component
+interface Transaction {
+  id: string;
+  transaction_type: string;
+  quantity: number;
+  created_at: string;
+  id_subscription: string;
+  payment_method: string;
+}
+
+// Define subscription plans for mapping
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price?: number;
+  description?: string;
+}
 
 export function ProfilePage() {
   const [showPassword, setShowPassword] = React.useState(false);
@@ -35,18 +59,108 @@ export function ProfilePage() {
   const [isManager] = React.useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [userRole, setUserRole] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState("profile");
+
+  // Transaction state management
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+  const [transactionsError, setTransactionsError] = useState<string>("");
+  const [subscriptionPlans, setSubscriptionPlans] = useState<
+    SubscriptionPlan[]
+  >([]);
+  const [, setCurrentSubscription] = useState<any>(null);
+
+  // Function to get plan name by ID
+  const getPlanNameById = (planId: string): string => {
+    const plan = subscriptionPlans.find((p) => p.id === planId);
+    return plan?.name || planId;
+  };
 
   // Get user role from token
   useEffect(() => {
     setUserRole(AuthService.getRoleFromToken());
   }, []);
 
+  // Load subscription plans and current subscription
+  useEffect(() => {
+    const loadSubscriptionData = async () => {
+      try {
+        const [plans, current] = await Promise.all([
+          getSubscriptionPlans(),
+          getCurrentSubscription(),
+        ]);
+        setSubscriptionPlans(plans);
+        setCurrentSubscription(current.data);
+      } catch (error) {
+        console.error("Error loading subscription data:", error);
+      }
+    };
+
+    loadSubscriptionData();
+  }, []);
+
+  // Load transactions from API
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        setIsLoadingTransactions(true);
+        setTransactionsError("");
+
+        // Call the actual transaction API
+        const response = await getTransactionHistory();
+        setTransactions(response.data || []);
+      } catch (error) {
+        setTransactionsError(
+          "Failed to load transactions. Please try again later."
+        );
+        console.error("Error loading transactions:", error);
+      } finally {
+        setIsLoadingTransactions(false);
+      }
+    };
+
+    loadTransactions();
+  }, []);
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Rest of the component remains the same... */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+          {/* Page Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Profile Dashboard</h1>
+                <p className="text-gray-600 mt-2">Manage your profile information and view transaction history</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  {userRole || "User"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs Navigation */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-white border border-gray-200 rounded-lg p-1">
+              <TabsTrigger 
+                value="profile" 
+                className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-white rounded-md transition-all"
+              >
+                Profile & Activity
+              </TabsTrigger>
+              <TabsTrigger 
+                value="transaction" 
+                className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-white rounded-md transition-all"
+              >
+                Transaction History
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Profile Tab Content */}
+            <TabsContent value="profile" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
             {/* Left Column - Profile Info */}
             <div className="lg:col-span-1 flex flex-col space-y-6">
               <Card>
@@ -336,7 +450,7 @@ export function ProfilePage() {
                       <Phone className="w-4 h-4 text-gray-400 mr-3" />
                       <span className="text-gray-600">+62 800 000 000</span>
                     </div>
-                    
+
                     <div className="flex items-center text-sm">
                       <Calendar className="w-4 h-4 text-gray-400 mr-3" />
                       <span className="text-gray-600">Joined March 2023</span>
@@ -527,7 +641,19 @@ export function ProfilePage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+              </div>
+            </TabsContent>
+
+            {/* Transaction Tab Content */}
+            <TabsContent value="transaction" className="space-y-6">
+              <TransactionHistory
+                  transactions={transactions}
+                  isLoading={isLoadingTransactions}
+                  error={transactionsError || undefined}
+                  getPlanNameById={getPlanNameById}
+                />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </MainLayout>

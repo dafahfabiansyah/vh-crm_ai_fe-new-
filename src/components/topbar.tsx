@@ -61,13 +61,58 @@ type Notification = {
   isRead: boolean;
 };
 
+// Mock notification data
+const mockNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "WhatsApp Message Received",
+    message: "New message from customer +628123456789",
+    type: "info" as const,
+    timestamp: "2 minutes ago",
+    isRead: false,
+  },
+  {
+    id: "2",
+    title: "AI Agent Response",
+    message: "AI Agent successfully handled customer inquiry",
+    type: "success" as const,
+    timestamp: "5 minutes ago",
+    isRead: false,
+  },
+  {
+    id: "3",
+    title: "System Alert",
+    message: "WhatsApp connection status updated",
+    type: "warning" as const,
+    timestamp: "10 minutes ago",
+    isRead: false,
+  },
+  {
+    id: "4",
+    title: "New Customer Registration",
+    message: "A new customer has registered on your platform",
+    type: "info" as const,
+    timestamp: "15 minutes ago",
+    isRead: true,
+  },
+  {
+    id: "5",
+    title: "Agent Assignment",
+    message: "Human agent assigned to conversation #12345",
+    type: "success" as const,
+    timestamp: "30 minutes ago",
+    isRead: true,
+  },
+];
+
+
 export default function Topbar({
   onToggleMobileMenu,
 }: {
   onToggleMobileMenu?: () => void;
 }) {
-  // const [notifications, setNotifications] = useState(mockNotifications);
-  const [notifications, setNotifications] = useState<Notification[]>([]); // No initial notifications
+  const [notifications, setNotifications] = useState(mockNotifications);
+  // const [notifications, setNotifications] = useState<Notification[]>([]); // No initial notifications
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [helpForm, setHelpForm] = useState({
     title: "",
