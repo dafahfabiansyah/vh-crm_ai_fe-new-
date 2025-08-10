@@ -35,10 +35,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       isConnectedRef.current = true
       onConnect?.()
     } catch (error) {
-      console.error('Failed to connect to WebSocket:', error)
-      onError?.(error as Event)
+      console.warn('WebSocket connection failed, will retry automatically:', error)
+      // Don't call onError for initial connection failures as reconnection will be handled automatically
+      // onError?.(error as Event)
     }
-  }, [onConnect, onError])
+  }, [onConnect])
 
   // Subscribe to a specific contact for chatlog updates
   const subscribeToContact = useCallback((contactId: string) => {

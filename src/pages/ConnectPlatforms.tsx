@@ -307,26 +307,12 @@ export default function ConnectedPlatformsPage() {
           console.log('Pipeline tab - updating id_pipeline via update_platform_inbox');
           await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
           
-          // Deactivate all existing human agent mappings when pipeline is mapped
-          // This follows the same logic as AI agent (which gets cleared automatically by backend)
-          const existingHumanMappings = (currentPlatform.allHumanAgentMappings || []);
+          // Note: Human agents remain active when pipeline is mapped
+          // Only AI agents are automatically cleared by the backend
           
-          for (const existingMapping of existingHumanMappings) {
-            if (existingMapping.is_active) {
-              try {
-                await platformsInboxService.updatePlatformMappingStatus(existingMapping.id, false, existingMapping.id_agent);
-                console.log(`Deactivated human agent mapping ${existingMapping.id} for pipeline mapping`);
-              } catch (error: any) {
-                console.warn(`Failed to deactivate human agent mapping ${existingMapping.id}:`, error.message);
-                // Continue with other mappings even if one fails
-              }
-            }
-          }
-          
-          // Update local state to clear human agents selection for immediate UI feedback
+          // Update local state to clear AI agent selection for immediate UI feedback
           updateSelectedPlatform({ 
-            humanAgentsSelected: [],
-            aiAgent: undefined // Also clear AI agent in local state for consistency
+            aiAgent: undefined // Clear AI agent in local state for consistency
           });
           
           success(`Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`);

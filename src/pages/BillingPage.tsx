@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
-import { createTransaction, getUsageTracking, getCurrentSubscription, getTransactionHistory } from "@/services/transactionService";
+import { createTransaction, getUsageTracking, getCurrentSubscription, getTransactionHistory, validateVoucher } from "@/services/transactionService";
+import type { VoucherValidationResponse } from "@/services/transactionService";
 import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
 import {
   Table,
@@ -52,6 +53,8 @@ export default function BillingPage() {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [, setDiscountedPrice] = useState<string | null>(null);
   const [, setOriginalPrice] = useState<string | null>(null);
+  const [voucherValidation, setVoucherValidation] = useState<VoucherValidationResponse | null>(null);
+  const [isValidatingVoucher, setIsValidatingVoucher] = useState(false);
   const [pricingPlans, setPricingPlans] = useState<any[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -78,6 +81,49 @@ export default function BillingPage() {
       setIsDiscountApplied(false);
       setDiscountedPrice(null);
       setOriginalPrice(null);
+      setVoucherValidation(null);
+      setCouponCode("");
+    }
+  };
+
+  const handleValidateVoucher = async () => {
+    if (!couponCode.trim()) {
+      showError("Please enter a voucher code");
+      return;
+    }
+
+    if (!selectedPlanData?.id) {
+      showError("No plan selected");
+      return;
+    }
+
+    const selectedPeriodData = periods.find(period => period.id === selectedPeriod);
+    const months = selectedPeriodData?.months || 1;
+
+    setIsValidatingVoucher(true);
+    try {
+      const response = await validateVoucher({
+        code: couponCode,
+        id_subscription: selectedPlanData.id,
+        months: months
+      });
+
+      setVoucherValidation(response);
+      
+      if (response.valid) {
+        success(response.message || "Voucher validated successfully!");
+        setIsDiscountApplied(true);
+      } else {
+        showError(response.message || "Invalid voucher code");
+        setIsDiscountApplied(false);
+      }
+    } catch (error: any) {
+      console.error('Voucher validation error:', error);
+      showError(error.response?.data?.message || "Failed to validate voucher");
+      setVoucherValidation(null);
+      setIsDiscountApplied(false);
+    } finally {
+      setIsValidatingVoucher(false);
     }
   };
 
@@ -86,13 +132,65 @@ export default function BillingPage() {
       showError("No plan selected");
       return;
     }
-    try {
-      setIsPaymentDialogOpen(false);
-      setIsProcessingDialogOpen(true);
-      await createTransaction({
-        id_subscription: selectedPlanData.id,
-        voucher: couponCode.trim() !== "" ? couponCode : undefined,
-      });
+    
+    // Get the months value from the selected period
+    const selectedPeriodData = periods.find(period => period.id === selectedPeriod);
+    const months = selectedPeriodData?.months || 1;
+    
+    // Calculate pricing based on discount and selected period
+    const basePrice = selectedPlanData.base_price || 0;
+    const originalTotalPrice = basePrice * months; // Original total price for the selected billing period
+    const packageDiscountPercentage = selectedPeriodData?.discountPercentage || 0;
+    const packageDiscountAmount = (originalTotalPrice * packageDiscountPercentage) / 100;
+    const discountedPrice = originalTotalPrice - packageDiscountAmount;
+    
+    // Final discount calculation - apply voucher discount to already discounted package price
+    let finalDiscountPercentage = packageDiscountPercentage;
+    let totalAmount = discountedPrice;
+    let discountAmount = packageDiscountAmount;
+    
+    if (voucherValidation && voucherValidation.valid) {
+      // Apply voucher discount to the already discounted package price
+      const voucherDiscountPercentage = Math.round((voucherValidation.discount_amount / basePrice) * 100);
+      const voucherDiscountAmount = (discountedPrice * voucherDiscountPercentage) / 100;
+      totalAmount = discountedPrice - voucherDiscountAmount;
+      discountAmount = packageDiscountAmount + voucherDiscountAmount;
+      finalDiscountPercentage = Math.round((discountAmount / originalTotalPrice) * 100);
+    }
+    
+    // Debug logging
+    console.log('Payment Debug:', {
+      selectedPeriod,
+      selectedPeriodData,
+      months,
+      basePrice,
+      originalTotalPrice,
+      packageDiscountPercentage,
+      discountedPrice,
+      voucherValidation,
+      finalDiscountPercentage,
+      totalAmount,
+      discountAmount
+    });
+      
+      try {
+        setIsPaymentDialogOpen(false);
+        setIsProcessingDialogOpen(true);
+        // Calculate voucher discount percentage if voucher is applied
+        let voucherDiscountPercentage = 0;
+        if (voucherValidation && voucherValidation.valid) {
+          voucherDiscountPercentage = Math.round((voucherValidation.discount_amount / basePrice) * 100);
+        }
+        
+        await createTransaction({
+          id_subscription: selectedPlanData.id,
+          voucher: couponCode.trim() !== "" ? couponCode : undefined,
+          months: months,
+          discount_percentage: packageDiscountPercentage, // Only package discount
+          voucher_discount_percentage: voucherDiscountPercentage, // Separate voucher discount
+          total_amount: totalAmount,
+          unit_price: originalTotalPrice,
+        });
       setCouponCode("");
       setTimeout(() => {
         setIsProcessingDialogOpen(false);
@@ -104,31 +202,14 @@ export default function BillingPage() {
     }
   };
 
-  const handleApplyCoupon = () => {
-    // Simulasi apply coupon 100% (gratis)
-    if (selectedPlanData && couponCode.trim() !== "") {
-      // Ambil harga asli (angka saja)
-      const priceStr = selectedPlanData.price.replace(/[^\d]/g, "");
-      const priceNum = parseInt(priceStr, 10);
-      if (!isNaN(priceNum)) {
-        setOriginalPrice(selectedPlanData.price);
-        setDiscountedPrice("IDR 0");
-        setIsDiscountApplied(true);
-        success("Coupon applied successfully! Harga menjadi gratis.");
-      } else {
-        showError("Invalid plan price");
-      }
-    } else {
-      showError("Invalid coupon code");
-    }
-  };
+
 
   // Mock data for dashboard cards
   const periods = [
-    { id: "monthly", label: "Monthly", discount: null },
-    { id: "3months", label: "3 Months", discount: "5% Discount" },
-    { id: "halfyearly", label: "Half-Yearly", discount: "10% Discount" },
-    { id: "yearly", label: "Yearly", discount: "20% Discount" },
+    { id: "monthly", label: "Monthly", discount: null, discountPercentage: 0, months: 1 },
+    { id: "3months", label: "3 Months", discount: "5% Discount", discountPercentage: 5, months: 3 },
+    { id: "halfyearly", label: "Half-Yearly", discount: "10% Discount", discountPercentage: 10, months: 6 },
+    { id: "yearly", label: "Yearly", discount: "20% Discount", discountPercentage: 20, months: 12 },
   ];
 
   useEffect(() => {
@@ -283,14 +364,14 @@ export default function BillingPage() {
                     {dashboardData.packageDetails.renewal}
                   </span>
                 </div>
-                {/* <Button
+                <Button
                   variant="secondary"
                   disabled
                   size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
                 >
                   View Current Subscription
-                </Button> */}
+                </Button>
               </CardContent>
             </Card>
 
@@ -313,9 +394,9 @@ export default function BillingPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                {/* <div className="text-xs sm:text-sm text-purple-100 mb-3">
+                <div className="text-xs sm:text-sm text-purple-100 mb-3">
                   Additional MAU: {dashboardData.monthlyUsers.additional}
-                </div> */}
+                </div>
                 <div className="flex gap-2 mb-2">
                   <Button
                     variant="secondary"
@@ -329,10 +410,10 @@ export default function BillingPage() {
                     Top Up MAU
                   </Button>
                 </div>
-                {/* <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
                   <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>Reset Setup Tanggal 1</span>
-                </div> */}
+                </div>
               </CardContent>
             </Card>
 
@@ -413,10 +494,7 @@ export default function BillingPage() {
                   key={period.id}
                   variant={selectedPeriod === period.id ? "default" : "ghost"}
                   size="sm"
-                  onClick={() =>
-                    period.id === "monthly" && setSelectedPeriod(period.id)
-                  }
-                  disabled={period.id !== "monthly"}
+                  onClick={() => setSelectedPeriod(period.id)}
                   className="flex flex-col items-center gap-1 h-auto py-2 px-2 sm:px-4 min-w-0 flex-1"
                 >
                   <span className="text-xs sm:text-sm font-medium truncate">
@@ -740,23 +818,66 @@ export default function BillingPage() {
                     {selectedPlanData.name}
                   </h3>
                   <div className="space-y-1">
-                    {isDiscountApplied &&
-                    selectedPlanData.base_price !== undefined ? (
-                      <>
-                        <div className="text-lg font-medium text-muted-foreground line-through">
-                          {`IDR ${selectedPlanData.base_price.toLocaleString()}`}
-                        </div>
-                        <div className="text-2xl font-bold text-foreground transition-opacity duration-300 opacity-100">
-                          IDR 0
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-2xl font-bold text-foreground">
-                        {selectedPlanData.base_price !== undefined
-                          ? `IDR ${selectedPlanData.base_price.toLocaleString()}`
-                          : "-"}
-                      </div>
-                    )}
+                    {(() => {
+                      const selectedPeriodData = periods.find(period => period.id === selectedPeriod);
+                      const months = selectedPeriodData?.months || 1;
+                      const packageDiscountPercentage = selectedPeriodData?.discountPercentage || 0;
+                      const basePrice = selectedPlanData.base_price || 0;
+                      const originalTotalPrice = basePrice * months;
+                      const packageDiscountAmount = (originalTotalPrice * packageDiscountPercentage) / 100;
+                      const discountedPrice = originalTotalPrice - packageDiscountAmount;
+                      
+                      if (voucherValidation && voucherValidation.valid) {
+                        // Calculate sequential discount: package discount first, then voucher discount
+                        const voucherDiscountPercentage = Math.round((voucherValidation.discount_amount / basePrice) * 100);
+                        const voucherDiscountAmount = (discountedPrice * voucherDiscountPercentage) / 100;
+                        const finalPriceAfterVoucher = discountedPrice - voucherDiscountAmount;
+                        const totalSavings = packageDiscountAmount + voucherDiscountAmount;
+                        const totalDiscountPercentage = Math.round((totalSavings / originalTotalPrice) * 100);
+                        
+                        // Calculate the actual voucher discount percentage applied to the discounted price
+                        const actualVoucherDiscountPercentage = Math.round((voucherDiscountAmount / discountedPrice) * 100);
+                        
+                        return (
+                          <>
+                            <div className="text-lg font-medium text-muted-foreground line-through">
+                              {`IDR ${originalTotalPrice.toLocaleString()}`}
+                            </div>
+                            <div className="text-2xl font-bold text-green-600 transition-opacity duration-300 opacity-100">
+                              {`IDR ${finalPriceAfterVoucher.toLocaleString()}`}
+                            </div>
+                            <div className="text-sm text-green-600 font-medium">
+                              Package Discount: {packageDiscountPercentage}% → Voucher: {actualVoucherDiscountPercentage}% (Total: {totalDiscountPercentage}%)
+                            </div>
+                            <div className="text-xs text-green-600">
+                              Save IDR {totalSavings.toLocaleString()}
+                            </div>
+                          </>
+                        );
+                      } else if (packageDiscountPercentage > 0) {
+                        // Show package discount
+                        return (
+                          <>
+                            <div className="text-lg font-medium text-muted-foreground line-through">
+                              {`IDR ${originalTotalPrice.toLocaleString()}`}
+                            </div>
+                            <div className="text-2xl font-bold text-green-600">
+                              {`IDR ${discountedPrice.toLocaleString()}`}
+                            </div>
+                            <div className="text-sm text-green-600 font-medium">
+                              Save {packageDiscountPercentage}% (IDR {packageDiscountAmount.toLocaleString()})
+                            </div>
+                          </>
+                        );
+                      } else {
+                        // No discount
+                        return (
+                          <div className="text-2xl font-bold text-foreground">
+                            {`IDR ${originalTotalPrice.toLocaleString()}`}
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {(() => {
@@ -770,23 +891,35 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                {/* Coupon Code Section */}
+                {/* Voucher Code Section */}
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Masukkan kode kupon"
+                      placeholder="Masukkan kode voucher"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       className="flex-1"
+                      disabled={isValidatingVoucher}
                     />
                     <Button
                       variant="outline"
-                      onClick={handleApplyCoupon}
+                      onClick={handleValidateVoucher}
                       className="px-6 bg-transparent"
+                      disabled={isValidatingVoucher || !couponCode.trim()}
                     >
-                      APPLY
+                      {isValidatingVoucher ? "VALIDATING..." : "VALIDATE"}
                     </Button>
                   </div>
+                  {voucherValidation && (
+                    <div className={`text-sm p-2 rounded ${voucherValidation.valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      {voucherValidation.message}
+                      {voucherValidation.valid && voucherValidation.trial_duration_days && (
+                        <div className="mt-1 text-xs">
+                          Trial Duration: {voucherValidation.trial_duration_days} days
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
