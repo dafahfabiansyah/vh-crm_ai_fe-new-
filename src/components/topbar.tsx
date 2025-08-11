@@ -322,7 +322,7 @@ export default function Topbar({
             >
               <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground">
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-xs bg-destructive">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
               )}
