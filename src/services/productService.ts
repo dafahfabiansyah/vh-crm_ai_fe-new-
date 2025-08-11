@@ -26,6 +26,7 @@ export interface CreateCategoryRequest {
 }
 
 export interface ProductResponse {
+  category_name: string;
   image_url: string;
   sku: string;
   id: string;
@@ -53,6 +54,7 @@ export interface CreateProductRequest {
   material: string;
   image: string;
   category: string;
+  id_category?: string;
 }
 
 // Category API functions

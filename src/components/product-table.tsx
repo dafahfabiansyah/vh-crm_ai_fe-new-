@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Edit, Trash2, Eye, Package } from "lucide-react";
+import { Edit, Trash2, Eye, Package } from "lucide-react";
 import type { Category, Product } from "@/types";
 import type { CategoryAttribute } from "@/services/productService";
 
@@ -36,7 +36,6 @@ interface ProductTableProps {
   onSearchChange: (value: string) => void;
   onEdit?: (product: Product) => void;
   onDelete?: (productId: string) => void;
-  onView?: (product: Product) => void;
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({
@@ -44,10 +43,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
   categories,
   categoriesWithAttributes,
   searchTerm,
-  onSearchChange,
   onEdit,
   onDelete,
-  onView,
 }) => {
   // State untuk force refresh gambar per product
   const [refreshKeys, setRefreshKeys] = useState<Record<string, number>>({});
@@ -128,7 +125,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   return (
     <>
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 m-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -178,7 +175,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
         </Card>
       </div>
 
-      {/* Search and Filter */}
+      {/* Search and Filter
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
@@ -193,10 +190,10 @@ const ProductTable: React.FC<ProductTableProps> = ({
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Products Table (desktop/tablet) */}
-      <div className="hidden sm:block">
+      <div className="hidden sm:block m-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -240,13 +237,13 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>
                   {product.description && product.description.length > 30 ? (
-                    <span
+                    <Link
+                      to={`/products/${product.id}`}
                       className="text-blue-600 cursor-pointer hover:underline"
                       title="Lihat detail"
-                      onClick={() => onView?.(product)}
                     >
                       {product.description.slice(0, 30)}... <span className="text-xs">[detail]</span>
-                    </span>
+                    </Link>
                   ) : (
                     <span>{product.description || '-'}</span>
                   )}
@@ -309,9 +306,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => onView?.(product)}
+                      asChild
                     >
-                      <Eye className="h-4 w-4" />
+                      <Link to={`/products/${product.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -395,9 +394,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     variant="outline" 
                     size="sm"
                     className="flex-1"
-                    onClick={() => onView?.(product)}
+                    asChild
                   >
-                    <Eye className="h-4 w-4" />
+                    <Link to={`/products/${product.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
                   </Button>
                   <Button 
                     variant="outline" 
