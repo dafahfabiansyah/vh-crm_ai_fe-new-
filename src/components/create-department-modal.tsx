@@ -138,12 +138,12 @@ export default function CreateDepartmentModal({ isOpen, onClose, onDepartmentCre
                   {formData.head_ids.map(headId => {
                     const agent = agents.find(a => a.id === headId);
                     return (
-                      <div key={headId} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                      <div key={headId} className="flex items-center gap-1 bg-secondary text-foreground px-2 py-1 rounded-md text-sm">
                         <span>{agent?.user?.name || agent?.name || agent?.user_email}</span>
                         <button
                           type="button"
                           onClick={() => removeHeadOfDepartment(headId)}
-                          className="ml-1 hover:bg-primary/20 rounded p-0.5"
+                          className="ml-1 rounded p-0.5"
                           disabled={isLoading}
                         >
                           ×
