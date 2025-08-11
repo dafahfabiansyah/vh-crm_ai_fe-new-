@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -177,7 +177,7 @@ export function ProfilePage() {
                     <CardHeader className="text-center">
                       <div className="flex justify-center ">
                         <Avatar className="w-24 h-24">
-                          <AvatarImage src="/professional-profile.png" />
+                          {/* <AvatarImage src="/professional-profile.png" /> */}
                           <AvatarFallback className="bg-green-100 text-green-700 text-2xl font-semibold">
                             BB
                           </AvatarFallback>
@@ -221,7 +221,6 @@ export function ProfilePage() {
                                   Security
                                 </TabsTrigger>
                               {userRole === "Manager" && (
-                                
                                  <TabsTrigger value="profile">Profile</TabsTrigger>
                               )}
                             </TabsList>
@@ -239,23 +238,6 @@ export function ProfilePage() {
                                   </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                  {/* <div className="flex items-center space-x-4">
-                              <Avatar className="w-20 h-20">
-                                <AvatarImage src="/professional-profile.png" />
-                                <AvatarFallback className="bg-green-100 text-green-700 text-xl font-semibold">
-                                  BB
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="space-y-2">
-                                <Button variant="outline" size="sm">
-                                  Change Photo
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                  Remove Photo
-                                </Button>
-                              </div>
-                            </div> */}
-
                                   <div className="space-y-2">
                                     <Label
                                       htmlFor="username"

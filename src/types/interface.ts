@@ -287,3 +287,21 @@ export interface LeadTransferHistoryResponse {
   total_count: number;
   items: LeadTransferHistoryItem[];
 }
+
+// transaction history table interface 
+
+export interface Transaction {
+  id: string;
+  transaction_type: string;
+  quantity: number;
+  created_at: string;
+  id_subscription: string;
+  payment_method: string;
+}
+
+export interface TransactionHistoryProps {
+  transactions?: Transaction[];
+  isLoading?: boolean;
+  error?: string;
+  getPlanNameById?: (id: string) => string;
+}
