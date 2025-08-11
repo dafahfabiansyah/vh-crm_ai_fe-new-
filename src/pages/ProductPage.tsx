@@ -1,3 +1,4 @@
+import { useState } from "react";
 import MainLayout from "@/main-layout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -9,6 +10,7 @@ import AIKnowledgeTab from "@/components/AIKnowledgeTab";
 // Import your existing modal components here
 import CreateProductModal from "@/components/CreateProductModal";
 import CreateCategoryModal from "@/components/CreateCategoryModal";
+import EditProductModal from "@/components/EditProductModal";
 // etc.
 
 const ProductPage = () => {
@@ -50,9 +52,19 @@ const ProductPage = () => {
     // Add other form states and handlers as needed
   } = useProductForms();
 
+  // State for edit product modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
+
   const handleEditProduct = (product: any) => {
-    // Implementation for editing product
-    console.log("Edit product:", product);
+    setProductToEdit(product);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditProductSuccess = () => {
+    setIsEditModalOpen(false);
+    setProductToEdit(null);
+    loadData(); // Refresh the data
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -218,12 +230,22 @@ const ProductPage = () => {
           onClose={() => setIsModalOpen(false)}
           onSuccess={loadData}
           categories={categories}
+          categoriesWithAttributes={categoriesWithAttributes}
         />
         
         <CreateCategoryModal
           isOpen={isCategoryModalOpen}
           onClose={() => setIsCategoryModalOpen(false)}
           onSuccess={loadData}
+        />
+
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={handleEditProductSuccess}
+          product={productToEdit}
+          categories={categories}
+          categoriesWithAttributes={categoriesWithAttributes}
         />
       
       </div>

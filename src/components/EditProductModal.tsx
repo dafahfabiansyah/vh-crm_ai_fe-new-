@@ -16,22 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { productService, uploadImageToS3, type CategoryAttribute } from "@/services/productService";
+import { uploadImageToS3, productService, type CategoryAttribute } from "@/services/productService";
 import { useToast } from "@/hooks";
-import type { Category, ProductFormData } from "@/types";
+import type { Category, Product } from "@/types";
 
-interface CreateProductModalProps {
+interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  product: Product | null;
   categories: Category[];
   categoriesWithAttributes: Map<string, CategoryAttribute[]>;
 }
 
-const CreateProductModal: React.FC<CreateProductModalProps> = ({
+const EditProductModal: React.FC<EditProductModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  product,
   categories,
   categoriesWithAttributes,
 }) => {
@@ -44,7 +46,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
 
   const { success, error: showError } = useToast();
 
-  const [formData, setFormData] = useState<ProductFormData>({
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
@@ -53,6 +55,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
     colors: "",
     material: "",
     code: "",
+    sku: "",
     category: "",
     image: "",
   });
@@ -64,8 +67,52 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
     return num.toLocaleString("id-ID");
   };
 
+  // Initialize form data when product changes
+  useEffect(() => {
+    if (product && isOpen) {
+      setFormData({
+        name: product.name || "",
+        description: product.description || "",
+        price: product.price?.toString() || "",
+        weight: product.weight?.toString() || "",
+        stock: product.stock?.toString() || "",
+        colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
+        material: product.material || "",
+        code: product.code || product.sku || "",
+        sku: product.sku || product.code || "",
+        category: (product as any).category || (product as any).id_category || "", 
+        image: product.image_url || product.image || "", // prioritize image_url
+      });
+
+      // Initialize attributes if product has them
+      if ((product as any).attributes && Array.isArray((product as any).attributes)) {
+        const attrs: Record<string, string> = {};
+        (product as any).attributes.forEach((attr: any) => {
+          // Use attribute_name as key, value as value
+          attrs[attr.attribute_name] = attr.value;
+        });
+        console.log("Initialized attribute values from product:", attrs);
+        setAttributeValues(attrs);
+      } else {
+        setAttributeValues({});
+      }
+
+      // Load category attributes based on product's category
+      const productCategoryId = (product as any).id_category || (product as any).category;
+      console.log("Product category ID:", productCategoryId);
+      if (productCategoryId && categoriesWithAttributes.has(productCategoryId)) {
+        const categoryAttrs = categoriesWithAttributes.get(productCategoryId) || [];
+        console.log("Loading category attributes for edit:", categoryAttrs);
+        setCategoryAttributes(categoryAttrs);
+      } else {
+        console.log("No category attributes found for:", productCategoryId);
+        setCategoryAttributes([]);
+      }
+    }
+  }, [product, isOpen, categories, categoriesWithAttributes]);
+
   // Handle input changes
-  const handleInputChange = (field: keyof ProductFormData) => (
+  const handleInputChange = (field: string) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = e.target.value;
@@ -145,48 +192,71 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!product) return;
+
     setIsLoading(true);
 
     try {
-      // Prepare data based on Go struct CreateProductRequest
-      const productData = {
-        // Required fields
-        sku: formData.code,                                    // string
-        name: formData.name,                                   // string
-        id_category: formData.category,                        // uuid.UUID (as string)
-        status: true,                                          // bool
-        
-        // Optional fields (*string, *float64)
-        description: formData.description || null,             // *string
-        image: formData.image || null,                         // Send image URL directly
-        stock: formData.stock || null,                         // *string (not number!)
-        price: formData.price ? parseFloat(formData.price) : null, // *float64
-        
-        // Attributes array - based on CreateProductAttributeRequest struct
-        attributes: categoryAttributes.map((attr) => {
-          const value = attributeValues[attr.attribute_name] || "";
-          console.log(`Mapping attribute: ${attr.attribute_name} (ID: ${attr.id}) = "${value}"`);
-          return {
-            id_category_attribute: attr.id,  // Use the actual attribute ID
-            value: value  // Use attribute name as key
-          };
-        }),
-      };
+      // Prepare attributes array like in ProductPageRefactored
+      const attributesArr = categoryAttributes.map((attr) => {
+        const value = attributeValues[attr.attribute_name] || "";
+        console.log(`Edit - Mapping attribute: ${attr.attribute_name} (ID: ${attr.id}) = "${value}"`);
+        return {
+          id_category_attribute: attr.id,
+          value: value,
+        };
+      });
+      
+      console.log("Final attributes array for update:", attributesArr);
 
-      console.log("Creating product with data:", productData);
+      // Prepare product data for API - based on Go struct UpdateProductRequest
+      const productData: any = {};
+      
+      // String fields (*string in Go)
+      if (formData.name) productData.name = formData.name;
+      if (formData.description) productData.description = formData.description;
+      if (formData.sku || formData.code) productData.sku = formData.sku || formData.code;
+      if (formData.stock) productData.stock = formData.stock; // *string
+      if (formData.image) productData.image = formData.image; // Send image URL directly
+      
+      // Number fields (*float64 in Go)
+      if (formData.price) productData.price = parseFloat(formData.price) || 0; // *float64
+      
+      // Bool field (*bool in Go) - assuming product is active when editing
+      productData.status = true; // *bool
+      
+      // Add attributes if available
+      if (attributesArr.length > 0) {
+        productData.attributes = attributesArr;
+      }
+
+      console.log("Updating product with data:", productData);
+      console.log("Product ID:", product.id);
       console.log("Form data image value:", formData.image);
       console.log("Image field type:", typeof productData.image);
       console.log("Image field value:", productData.image);
-      console.log("Attributes:", productData.attributes);
+      console.log("Attributes:", attributesArr);
 
-      await productService.createProduct(productData as any);
-      success("Product created successfully");
+      // Call the update API
+      await productService.updateProduct(product.id, productData as any);
+      
+      success("Product updated successfully");
       resetForm();
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error("Error creating product:", error);
-      showError(error.message || "Failed to create product");
+      console.error("Error updating product:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Full error object:", error);
+      
+      let errorMessage = "Failed to update product";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +273,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
       colors: "",
       material: "",
       code: "",
+      sku: "",
       category: "",
       image: "",
     });
@@ -214,42 +285,27 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
 
   // Load category attributes when category changes
   useEffect(() => {
-    console.log("=== Category changed ===");
-    console.log("Selected category:", formData.category);
-    console.log("Categories with attributes:", categoriesWithAttributes);
-    
     if (formData.category && formData.category !== "") {
-      console.log("Looking for attributes for category:", formData.category);
-      
-      if (categoriesWithAttributes.has(formData.category)) {
-        const attrs = categoriesWithAttributes.get(formData.category) || [];
-        console.log("Found attributes for category:", attrs);
-        setCategoryAttributes(attrs);
-      } else {
-        console.log("No attributes found for category:", formData.category);
-        console.log("Available categories:", Array.from(categoriesWithAttributes.keys()));
-        setCategoryAttributes([]);
-      }
-      setAttributeValues({});
-    } else {
-      console.log("No category selected, clearing attributes");
+      // Note: You'll need to implement getCategoryAttributes in categoryService
+      // For now, we'll just reset the attributes
       setCategoryAttributes([]);
-      setAttributeValues({});
     }
-  }, [formData.category, categoriesWithAttributes]);
+  }, [formData.category]);
 
-  // Reset form when modal opens/closes
+  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       resetForm();
     }
   }, [isOpen]);
 
+  if (!product) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Product</DialogTitle>
+          <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -260,8 +316,8 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
             <Input
               id="code"
               placeholder="Enter product code (SKU)"
-              value={formData.code}
-              onChange={handleInputChange("code")}
+              value={formData.sku || formData.code}
+              onChange={handleInputChange("sku")}
               required
             />
           </div>
@@ -298,13 +354,13 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
               value={formData.category}
               onValueChange={(value) => {
                 setFormData((prev) => ({ ...prev, category: value }));
-                // Load category attributes when category changes
-                if (value && categoriesWithAttributes.has(value)) {
+                // Fetch category attributes when category changes
+                const selectedCategory = categories.find(cat => cat.id === value);
+                if (selectedCategory && categoriesWithAttributes.has(value)) {
                   setCategoryAttributes(categoriesWithAttributes.get(value) || []);
                 } else {
                   setCategoryAttributes([]);
                 }
-                setAttributeValues({}); // Reset attribute values
               }}
               required
             >
@@ -312,44 +368,47 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+                {categories.length === 0 ? (
+                  <SelectItem value="no-categories" disabled>
+                    No categories available
                   </SelectItem>
-                ))}
+                ) : (
+                  categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            {categories.length === 0 && (
+              <p className="text-sm text-red-500 mt-1">
+                No categories found. Please add categories first.
+              </p>
+            )}
           </div>
 
-          {/* Render attribute fields dinamis */}
-          {(() => {
-            console.log("Rendering attributes, categoryAttributes:", categoryAttributes);
-            return null;
-          })()}
+          {/* Render dynamic attribute fields */}
           {categoryAttributes.length > 0 && (
             <div className="space-y-4">
-              <h4 className="font-medium text-sm">Category Attributes ({categoryAttributes.length})</h4>
+              <h4 className="font-medium text-sm">Category Attributes</h4>
               {categoryAttributes
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((attr) => (
                   <div key={attr.attribute_name}>
                     <Label htmlFor={`attr-${attr.attribute_name}`}>
-                      {attr.attribute_name}
-                      {attr.is_required && (
-                        <span className="text-red-500">*</span>
-                      )}
+                      {attr.attribute_name} {attr.is_required && <span className="text-red-500">*</span>}
                     </Label>
                     <Input
                       id={`attr-${attr.attribute_name}`}
                       placeholder={`Enter ${attr.attribute_name}`}
                       value={attributeValues[attr.attribute_name] || ""}
-                      onChange={(e) => {
-                        console.log(`Attribute ${attr.attribute_name} changed to:`, e.target.value);
+                      onChange={(e) =>
                         handleAttributeValueChange(
                           attr.attribute_name,
                           e.target.value
-                        );
-                      }}
+                        )
+                      }
                       required={attr.is_required}
                     />
                   </div>
@@ -382,7 +441,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
             {formData.image && (
               <div className="mt-2">
                 <p className="text-sm text-green-600 mb-1">
-                  Image uploaded: {formData.image}
+                  Image URL: {formData.image}
                 </p>
                 <img
                   src={formData.image}
@@ -416,7 +475,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
 
             <div>
               <Label htmlFor="weight">
-                Weight (grams) <span className="text-red-500">*</span>
+                Weight (grams)
               </Label>
               <Input
                 id="weight"
@@ -424,7 +483,6 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
                 placeholder="0"
                 value={formData.weight ? formatNumber(formData.weight) : ""}
                 onChange={handleInputChange("weight")}
-                required
               />
             </div>
 
@@ -453,7 +511,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? "Creating..." : "Create"}
+              {isLoading ? "Updating..." : "Update Product"}
             </Button>
           </div>
         </form>
@@ -462,4 +520,4 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
   );
 };
 
-export default CreateProductModal;
+export default EditProductModal;

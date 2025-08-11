@@ -3,8 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import MainLayout from "@/main-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import EditProductModal from "@/components/EditProductModal";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +13,13 @@ import {
 import {
   ArrowLeft,
   Edit,
-  Save,
-  X,
   Package,
   ZoomIn,
 } from "lucide-react";
-import { productService } from "@/services/productService";
+import { productService, categoryService, type CategoryAttribute } from "@/services/productService";
 import type { ProductResponse } from "@/services/productService";
 import { useToast } from "@/hooks/useToast";
-import { Label } from "@/components/ui/label";
+import type { Category } from "@/types";
 
 // Extend ProductResponse to match our display needs
 interface ExtendedProduct extends ProductResponse {
@@ -45,18 +42,12 @@ const ProductDetailsPage = () => {
   const toast = useToast();
   
   const [product, setProduct] = useState<ExtendedProduct | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [editForm, setEditForm] = useState({
-    name: "",
-    price: "",
-    sku: "",
-    stock: "",
-    description: "",
-  });
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("id-ID").format(num);
@@ -67,98 +58,63 @@ const ProductDetailsPage = () => {
     setIsImageModalOpen(true);
   };
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        const response = await productService.getProducts();
-        const foundProduct = response.find((p) => p.id === id);
-        
-        if (!foundProduct) {
-          toast.error("Product not found");
-          navigate("/products");
-          return;
-        }
-
-        // Transform ProductResponse to ExtendedProduct
-        const extendedProduct: ExtendedProduct = {
-          ...foundProduct,
-          category_name: foundProduct.category_name || "Uncategorized",
-          id_category: undefined,
-          status: true, 
-          attributes: []
-        };
-
-        setProduct(extendedProduct);
-        setEditForm({
-          name: foundProduct.name,
-          price: foundProduct.price.toString(),
-          sku: foundProduct.sku,
-          stock: foundProduct.stock.toString(),
-          description: foundProduct.description,
-        });
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        toast.error("Failed to load product");
-        navigate("/products");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  const handleEditSuccess = () => {
+    // Reload product data after successful edit
     fetchProduct();
-  }, [id, navigate, toast]);
-
-  const handleEditChange = (field: string, value: string) => {
-    setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    if (!product) return;
-
+  const fetchProduct = async () => {
+    if (!id) return;
+    
     try {
-      setIsSaving(true);
+      setLoading(true);
       
-      // Here you would typically call an update API
-      // await productService.updateProduct(product.id, editForm);
+      // Fetch both product and categories data
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        productService.getProducts(),
+        categoryService.getCategories()
+      ]);
       
-      // For now, just update local state
-      setProduct((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          name: editForm.name,
-          price: parseFloat(editForm.price) || 0,
-          sku: editForm.sku,
-          stock: parseInt(editForm.stock) || 0,
-          description: editForm.description,
-        };
-      });
+      const foundProduct = productsResponse.find((p: any) => p.id === id);
+      
+      if (!foundProduct) {
+        toast.error("Product not found");
+        navigate("/products");
+        return;
+      }
 
-      setIsEditing(false);
-      toast.success("Product updated successfully!");
+      // Transform ProductResponse to ExtendedProduct
+      const extendedProduct: ExtendedProduct = {
+        ...foundProduct,
+        category_name: foundProduct.category_name || "Uncategorized",
+        id_category: undefined,
+        status: true, 
+        attributes: []
+      };
+
+      setProduct(extendedProduct);
+      setCategories(categoriesResponse);
+      
+      // Store category attributes in Map for quick lookup
+      const attributesMap = new Map<string, CategoryAttribute[]>();
+      categoriesResponse.forEach((cat: any) => {
+        if (cat.attributes && cat.attributes.length > 0) {
+          attributesMap.set(cat.id, cat.attributes);
+        }
+      });
+      setCategoriesWithAttributes(attributesMap);
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      console.error("Error fetching product:", error);
+      toast.error("Failed to load product");
+      navigate("/products");
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
-  const handleCancelEdit = () => {
-    if (!product) return;
-    
-    setEditForm({
-      name: product.name,
-      price: product.price.toString(),
-      sku: product.sku,
-      stock: product.stock.toString(),
-      description: product.description,
-    });
-    setIsEditing(false);
-  };
+  useEffect(() => {
+    fetchProduct();
+  }, [id, navigate, toast]);
 
   if (loading) {
     return (
@@ -198,38 +154,14 @@ const ProductDetailsPage = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  className="h-9 px-4 flex-1 sm:flex-none"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="h-9 px-4 flex-1 sm:flex-none"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
-              </>
-            ) : (
-              <Button 
-                size="sm" 
-                onClick={() => setIsEditing(true)}
-                className="h-9 px-4 w-full sm:w-auto"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Product
-              </Button>
-            )}
+            <Button 
+              size="sm" 
+              onClick={() => setIsEditModalOpen(true)}
+              className="h-9 px-4 w-full sm:w-auto"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Product
+            </Button>
           </div>
         </div>
 
@@ -299,68 +231,33 @@ const ProductDetailsPage = () => {
           <div className="lg:col-span-3 space-y-4 lg:space-y-6">
             {/* Product Title & Price */}
             <div className="space-y-4">
-              {isEditing ? (
-                <Input
-                  value={editForm.name}
-                  onChange={(e) => handleEditChange("name", e.target.value)}
-                  className="text-2xl font-bold border-0 p-0 h-auto bg-transparent focus-visible:ring-0"
-                  style={{ fontSize: '1.75rem', lineHeight: '2rem' }}
-                />
-              ) : (
-                <h1 className="text-3xl font-bold text-gray-900 leading-tight">
-                  {product.name}
-                </h1>
-              )}
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                {product.name}
+              </h1>
               
-              {isEditing ? (
-                <Input
-                  type="number"
-                  value={editForm.price}
-                  onChange={(e) => handleEditChange("price", e.target.value)}
-                  className="text-2xl font-bold text-primary border-0 p-0 h-auto bg-transparent focus-visible:ring-0"
-                />
-              ) : (
-                <div className="text-3xl font-bold text-primary">
-                  Rp {formatNumber(product.price)}
-                </div>
-              )}
+              <div className="text-3xl font-bold text-primary">
+                Rp {formatNumber(product.price)}
+              </div>
             </div>
 
             {/* Product Details Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-500 tracking-wider uppercase">
+                <div className="text-sm font-medium text-gray-500 tracking-wider uppercase">
                   SKU
-                </Label>
-                {isEditing ? (
-                  <Input
-                    value={editForm.sku}
-                    onChange={(e) => handleEditChange("sku", e.target.value)}
-                    className="font-medium text-gray-900"
-                  />
-                ) : (
-                  <p className="font-medium text-gray-900">
-                    {product.sku || product.code}
-                  </p>
-                )}
+                </div>
+                <p className="font-medium text-gray-900">
+                  {product.sku || product.code}
+                </p>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-500 tracking-wider uppercase">
+                <div className="text-sm font-medium text-gray-500 tracking-wider uppercase">
                   Stock
-                </Label>
-                {isEditing ? (
-                  <Input
-                    type="number"
-                    value={editForm.stock}
-                    onChange={(e) => handleEditChange("stock", e.target.value)}
-                    className="font-medium text-gray-900"
-                  />
-                ) : (
-                  <p className="font-medium text-gray-900">
-                    {formatNumber(product.stock)} units
-                  </p>
-                )}
+                </div>
+                <p className="font-medium text-gray-900">
+                  {formatNumber(product.stock)} units
+                </p>
               </div>
             </div>
 
@@ -377,18 +274,9 @@ const ProductDetailsPage = () => {
             {/* Description Section */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-900">Description</h3>
-              {isEditing ? (
-                <Textarea
-                  value={editForm.description}
-                  onChange={(e) => handleEditChange("description", e.target.value)}
-                  rows={4}
-                  className="w-full text-gray-700 leading-relaxed resize-none"
-                />
-              ) : (
-                <p className="text-gray-700 leading-relaxed">
-                  {product.description || "No description available"}
-                </p>
-              )}
+              <p className="text-gray-700 leading-relaxed">
+                {product.description || "No description available"}
+              </p>
             </div>
 
             {/* Product Specifications */}
@@ -458,6 +346,16 @@ const ProductDetailsPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Product Modal */}
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={handleEditSuccess}
+          product={product}
+          categories={categories}
+          categoriesWithAttributes={categoriesWithAttributes}
+        />
       </div>
     </MainLayout>
   );
