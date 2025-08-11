@@ -49,16 +49,15 @@ export const generateInvoicePDF = (
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text("DITERBITKAN ATAS NAMA", 20, startY);
+    // doc.text("DITERBITKAN ATAS NAMA", 20, startY);
+    doc.text("ALAMAT: ", 20, startY);
     let leftY = startY + 8;
     
     doc.setFont("helvetica", "normal");
     // doc.text("Penyedia Layanan", 20, leftY);
     // doc.text(": Tumbuhin", 80, leftY);
     // leftY += 5;
-    
-    doc.text("Alamat : ", 20, leftY);
-    leftY += 5;
+   
     // Company address with wrapping
     const companyAddress = "Ruko City Square Business Park Blok B-61\nJl Peta Selatan, RT.010/RW.001\nKalideres - Jakarta Barat, DKI Jakarta 11840";
     const addressLines = companyAddress.split('\n');
