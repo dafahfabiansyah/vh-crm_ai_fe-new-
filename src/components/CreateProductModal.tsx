@@ -376,18 +376,18 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
                 {imageUploadError}
               </div>
             )}
-            {/* {formData.image && (
+            {formData.image && (
               <div className="mt-2">
-                <p className="text-sm text-green-600 mb-1">
+                {/* <p className="text-sm text-green-600 mb-1">
                   Image uploaded: {formData.image}
-                </p>
+                </p> */}
                 <img
                   src={formData.image}
                   alt="Product Preview"
                   className="max-h-32 rounded border"
                 />
               </div>
-            )} */}
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">
