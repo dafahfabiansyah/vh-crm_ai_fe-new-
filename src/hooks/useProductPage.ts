@@ -126,9 +126,27 @@ export const useProductPage = () => {
       setProducts(productsData);
       setCategories(categoriesData);
 
-      // Load attributes for each category (simplified for now)
+      // Load attributes for each category
       const attributesMap = new Map<string, CategoryAttribute[]>();
-      // Note: getCategoryAttributes method needs to be implemented in categoryService
+      
+      // Fetch detailed category info with attributes for each category
+      const categoryDetailsPromises = categoriesData.map(async (category: any) => {
+        try {
+          const categoryDetail = await categoryService.getCategoryById(category.id);
+          if (categoryDetail.attributes && Array.isArray(categoryDetail.attributes)) {
+            attributesMap.set(category.id, categoryDetail.attributes);
+          }
+        } catch (error) {
+          console.error(`Error fetching attributes for category ${category.id}:`, error);
+          // Set empty array for categories that fail to load
+          attributesMap.set(category.id, []);
+        }
+      });
+      
+      // Wait for all category details to be loaded
+      await Promise.all(categoryDetailsPromises);
+      
+      console.log("Loaded categories with attributes:", attributesMap);
       setCategoriesWithAttributes(attributesMap);
     } catch (error) {
       console.error("Error loading data:", error);

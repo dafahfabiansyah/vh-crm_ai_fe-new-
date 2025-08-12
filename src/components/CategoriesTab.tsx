@@ -36,6 +36,13 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({
 }) => {
   const totalCategories = categories.length;
   
+  // Safety check for categoriesWithAttributes
+  const safeAttributesMap = categoriesWithAttributes || new Map<string, CategoryAttribute[]>();
+  
+  // Debug logging
+  console.log("CategoriesTab - categoriesWithAttributes Map:", safeAttributesMap);
+  console.log("CategoriesTab - Map size:", safeAttributesMap.size);
+  
   const filteredCategories = categories.filter((category) =>
     (category.name?.toLowerCase?.() || "").includes(searchTerm.toLowerCase()) ||
     (category.description?.toLowerCase?.() || "").includes(searchTerm.toLowerCase())
@@ -123,7 +130,10 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({
             <div className="divide-y">
               {filteredCategories.map((category) => {
                 const attributes =
-                  categoriesWithAttributes.get(category.id) || [];
+                  safeAttributesMap.get(category.id) || [];
+                
+                // Debug logging
+                console.log(`Category ${category.name} (${category.id}) attributes:`, attributes);
 
                 return (
                   <Accordion
@@ -191,15 +201,16 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({
                           ) : (
                             <div className="space-y-2">
                               {attributes
-                                .sort((a, b) => a.display_order - b.display_order)
+                                .filter((attr) => attr && attr.attribute_name) // Filter out invalid attributes
+                                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                                 .map((attr) => (
                                   <div
-                                    key={attr.id}
+                                    key={attr.id || attr.attribute_name}
                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                                   >
                                     <div>
                                       <span className="font-medium text-gray-900">
-                                        {attr.attribute_name}
+                                        {attr.attribute_name || 'Unknown Attribute'}
                                       </span>
                                       {attr.is_required && (
                                         <Badge
@@ -211,7 +222,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({
                                       )}
                                     </div>
                                     <div className="text-sm text-gray-500">
-                                      Order: {attr.display_order}
+                                      Order: {attr.display_order || 0}
                                     </div>
                                   </div>
                                 ))}
