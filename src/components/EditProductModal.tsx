@@ -9,24 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { uploadImageToS3, productService, type CategoryAttribute } from "@/services/productService";
+
+import { uploadImageToS3, productService } from "@/services/productService";
 import { useToast } from "@/hooks";
-import type { Category, Product } from "@/types";
+import type { Product } from "@/types";
 
 interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   product: Product | null;
-  categories: Category[];
-  categoriesWithAttributes: Map<string, CategoryAttribute[]>;
 }
 
 const EditProductModal: React.FC<EditProductModalProps> = ({
@@ -34,31 +26,13 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   onClose,
   onSuccess,
   product,
-  categories,
-  categoriesWithAttributes,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string>("");
-  const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
-  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
 
   const { success, error: showError } = useToast();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    weight: "",
-    stock: "",
-    colors: "",
-    material: "",
-    code: "",
-    sku: "",
-    category: "",
-    image: "",
-  });
 
   // Utility function for formatting numbers
   const formatNumber = (value: number | string): string => {
@@ -67,6 +41,16 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     return num.toLocaleString("id-ID");
   };
 
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    code: "",
+    sku: "",
+    image: "",
+  });
+
   // Initialize form data when product changes
   useEffect(() => {
     if (product && isOpen) {
@@ -74,42 +58,13 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         name: product.name || "",
         description: product.description || "",
         price: product.price?.toString() || "",
-        weight: product.weight?.toString() || "",
         stock: product.stock?.toString() || "",
-        colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
-        material: product.material || "",
         code: product.code || product.sku || "",
         sku: product.sku || product.code || "",
-        category: (product as any).category || (product as any).id_category || "", 
         image: product.image_url || product.image || "", // prioritize image_url
       });
-
-      // Initialize attributes if product has them
-      if ((product as any).attributes && Array.isArray((product as any).attributes)) {
-        const attrs: Record<string, string> = {};
-        (product as any).attributes.forEach((attr: any) => {
-          // Use attribute_name as key, value as value
-          attrs[attr.attribute_name] = attr.value;
-        });
-        console.log("Initialized attribute values from product:", attrs);
-        setAttributeValues(attrs);
-      } else {
-        setAttributeValues({});
-      }
-
-      // Load category attributes based on product's category
-      const productCategoryId = (product as any).id_category || (product as any).category;
-      console.log("Product category ID:", productCategoryId);
-      if (productCategoryId && categoriesWithAttributes.has(productCategoryId)) {
-        const categoryAttrs = categoriesWithAttributes.get(productCategoryId) || [];
-        console.log("Loading category attributes for edit:", categoryAttrs);
-        setCategoryAttributes(categoryAttrs);
-      } else {
-        console.log("No category attributes found for:", productCategoryId);
-        setCategoryAttributes([]);
-      }
     }
-  }, [product, isOpen, categories, categoriesWithAttributes]);
+  }, [product, isOpen]);
 
   // Handle input changes
   const handleInputChange = (field: string) => (
@@ -118,17 +73,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     const value = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      [field]: field === "price" || field === "weight" || field === "stock"
+      [field]: field === "price" || field === "stock"
         ? value.replace(/\D/g, "")
         : value,
-    }));
-  };
-
-  // Handle attribute value changes
-  const handleAttributeValueChange = (attributeName: string, value: string) => {
-    setAttributeValues((prev) => ({
-      ...prev,
-      [attributeName]: value,
     }));
   };
 
@@ -197,45 +144,25 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     setIsLoading(true);
 
     try {
-      // Prepare attributes array like in ProductPageRefactored
-      const attributesArr = categoryAttributes.map((attr) => {
-        const value = attributeValues[attr.attribute_name] || "";
-        console.log(`Edit - Mapping attribute: ${attr.attribute_name} (ID: ${attr.id}) = "${value}"`);
-        return {
-          id_category_attribute: attr.id,
-          value: value,
-        };
-      });
-      
-      console.log("Final attributes array for update:", attributesArr);
-
       // Prepare product data for API - based on Go struct UpdateProductRequest
-      const productData: any = {};
+      // UpdateProductRequest only supports: SKU, Name, Description, Stock, ImageURL, Price, Status
+      const productData: any = {
+        sku: formData.sku || formData.code,
+        name: formData.name,
+        description: formData.description || "",
+        stock: formData.stock || "0",
+        price: formData.price ? parseFloat(formData.price) : 0,
+        status: true,
+      };
       
-      // String fields (*string in Go)
-      if (formData.name) productData.name = formData.name;
-      if (formData.description) productData.description = formData.description;
-      if (formData.sku || formData.code) productData.sku = formData.sku || formData.code;
-      if (formData.stock) productData.stock = formData.stock; // *string
-      if (formData.image) productData.image = formData.image; // Send image URL directly
-      
-      // Number fields (*float64 in Go)
-      if (formData.price) productData.price = parseFloat(formData.price) || 0; // *float64
-      
-      // Bool field (*bool in Go) - assuming product is active when editing
-      productData.status = true; // *bool
-      
-      // Add attributes if available
-      if (attributesArr.length > 0) {
-        productData.attributes = attributesArr;
+      // Add image only if it exists (ImageURL field)
+      if (formData.image) {
+        productData.image = formData.image;
       }
 
-      console.log("Updating product with data:", productData);
+      console.log("Updating product with data (UpdateProductRequest):", productData);
       console.log("Product ID:", product.id);
-      console.log("Form data image value:", formData.image);
-      console.log("Image field type:", typeof productData.image);
-      console.log("Image field value:", productData.image);
-      console.log("Attributes:", attributesArr);
+      console.log("Note: Attributes and category updates not supported in UpdateProductRequest");
 
       // Call the update API
       await productService.updateProduct(product.id, productData as any);
@@ -268,29 +195,14 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
       name: "",
       description: "",
       price: "",
-      weight: "",
       stock: "",
-      colors: "",
-      material: "",
       code: "",
       sku: "",
-      category: "",
       image: "",
     });
-    setAttributeValues({});
     setImageFile(null);
     setImageUploadError("");
-    setCategoryAttributes([]);
   };
-
-  // Load category attributes when category changes
-  useEffect(() => {
-    if (formData.category && formData.category !== "") {
-      // Note: You'll need to implement getCategoryAttributes in categoryService
-      // For now, we'll just reset the attributes
-      setCategoryAttributes([]);
-    }
-  }, [formData.category]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -346,75 +258,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="category">
-              Category <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, category: value }));
-                // Fetch category attributes when category changes
-                const selectedCategory = categories.find(cat => cat.id === value);
-                if (selectedCategory && categoriesWithAttributes.has(value)) {
-                  setCategoryAttributes(categoriesWithAttributes.get(value) || []);
-                } else {
-                  setCategoryAttributes([]);
-                }
-              }}
-              required
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.length === 0 ? (
-                  <SelectItem value="no-categories" disabled>
-                    No categories available
-                  </SelectItem>
-                ) : (
-                  categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {categories.length === 0 && (
-              <p className="text-sm text-red-500 mt-1">
-                No categories found. Please add categories first.
-              </p>
-            )}
-          </div>
 
-          {/* Render dynamic attribute fields */}
-          {categoryAttributes.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm">Category Attributes</h4>
-              {categoryAttributes
-                .sort((a, b) => a.display_order - b.display_order)
-                .map((attr) => (
-                  <div key={attr.attribute_name}>
-                    <Label htmlFor={`attr-${attr.attribute_name}`}>
-                      {attr.attribute_name} {attr.is_required && <span className="text-red-500">*</span>}
-                    </Label>
-                    <Input
-                      id={`attr-${attr.attribute_name}`}
-                      placeholder={`Enter ${attr.attribute_name}`}
-                      value={attributeValues[attr.attribute_name] || ""}
-                      onChange={(e) =>
-                        handleAttributeValueChange(
-                          attr.attribute_name,
-                          e.target.value
-                        )
-                      }
-                      required={attr.is_required}
-                    />
-                  </div>
-                ))}
-            </div>
-          )}
 
           <div>
             <Label htmlFor="image">Product Image</Label>
@@ -438,7 +282,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 {imageUploadError}
               </div>
             )}
-            {formData.image && (
+            {/* {formData.image && (
               <div className="mt-2">
                 <p className="text-sm text-green-600 mb-1">
                   Image URL: {formData.image}
@@ -449,10 +293,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="max-h-32 rounded border"
                 />
               </div>
-            )}
+            )} */}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">
                 Price <span className="text-red-500">*</span>
@@ -471,19 +315,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="weight">
-                Weight (grams)
-              </Label>
-              <Input
-                id="weight"
-                type="text"
-                placeholder="0"
-                value={formData.weight ? formatNumber(formData.weight) : ""}
-                onChange={handleInputChange("weight")}
-              />
             </div>
 
             <div>

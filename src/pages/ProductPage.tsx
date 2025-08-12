@@ -230,7 +230,6 @@ const ProductPage = () => {
           onClose={() => setIsModalOpen(false)}
           onSuccess={loadData}
           categories={categories}
-          categoriesWithAttributes={categoriesWithAttributes}
         />
         
         <CreateCategoryModal
@@ -244,8 +243,6 @@ const ProductPage = () => {
           onClose={() => setIsEditModalOpen(false)}
           onSuccess={handleEditProductSuccess}
           product={productToEdit}
-          categories={categories}
-          categoriesWithAttributes={categoriesWithAttributes}
         />
       
       </div>

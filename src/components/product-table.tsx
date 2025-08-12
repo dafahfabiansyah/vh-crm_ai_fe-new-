@@ -239,10 +239,10 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   {product.description && product.description.length > 30 ? (
                     <Link
                       to={`/products/${product.id}`}
-                      className="text-blue-600 cursor-pointer hover:underline"
+                      className="cursor-pointer hover:underline"
                       title="Lihat detail"
                     >
-                      {product.description.slice(0, 30)}... <span className="text-xs">[detail]</span>
+                      {product.description.slice(0, 30)}...
                     </Link>
                   ) : (
                     <span>{product.description || '-'}</span>

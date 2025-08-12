@@ -42,8 +42,8 @@ const ProductDetailsPage = () => {
   const toast = useToast();
   
   const [product, setProduct] = useState<ExtendedProduct | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
+  const [_categories, setCategories] = useState<Category[]>([]);
+  const [_categoriesWithAttributes, setCategoriesWithAttributes] = useState<Map<string, CategoryAttribute[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -353,8 +353,6 @@ const ProductDetailsPage = () => {
           onClose={() => setIsEditModalOpen(false)}
           onSuccess={handleEditSuccess}
           product={product}
-          categories={categories}
-          categoriesWithAttributes={categoriesWithAttributes}
         />
       </div>
     </MainLayout>

@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { productService, uploadImageToS3, type CategoryAttribute } from "@/services/productService";
+import { productService, uploadImageToS3, categoryService, type CategoryAttribute } from "@/services/productService";
 import { useToast } from "@/hooks";
 import type { Category, ProductFormData } from "@/types";
 
@@ -25,7 +25,6 @@ interface CreateProductModalProps {
   onClose: () => void;
   onSuccess: () => void;
   categories: Category[];
-  categoriesWithAttributes: Map<string, CategoryAttribute[]>;
 }
 
 const CreateProductModal: React.FC<CreateProductModalProps> = ({
@@ -33,8 +32,11 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
   onClose,
   onSuccess,
   categories,
-  categoriesWithAttributes,
 }) => {
+  console.log("CreateProductModal props:", {
+    isOpen,
+    categories: categories.length,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -149,18 +151,14 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
 
     try {
       // Prepare data based on Go struct CreateProductRequest
-      const productData = {
-        // Required fields
+      const productData: any = {
+        id_category: formData.category,                        // uuid.UUID (as string)
         sku: formData.code,                                    // string
         name: formData.name,                                   // string
-        id_category: formData.category,                        // uuid.UUID (as string)
+        description: formData.description || "",               // string (not null)
+        stock: formData.stock || "0",                          // string (not null)
+        price: formData.price ? parseFloat(formData.price) : 0, // float64 (not null)
         status: true,                                          // bool
-        
-        // Optional fields (*string, *float64)
-        description: formData.description || null,             // *string
-        image: formData.image || null,                         // Send image URL directly
-        stock: formData.stock || null,                         // *string (not number!)
-        price: formData.price ? parseFloat(formData.price) : null, // *float64
         
         // Attributes array - based on CreateProductAttributeRequest struct
         attributes: categoryAttributes.map((attr) => {
@@ -173,11 +171,14 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
         }),
       };
 
+      // Add image only if it exists
+      if (formData.image) {
+        productData.image = formData.image;
+      }
+
       console.log("Creating product with data:", productData);
       console.log("Form data image value:", formData.image);
-      console.log("Image field type:", typeof productData.image);
-      console.log("Image field value:", productData.image);
-      console.log("Attributes:", productData.attributes);
+      console.log("Final payload attributes:", productData.attributes);
 
       await productService.createProduct(productData as any);
       success("Product created successfully");
@@ -211,32 +212,6 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
     setImageUploadError("");
     setCategoryAttributes([]);
   };
-
-  // Load category attributes when category changes
-  useEffect(() => {
-    console.log("=== Category changed ===");
-    console.log("Selected category:", formData.category);
-    console.log("Categories with attributes:", categoriesWithAttributes);
-    
-    if (formData.category && formData.category !== "") {
-      console.log("Looking for attributes for category:", formData.category);
-      
-      if (categoriesWithAttributes.has(formData.category)) {
-        const attrs = categoriesWithAttributes.get(formData.category) || [];
-        console.log("Found attributes for category:", attrs);
-        setCategoryAttributes(attrs);
-      } else {
-        console.log("No attributes found for category:", formData.category);
-        console.log("Available categories:", Array.from(categoriesWithAttributes.keys()));
-        setCategoryAttributes([]);
-      }
-      setAttributeValues({});
-    } else {
-      console.log("No category selected, clearing attributes");
-      setCategoryAttributes([]);
-      setAttributeValues({});
-    }
-  }, [formData.category, categoriesWithAttributes]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -296,15 +271,37 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
             </Label>
             <Select
               value={formData.category}
-              onValueChange={(value) => {
+              onValueChange={async (value) => {
                 setFormData((prev) => ({ ...prev, category: value }));
-                // Load category attributes when category changes
-                if (value && categoriesWithAttributes.has(value)) {
-                  setCategoryAttributes(categoriesWithAttributes.get(value) || []);
-                } else {
-                  setCategoryAttributes([]);
+                setCategoryAttributes([]);
+                setAttributeValues({});
+                
+                console.log("Category selected:", value);
+                
+                if (value) {
+                  try {
+                    console.log("Fetching category details for:", value);
+                    const detail = await categoryService.getCategoryById(value);
+                    console.log("Category detail response:", detail);
+                    
+                    if (detail.attributes && Array.isArray(detail.attributes)) {
+                      console.log("Setting category attributes:", detail.attributes);
+                      setCategoryAttributes(detail.attributes);
+                      
+                      // Initialize empty attribute values
+                      const attrInit: Record<string, string> = {};
+                      detail.attributes.forEach((attr) => {
+                        attrInit[attr.attribute_name] = "";
+                      });
+                      setAttributeValues(attrInit);
+                      console.log("Initialized attribute values:", attrInit);
+                    }
+                  } catch (err) {
+                    console.error("Error fetching category details:", err);
+                    setCategoryAttributes([]);
+                    setAttributeValues({});
+                  }
                 }
-                setAttributeValues({}); // Reset attribute values
               }}
               required
             >
@@ -379,7 +376,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
                 {imageUploadError}
               </div>
             )}
-            {formData.image && (
+            {/* {formData.image && (
               <div className="mt-2">
                 <p className="text-sm text-green-600 mb-1">
                   Image uploaded: {formData.image}
@@ -390,7 +387,7 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
                   className="max-h-32 rounded border"
                 />
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="grid grid-cols-3 gap-4">
