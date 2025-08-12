@@ -340,13 +340,13 @@ const ProductTable: React.FC<ProductTableProps> = ({
         {filteredProducts.map((product: any) => (
           <Card key={product.id} className="rounded-lg shadow-sm">
             <CardContent className="flex gap-3 p-4">
-              {product.image_url || product.image ? (
+              {product.image_url ? (
                 <img
                   key={`${product.id}-${product.updated_at}-${refreshKeys[product.id] || 0}`}
-                  src={`${product.image_url || product.image}?v=${refreshKeys[product.id] || 0}`}
+                  src={`${product.image_url}?v=${refreshKeys[product.id] || 0}`}
                   alt={product.name}
                   className="h-16 w-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => handleImageClick(product.image_url || product.image, product.name)}
+                  onClick={() => handleImageClick(product.image_url, product.name)}
                   onError={(e) => {
                     // Fallback jika gambar gagal load
                     const target = e.target as HTMLImageElement;

@@ -161,12 +161,12 @@ const ProductDetailsPage = () => {
           <div className="lg:col-span-2 space-y-4 lg:space-y-6">
             {/* Main Image */}
             <div className="bg-gray-50 rounded-2xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300"
-                 onClick={() => handleImageClick(product.image_url || product.image || "")}>
+                 onClick={() => handleImageClick(product.image_url ||  "")}>
               <div className="aspect-[4/3] w-full relative">
-                {product.image_url || product.image ? (
+                {product.image_url ? (
                   <>
                     <img
-                      src={product.image_url || product.image}
+                      src={product.image_url}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
@@ -192,13 +192,13 @@ const ProductDetailsPage = () => {
                 <div
                   key={index}
                   className="aspect-square bg-gray-100 rounded-xl border-2 border-transparent hover:border-primary cursor-pointer transition-all duration-200 group"
-                  onClick={() => handleImageClick(product.image_url || product.image || "")}
+                  onClick={() => handleImageClick(product.image_url || "")}
                 >
                   <div className="w-full h-full flex items-center justify-center rounded-xl relative overflow-hidden">
-                    {product.image_url || product.image ? (
+                    {product.image_url ? (
                       <>
                         <img
-                          src={product.image_url || product.image}
+                          src={product.image_url}
                           alt={`${product.name} thumbnail ${index}`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           onError={(e) => {
@@ -252,7 +252,7 @@ const ProductDetailsPage = () => {
                   SKU
                 </div>
                 <p className="font-medium text-gray-900">
-                  {product.sku || product.code}
+                  {product.sku}
                 </p>
               </div>
               

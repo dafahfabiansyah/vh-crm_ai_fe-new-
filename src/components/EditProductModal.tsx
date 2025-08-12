@@ -69,7 +69,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         stock: product.stock?.toString() || "",
         code: product.code || product.sku || "",
         sku: product.sku || product.code || "",
-        image: product.image_url || product.image || "", // prioritize image_url
+        image: product.image_url || "", 
         status: (product as any).status !== undefined ? (product as any).status.toString() : "true",
       });
     }
