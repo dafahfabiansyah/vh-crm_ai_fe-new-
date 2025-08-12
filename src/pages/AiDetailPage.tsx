@@ -161,7 +161,7 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
   const [requireSucess, setRequireSucess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [integrationToDelete, setIntegrationToDelete] = useState<any>(null);
-  const { success, error: showError } = useToast();
+  const { success } = useToast();
 
   useEffect(() => {
     setCustomIntegrationsLoading(true);

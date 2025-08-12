@@ -10,7 +10,6 @@ import { Button } from "./ui/button";
 import { BanknoteArrowDown, FileText } from "lucide-react";
 import { generateInvoicePDF } from "../utils/pdfGenerator";
 import { exportTransactionsToExcel } from "../utils/excelExporter";
-import type {  TransactionHistoryProps } from "../types/transaction";
 import {
   Table,
   TableBody,
@@ -19,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import type { TransactionHistoryProps } from "@/types";
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions = [],
