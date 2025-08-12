@@ -16,7 +16,7 @@ import {
   Package,
   ZoomIn,
 } from "lucide-react";
-import { productService, categoryService, type CategoryAttribute } from "@/services/productService";
+import { productService, categoryService, type CategoryAttribute, type ProductAttribute } from "@/services/productService";
 import type { ProductResponse } from "@/services/productService";
 import { useToast } from "@/hooks/useToast";
 import type { Category } from "@/types";
@@ -26,14 +26,7 @@ interface ExtendedProduct extends ProductResponse {
   category_name: string;
   id_category?: string;
   status?: boolean;
-  attributes?: Array<{
-    id: string;
-    id_category_attribute: string;
-    attribute_name: string;
-    value: string;
-    created_at: string;
-    updated_at: string;
-  }>;
+  attributes?: ProductAttribute[];
 }
 
 const ProductDetailsPage = () => {
@@ -69,27 +62,24 @@ const ProductDetailsPage = () => {
     try {
       setLoading(true);
       
-      // Fetch both product and categories data
-      const [productsResponse, categoriesResponse] = await Promise.all([
-        productService.getProducts(),
-        categoryService.getCategories()
-      ]);
-      
-      const foundProduct = productsResponse.find((p: any) => p.id === id);
-      
-      if (!foundProduct) {
-        toast.error("Product not found");
+      if (!id) {
+        toast.error("Product ID not found");
         navigate("/products");
         return;
       }
-
+      
+      // Fetch product by ID and categories data
+      const [productResponse, categoriesResponse] = await Promise.all([
+        productService.getProductById(id),
+        categoryService.getCategories()
+      ]);
+      
       // Transform ProductResponse to ExtendedProduct
       const extendedProduct: ExtendedProduct = {
-        ...foundProduct,
-        category_name: foundProduct.category_name || "Uncategorized",
-        id_category: undefined,
-        status: true, 
-        attributes: []
+        ...productResponse,
+        category_name: productResponse.category_name || "Uncategorized",
+        status: productResponse.status ?? true,
+        attributes: productResponse.attributes || []
       };
 
       setProduct(extendedProduct);
@@ -225,7 +215,22 @@ const ProductDetailsPage = () => {
                 </div>
               ))}
             </div>
+          {/* Product Attributes */}
+            {Array.isArray(product.attributes) && product.attributes.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900">Attributes</h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  {product.attributes.map((attr: any, index: number) => (
+                    <div key={index} className="flex justify-between py-2 border-b border-gray-200 last:border-b-0">
+                      <span className="font-medium text-gray-600">{attr.attribute_name}</span>
+                      <span className="text-gray-900">{attr.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+          
 
           {/* Right Column - Product Information (3/5 width) */}
           <div className="lg:col-span-3 space-y-4 lg:space-y-6">
@@ -306,20 +311,7 @@ const ProductDetailsPage = () => {
               </div>
             </div>
 
-            {/* Product Attributes */}
-            {Array.isArray(product.attributes) && product.attributes.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">Attributes</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  {product.attributes.map((attr: any, index: number) => (
-                    <div key={index} className="flex justify-between py-2 border-b border-gray-200 last:border-b-0">
-                      <span className="font-medium text-gray-600">{attr.attribute_name}</span>
-                      <span className="text-gray-900">{attr.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            
           </div>
         </div>
 
