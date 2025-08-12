@@ -275,7 +275,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   product.attributes.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {product.attributes.map((attr: any) => {
-                        const attrName =
+                        // Try to get attribute name from the attribute object itself first
+                        const attrName = attr.attribute_name || 
                           categoriesWithAttributes
                             .get(
                               product.id_category ||
@@ -288,7 +289,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                           attr.id_category_attribute;
                         return (
                           <Badge
-                            key={attr.id_category_attribute}
+                            key={attr.id_category_attribute || attr.attribute_name}
                             variant="outline"
                             className="text-xs"
                           >
@@ -371,14 +372,15 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 {Array.isArray(product.attributes) && product.attributes.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {product.attributes.map((attr: any) => {
-                      const attrName =
+                      // Try to get attribute name from the attribute object itself first
+                      const attrName = attr.attribute_name || 
                         categoriesWithAttributes
                           .get(product.id_category || product.category)
                           ?.find((a) => a.id === attr.id_category_attribute)?.attribute_name ||
                         attr.id_category_attribute;
                       return (
                         <Badge
-                          key={attr.id_category_attribute}
+                          key={attr.id_category_attribute || attr.attribute_name}
                           variant="outline"
                           className="text-xs"
                         >

@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { uploadImageToS3, productService } from "@/services/productService";
 import { useToast } from "@/hooks";
@@ -49,6 +56,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     code: "",
     sku: "",
     image: "",
+    status: "true", // "true" for active, "false" for inactive
   });
 
   // Initialize form data when product changes
@@ -62,6 +70,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         code: product.code || product.sku || "",
         sku: product.sku || product.code || "",
         image: product.image_url || product.image || "", // prioritize image_url
+        status: (product as any).status !== undefined ? (product as any).status.toString() : "true",
       });
     }
   }, [product, isOpen]);
@@ -76,6 +85,14 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
       [field]: field === "price" || field === "stock"
         ? value.replace(/\D/g, "")
         : value,
+    }));
+  };
+
+  // Handle status select change
+  const handleStatusChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      status: value,
     }));
   };
 
@@ -152,7 +169,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         description: formData.description || "",
         stock: formData.stock || "0",
         price: formData.price ? parseFloat(formData.price) : 0,
-        status: true,
+        status: formData.status === "true",
       };
       
       // Add image only if it exists (ImageURL field)
@@ -199,6 +216,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
       code: "",
       sku: "",
       image: "",
+      status: "true",
     });
     setImageFile(null);
     setImageUploadError("");
@@ -330,6 +348,21 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="status">
+              Status <span className="text-red-500">*</span>
+            </Label>
+            <Select value={formData.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select product status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-3 pt-4">
