@@ -38,7 +38,7 @@ export async function createTransaction({ id_subscription, voucher, months, disc
   console.log('Transaction Service - Input params:', { id_subscription, voucher, months, discount_percentage, voucher_discount_percentage, total_amount, unit_price });
   
   // Call the new endpoint
-  const response = await axios.post("http://localhost:8080/v1/transactions/create-without-subscription", body);
+  const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/v1/transactions/create-without-subscription`, body);
   
   // After successful transaction creation, call Plink API
   try {
@@ -212,7 +212,7 @@ async function submitToPlinkAPI(data: PlinkSubmissionData): Promise<PlinkRespons
   const mac = CryptoJS.HmacSHA256(requestData, secretKey).toString();
   
   // Submit to Plink API via backend
-  const response = await axios.post('http://localhost:8080/v1/transactions/prismalink-payment', {
+  const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/v1/transactions/prismalink-payment`, {
     ...requestBody,
     mac: mac
   });
