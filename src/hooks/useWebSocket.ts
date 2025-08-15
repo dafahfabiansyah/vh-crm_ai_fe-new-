@@ -14,8 +14,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     onContactUpdate,
     onChatlogUpdate,
     onConnect,
-    onDisconnect,
-    onError
+    onDisconnect
   } = options
 
   const isConnectedRef = useRef(false)

@@ -44,7 +44,7 @@ export default function BillingPage() {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPlanData, setSelectedPlanData] = useState<any>(null);
   const [couponCode, setCouponCode] = useState("");
-  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+
   const [, setDiscountedPrice] = useState<string | null>(null);
   const [, setOriginalPrice] = useState<string | null>(null);
   const [voucherValidation, setVoucherValidation] = useState<VoucherValidationResponse | null>(null);
@@ -72,7 +72,6 @@ export default function BillingPage() {
       setSelectedPlan(planId);
       setSelectedPlanData(plan);
       setIsPaymentDialogOpen(true);
-      setIsDiscountApplied(false);
       setDiscountedPrice(null);
       setOriginalPrice(null);
       setVoucherValidation(null);
@@ -106,16 +105,13 @@ export default function BillingPage() {
       
       if (response.valid) {
         success(response.message || "Voucher validated successfully!");
-        setIsDiscountApplied(true);
       } else {
         showError(response.message || "Invalid voucher code");
-        setIsDiscountApplied(false);
       }
     } catch (error: any) {
       console.error('Voucher validation error:', error);
       showError(error.response?.data?.message || "Failed to validate voucher");
       setVoucherValidation(null);
-      setIsDiscountApplied(false);
     } finally {
       setIsValidatingVoucher(false);
     }
