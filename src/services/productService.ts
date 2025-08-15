@@ -26,6 +26,7 @@ export interface CreateCategoryRequest {
 }
 
 export interface ProductResponse {
+  category_name: string;
   image_url: string;
   sku: string;
   id: string;
@@ -41,6 +42,18 @@ export interface ProductResponse {
   category: string;
   created_at: string;
   updated_at: string;
+  status?: boolean;
+  id_category?: string;
+  attributes?: ProductAttribute[];
+}
+
+export interface ProductAttribute {
+  id: string;
+  id_category_attribute: string;
+  attribute_name: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateProductRequest {
@@ -53,6 +66,7 @@ export interface CreateProductRequest {
   material: string;
   image: string;
   category: string;
+  id_category?: string;
 }
 
 // Category API functions
@@ -190,6 +204,19 @@ export const productService = {
       console.error('Error updating product:', error);
       console.error('Error response:', error.response?.data);
       throw new Error(error.response?.data?.message || error.message || 'Failed to update product');
+    }
+  },
+
+  // Get product by ID
+  async getProductById(productId: string): Promise<ProductResponse> {
+    try {
+      const response = await axiosInstance.get<ProductResponse>(`/v1/products/${productId}`);
+      console.log('Product fetched by ID:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching product by ID:', error);
+      console.error('Error response:', error.response?.data);
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch product');
     }
   }
 };

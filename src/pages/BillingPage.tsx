@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -22,26 +21,21 @@ import {
   Users,
   Bot,
   Plus,
-  TrendingUp,
   Calendar,
-  FileText,
   Clock,
+  Star,
+  Zap,
+  Infinity,
+  Crown,
+  MessageSquare,
+  UserCheck,
+  Brain,
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
 import { createTransaction, getUsageTracking, getCurrentSubscription, getTransactionHistory, validateVoucher } from "@/services/transactionService";
 import type { VoucherValidationResponse } from "@/services/transactionService";
 import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { useToast } from "@/hooks";
 
 export default function BillingPage() {
@@ -68,9 +62,9 @@ export default function BillingPage() {
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [, setLoadingSubscription] = useState(true);
   const [, setSubscriptionError] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [transactionsError, setTransactionsError] = useState<string | null>(null);
+  const [, setTransactions] = useState<any[]>([]);
+  const [, setLoadingTransactions] = useState(true);
+  const [, setTransactionsError] = useState<string | null>(null);
 
   const handleUpgrade = (planId: string) => {
     const plan = pricingPlans.find((p) => p.id === planId);
@@ -281,12 +275,6 @@ export default function BillingPage() {
     return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
   }
 
-  // Helper untuk mendapatkan nama plan dari id_subscription
-  function getPlanNameById(id: string) {
-    const plan = pricingPlans.find((p) => p.id === id);
-    return plan ? plan.name : id;
-  }
-
   // Ganti dashboardData dengan data dari usageTracking jika ada
   const dashboardData = {
     packageDetails: {
@@ -314,24 +302,6 @@ export default function BillingPage() {
       count: usageTracking?.additional_ai_response ?? 0,
       permanent: true,
     },
-  };
-
-  const handleExportTransactions = () => {
-    if (!transactions || transactions.length === 0) return;
-    const exportData = transactions.map(tx => ({
-      id: tx.id,
-      transaction_type: tx.transaction_type,
-      quantity: tx.quantity,
-      created_at: tx.created_at,
-      subscription: getPlanNameById(tx.id_subscription),
-      payment_method: tx.payment_method,
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(file, `transactions_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
   return (
@@ -366,11 +336,12 @@ export default function BillingPage() {
                 </div>
                 <Button
                   variant="secondary"
-                  disabled
+                  // disabled
                   size="sm"
+                  onClick={() => {location.href = "/profile"}}
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full sm:w-auto text-xs"
                 >
-                  View Current Subscription
+                  View History Transaction
                 </Button>
               </CardContent>
             </Card>
@@ -410,10 +381,10 @@ export default function BillingPage() {
                     Top Up MAU
                   </Button>
                 </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
+                {/* <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-200">
                   <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>Reset Setup Tanggal 1</span>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -538,178 +509,189 @@ export default function BillingPage() {
                 if (plan.name?.toLowerCase().includes("pro"))
                   IconComponent = Shield;
                 if (plan.name?.toLowerCase().includes("business"))
-                  IconComponent = Bot;
+                  IconComponent = Crown;
                 if (plan.name?.toLowerCase().includes("enterprise"))
-                  IconComponent = Users;
+                  IconComponent = Star;
                 if (plan.name?.toLowerCase().includes("unlimited"))
-                  IconComponent = TrendingUp;
+                  IconComponent = Infinity;
+
+
                 return (
                   <Card
                     key={plan.id}
-                    className={
-                      "relative transition-all duration-300 hover:shadow-md h-full flex flex-col border-border hover:border-primary/50"
-                    }
+                    className="relative transition-all duration-500 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col bg-white border border-border hover:border-primary/50 overflow-hidden group"
                   >
-                    {/* Removed Current Plan Badge */}
+                    {/* Current Plan Badge */}
+                    {currentSubscription?.package_name === plan.name && (
+                      <div className="absolute top-3 left-3 z-10">
+                        <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                          <Check className="h-3 w-3" />
+                          Current
+                        </div>
+                      </div>
+                    )}
 
-                    <CardHeader className="text-center pb-3 sm:pb-4">
-                      <div className="flex justify-center mb-2">
-                        <div
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-muted`}
-                        >
-                          <IconComponent
-                            className={
-                              "h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground"
-                            }
-                          />
+                    <CardHeader className="text-center pb-3 sm:pb-4 relative">
+                      <div className="flex justify-center mb-3">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-muted shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <IconComponent className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
                         </div>
                       </div>
 
-                      <CardTitle className="text-base sm:text-lg font-bold text-foreground">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-foreground mb-2">
                         {plan.name}
                       </CardTitle>
 
-                      <div className="mt-2">
+                      <div className="mb-3">
                         {/* Show price for selected period or default to monthly */}
-                        <div className="text-xl sm:text-2xl font-bold text-foreground">
+                        <div className="text-2xl sm:text-3xl font-bold text-foreground">
                           {(() => {
                             const billing = plan.billing?.find((b: any) => {
-                              if (selectedPeriod === "monthly")
-                                return b.billing_period === 1;
-                              if (selectedPeriod === "3months")
-                                return b.billing_period === 3;
-                              if (selectedPeriod === "halfyearly")
-                                return b.billing_period === 6;
-                              if (selectedPeriod === "yearly")
-                                return b.billing_period === 12;
+                              if (selectedPeriod === "monthly") return b.billing_period === 1;
+                              if (selectedPeriod === "3months") return b.billing_period === 3;
+                              if (selectedPeriod === "halfyearly") return b.billing_period === 6;
+                              if (selectedPeriod === "yearly") return b.billing_period === 12;
                               return b.billing_period === 1;
                             });
                             if (billing) {
                               return `IDR ${billing.calculated_amount.toLocaleString()}`;
                             }
-                            return `IDR ${
-                              plan.base_price?.toLocaleString?.() ?? "-"
-                            }`;
+                            return `IDR ${plan.base_price?.toLocaleString?.() ?? "-"}`;
                           })()}
                         </div>
-                        <div className="text-xs sm:text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground font-medium">
                           {(() => {
                             const billing = plan.billing?.find((b: any) => {
-                              if (selectedPeriod === "monthly")
-                                return b.billing_period === 1;
-                              if (selectedPeriod === "3months")
-                                return b.billing_period === 3;
-                              if (selectedPeriod === "halfyearly")
-                                return b.billing_period === 6;
-                              if (selectedPeriod === "yearly")
-                                return b.billing_period === 12;
+                              if (selectedPeriod === "monthly") return b.billing_period === 1;
+                              if (selectedPeriod === "3months") return b.billing_period === 3;
+                              if (selectedPeriod === "halfyearly") return b.billing_period === 6;
+                              if (selectedPeriod === "yearly") return b.billing_period === 12;
                               return b.billing_period === 1;
                             });
                             if (billing) {
-                              if (billing.billing_period === 1)
-                                return "/ month";
-                              if (billing.billing_period === 3)
-                                return "/ 3 months";
-                              if (billing.billing_period === 6)
-                                return "/ 6 months";
-                              if (billing.billing_period === 12)
-                                return "/ year";
+                              if (billing.billing_period === 1) return "/ month";
+                              if (billing.billing_period === 3) return "/ 3 months";
+                              if (billing.billing_period === 6) return "/ 6 months";
+                              if (billing.billing_period === 12) return "/ year";
                             }
                             return "/ month";
                           })()}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mt-1 italic">
                           {plan.description}
-                        </div>
-                      </div>
-
-                      <div className="mt-2">
-                        <div className="text-xs sm:text-sm font-medium text-foreground">
-                          {plan.name} Features
                         </div>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-4 flex-1">
-                      <div className="space-y-1 sm:space-y-2">
-                        {plan.features?.map(
-                          (
-                            feature: { id: string; name: string },
-                            index: number
-                          ) => (
-                            <div
-                              key={feature.id || index}
-                              className="flex items-center gap-2"
-                            >
-                              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                    <CardContent className="px-4 sm:px-6 flex-1 relative pb-56">
+                      {/* Features */}
+                      <div className="space-y-3 mb-4">
+                        <div className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-amber-500" />
+                          Core Features
+                        </div>
+                        <div className="space-y-2">
+                          {plan.features?.map((feature: { id: string; name: string }, featureIndex: number) => (
+                            <div key={feature.id || featureIndex} className="flex items-center gap-3 group/feature">
+                              <div className="w-5 h-5 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 group-hover/feature:scale-110 transition-transform duration-200">
+                                <Check className="h-3 w-3 text-blue-600 font-bold" />
                               </div>
-                              <span className="text-xs sm:text-sm text-foreground">
+                              <span className="text-sm text-foreground font-medium">
                                 {feature.name}
                               </span>
                             </div>
-                          )
-                        )}
-                        {/* Show limits if available */}
-                        {plan.limits && (
-                          <div className="flex flex-col gap-1 mt-2">
-                            <div className="text-xs text-muted-foreground mb-1">
-                              Limits:
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Limits with engaging presentation - Absolute positioned */}
+                      {plan.limits && (
+                        <div className="absolute bottom-0 left-4 right-4 sm:left-6 sm:right-6">
+                          <div className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <Brain className="h-4 w-4 text-indigo-500" />
+                            Usage Limits
+                          </div>
+                          <div className="grid gap-3">
+                            {/* MAU Limit */}
+                            <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <UserCheck className="h-4 w-4 text-blue-500" />
+                                  <span className="text-xs font-medium text-muted-foreground">Monthly Active Users</span>
+                                </div>
+                                <div className={`text-lg font-bold ${plan.limits.mau === -1 ? 'text-indigo-600' : 'text-foreground'}`}>
+                                  {plan.limits.mau === -1 ? (
+                                    <div className="flex items-center gap-1">
+                                      <Infinity className="h-4 w-4" />
+                                      <span className="text-sm">Unlimited</span>
+                                    </div>
+                                  ) : (
+                                    <span>{plan.limits.mau.toLocaleString()}</span>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-xs sm:text-sm text-foreground">
-                                MAU:{" "}
-                                {plan.limits.mau === -1
-                                  ? "Unlimited"
-                                  : plan.limits.mau}
-                              </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+
+                            {/* Human Agents Limit */}
+                            <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-green-500" />
+                                  <span className="text-xs font-medium text-muted-foreground">Human Agents</span>
+                                </div>
+                                <div className={`text-lg font-bold ${plan.limits.human_agent === -1 ? 'text-indigo-600' : 'text-foreground'}`}>
+                                  {plan.limits.human_agent === -1 ? (
+                                    <div className="flex items-center gap-1">
+                                      <Infinity className="h-4 w-4" />
+                                      <span className="text-sm">Unlimited</span>
+                                    </div>
+                                  ) : (
+                                    <span>{plan.limits.human_agent}</span>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-xs sm:text-sm text-foreground">
-                                Human Agents:{" "}
-                                {plan.limits.human_agent === -1
-                                  ? "Unlimited"
-                                  : plan.limits.human_agent}
-                              </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <Check className="h-2 w-2 sm:h-3 sm:w-3 text-blue-600" />
+
+                            {/* AI Response Limit */}
+                            <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <MessageSquare className="h-4 w-4 text-purple-500" />
+                                  <span className="text-xs font-medium text-muted-foreground">Token Tumbuhin</span>
+                                </div>
+                                <div className={`text-lg font-bold ${plan.limits.ai_response === -1 ? 'text-indigo-600' : 'text-foreground'}`}>
+                                  {plan.limits.ai_response === -1 ? (
+                                    <div className="flex items-center gap-1">
+                                      <Infinity className="h-4 w-4" />
+                                      <span className="text-sm">Unlimited</span>
+                                    </div>
+                                  ) : (
+                                    <span>{plan.limits.ai_response.toLocaleString()}</span>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-xs sm:text-sm text-foreground">
-                                Token Tumbuhin:{" "}
-                                {plan.limits.ai_response === -1
-                                  ? "Unlimited"
-                                  : plan.limits.ai_response}
-                              </span>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </CardContent>
 
-                    <CardFooter className="flex flex-col gap-2 pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
+                    <CardFooter className="px-4 sm:px-6 pb-4 sm:pb-6 pt-4">
                       {currentSubscription?.package_name === plan.name ? (
                         <Button
                           disabled
-                          className={
-                            "w-full h-8 sm:h-9 text-xs sm:text-sm bg-primary cursor-not-allowed"
-                          }
+                          className="w-full h-11 text-sm font-semibold bg-green-500 text-white cursor-not-allowed rounded-xl shadow-lg"
                         >
-                          Active
+                          <Check className="h-4 w-4 mr-2" />
+                          Current Plan
                         </Button>
                       ) : (
                         <Button
                           onClick={() => handleUpgrade(plan.id)}
-                          className={
-                            "w-full h-8 sm:h-9 text-xs sm:text-sm bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                          }
+                          className={`w-full h-11 text-sm font-semibold rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                            
+                              'bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white'
+                          }`}
                         >
                           Upgrade Now
                         </Button>
@@ -721,74 +703,10 @@ export default function BillingPage() {
             )}
           </div>
 
-          {/* Transaction History */}
-          <div className="mt-6 sm:mt-8">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base sm:text-lg font-semibold">
-                      Transaction History
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      Riwayat pembayaran dan transaksi Anda
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={handleExportTransactions}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Tipe</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Subscription</TableHead>
-                      <TableHead>Metode</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loadingTransactions ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center">Memuat transaksi...</TableCell>
-                      </TableRow>
-                    ) : transactionsError ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-red-500">{transactionsError}</TableCell>
-                      </TableRow>
-                    ) : transactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center">Belum ada transaksi</TableCell>
-                      </TableRow>
-                    ) : (
-                      transactions.map((transaction) => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>
-                            {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs max-w-[120px] truncate" title={transaction.id}>{transaction.id}</TableCell>
-                          <TableCell>{transaction.transaction_type}</TableCell>
-                          <TableCell>{transaction.quantity}</TableCell>
-                          <TableCell className="max-w-[120px] truncate" title={transaction.id_subscription}>{getPlanNameById(transaction.id_subscription)}</TableCell>
-                          <TableCell>{transaction.payment_method}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Transaction History
+          <TransactionHistory
+            transactions={transactions}
+          /> */}
         </div>
 
         {/* Payment Dialog */}

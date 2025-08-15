@@ -7,4 +7,6 @@ export { useContacts } from './useContacts';
 export { useChatLogs } from './useChatLogs';
 export { useWebSocket } from './useWebSocket';
 export { useToast } from './useToast';
+export { useProductPage } from './useProductPage';
+export { useProductForms } from './useProductForms';
 // export { useWhatsAppStatus } from './useWhatsAppStatus';

@@ -48,8 +48,8 @@ import type { ContactFilterData } from "@/components/filter-contact-modal";
 import { platformsInboxService } from "@/services/platfrormsInboxService";
 import { contactService } from "@/services/contactService";
 import { useToast } from "@/contexts/ToastContext";
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 interface Contact {
   id: string;
@@ -176,7 +176,10 @@ export default function ContactsPage() {
         !addContactForm.phone ||
         !addContactForm.name
       ) {
-        showError("Form Tidak Lengkap", "Platform, nomor telepon, dan nama wajib diisi");
+        showError(
+          "Form Tidak Lengkap",
+          "Platform, nomor telepon, dan nama wajib diisi"
+        );
         return;
       }
       const body = {
@@ -194,7 +197,10 @@ export default function ContactsPage() {
       fetchContacts(currentPage, itemsPerPage);
       success("Kontak Ditambahkan", "Kontak berhasil ditambahkan.");
     } catch (err: any) {
-      showError("Gagal Menambah Kontak", err.response?.data?.message || err.message || "Gagal menambah kontak");
+      showError(
+        "Gagal Menambah Kontak",
+        err.response?.data?.message || err.message || "Gagal menambah kontak"
+      );
     }
   };
 
@@ -210,7 +216,10 @@ export default function ContactsPage() {
       success("Kontak Dihapus", "Kontak berhasil dihapus.");
       fetchContacts(currentPage, itemsPerPage);
     } catch (err: any) {
-      showError("Gagal Menghapus", err.response?.data?.message || err.message || "Gagal menghapus kontak");
+      showError(
+        "Gagal Menghapus",
+        err.response?.data?.message || err.message || "Gagal menghapus kontak"
+      );
     } finally {
       setDeleteDialog({ open: false });
     }
@@ -219,10 +228,10 @@ export default function ContactsPage() {
   // Filter contacts based on search query and filter data
   const filteredContacts = contacts.filter((contact) => {
     // Search query filter
-    const matchesSearch = 
+    const matchesSearch =
       contact.push_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.contact_identifier.includes(searchQuery);
-    
+
     if (!matchesSearch) return false;
 
     // Date range filter
@@ -231,7 +240,7 @@ export default function ContactsPage() {
       const fromDate = new Date(filterData.dateFrom);
       if (contactDate < fromDate) return false;
     }
-    
+
     if (filterData.dateTo) {
       const contactDate = new Date(contact.created_at);
       const toDate = new Date(filterData.dateTo);
@@ -249,10 +258,13 @@ export default function ContactsPage() {
     if (filterData.platformType && filterData.platformType !== "#") {
       const contactSourceType = (contact.source_type || "").toLowerCase();
       const selectedType = filterData.platformType.toLowerCase();
-      
-      if (selectedType === "whatsapp" && contactSourceType !== "whatsapp") return false;
-      if (selectedType === "instagram" && contactSourceType !== "instagram") return false;
-      if (selectedType === "webchat" && contactSourceType !== "webchat") return false;
+
+      if (selectedType === "whatsapp" && contactSourceType !== "whatsapp")
+        return false;
+      if (selectedType === "instagram" && contactSourceType !== "instagram")
+        return false;
+      if (selectedType === "webchat" && contactSourceType !== "webchat")
+        return false;
     }
 
     return true;
@@ -262,10 +274,14 @@ export default function ContactsPage() {
   const activeFiltersCount = [
     filterData.dateFrom,
     filterData.dateTo,
-    filterData.platform !== "#" && filterData.platform !== "" ? filterData.platform : null,
-    filterData.platformType !== "#" && filterData.platformType !== "" ? filterData.platformType : null,
+    filterData.platform !== "#" && filterData.platform !== ""
+      ? filterData.platform
+      : null,
+    filterData.platformType !== "#" && filterData.platformType !== ""
+      ? filterData.platformType
+      : null,
   ].filter(Boolean).length;
-  
+
   const hasActiveFilters = activeFiltersCount > 0;
 
   // Filter handlers
@@ -285,17 +301,20 @@ export default function ContactsPage() {
   // Export contacts to Excel
   const handleExportContacts = () => {
     if (!selectedContacts || selectedContacts.length === 0) {
-      showError("Tidak Ada Data", "Silakan pilih kontak yang ingin diekspor terlebih dahulu");
+      showError(
+        "Tidak Ada Data",
+        "Silakan pilih kontak yang ingin diekspor terlebih dahulu"
+      );
       return;
     }
 
     try {
       // Filter contacts berdasarkan yang dipilih
-      const selectedContactsData = filteredContacts.filter(contact => 
+      const selectedContactsData = filteredContacts.filter((contact) =>
         selectedContacts.includes(contact.id)
       );
 
-      const exportData = selectedContactsData.map(contact => ({
+      const exportData = selectedContactsData.map((contact) => ({
         ID: contact.id,
         Name: contact.push_name || "-",
         Phone: contact.contact_identifier || "-",
@@ -310,7 +329,7 @@ export default function ContactsPage() {
           minute: "2-digit",
         }),
         Updated_At: new Date(contact.updated_at).toLocaleDateString("id-ID", {
-          year: "numeric", 
+          year: "numeric",
           month: "short",
           day: "numeric",
           hour: "2-digit",
@@ -321,14 +340,24 @@ export default function ContactsPage() {
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
-      
-      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      const file = new Blob([excelBuffer], { type: "application/octet-stream" });
-      
-      const fileName = `selected_contacts_${new Date().toISOString().slice(0,10)}.xlsx`;
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const file = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+
+      const fileName = `selected_contacts_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
       saveAs(file, fileName);
 
-      success("Export Berhasil", `Data ${exportData.length} kontak terpilih berhasil diekspor ke ${fileName}`);
+      success(
+        "Export Berhasil",
+        `Data ${exportData.length} kontak terpilih berhasil diekspor ke ${fileName}`
+      );
     } catch (error) {
       console.error("Export error:", error);
       showError("Export Gagal", "Terjadi kesalahan saat mengekspor data");
@@ -385,7 +414,9 @@ export default function ContactsPage() {
               <Button
                 variant={hasActiveFilters ? "default" : "outline"}
                 size="sm"
-                className={`flex-1 sm:flex-none ${hasActiveFilters ? "bg-primary text-white" : ""}`}
+                className={`flex-1 sm:flex-none ${
+                  hasActiveFilters ? "bg-primary text-white" : ""
+                }`}
                 onClick={() => setIsFilterModalOpen(true)}
               >
                 <Filter className="h-4 w-4 mr-2" />
@@ -587,7 +618,10 @@ export default function ContactsPage() {
                 disabled={selectedContacts.length === 0}
               >
                 <Download className="h-4 w-4 mr-2" />
-                Export {selectedContacts.length > 0 ? `(${selectedContacts.length})` : ''}
+                Export{" "}
+                {selectedContacts.length > 0
+                  ? `(${selectedContacts.length})`
+                  : ""}
               </Button>
 
               {/* <Button
@@ -643,11 +677,9 @@ export default function ContactsPage() {
                     <TableHead className="min-w-32">Name</TableHead>
                     <TableHead className="min-w-32">Phone</TableHead>
                     <TableHead className="min-w-32">Platform Name</TableHead>
-                    <TableHead className="min-w-32">Platform Type</TableHead>
                     <TableHead className="min-w-24">Last Message</TableHead>
                     <TableHead className="min-w-24">Unread</TableHead>
                     <TableHead className="min-w-40">Created</TableHead>
-                    {/* <TableHead className="min-w-40">Updated</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -690,33 +722,26 @@ export default function ContactsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={`text-xs max-w-full break-all`}
-                        >
-                          {contact.platform_name || 'Unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                       <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            contact.source_type?.toLowerCase() === 'whatsapp'
-                              ? 'bg-green-100 text-green-800 border-green-300'
-                              : contact.source_type?.toLowerCase() === 'webchat'
-                              ? 'bg-blue-100 text-blue-800 border-blue-300'
-                              : contact.source_type?.toLowerCase() === 'instagram'
-                              ? 'bg-purple-100 text-purple-800 border-purple-300'
-                              : 'bg-gray-100 text-gray-800 border-gray-300'
+                          className={`text-xs max-w-full break-all ${
+                            contact.source_type?.toLowerCase() === "whatsapp"
+                              ? "bg-green-100 text-green-800 border-green-300"
+                              : contact.source_type?.toLowerCase() === "webchat"
+                              ? "bg-blue-100 text-blue-800 border-blue-300"
+                              : contact.source_type?.toLowerCase() ===
+                                "instagram"
+                              ? "bg-purple-100 text-purple-800 border-purple-300"
+                              : "bg-gray-100 text-gray-800 border-gray-300"
                           }`}
                         >
-                          {contact.source_type || 'Unknown'}
+                          {contact.platform_name || "Unknown"}
                         </Badge>
-
                       </TableCell>
+
                       <TableCell className="text-muted-foreground text-sm">
-                        {contact.last_message 
-                          ? (contact.last_message.length > 30 
-                              ? `${contact.last_message.substring(0, 30)}...` 
-                              : contact.last_message)
+                        {contact.last_message
+                          ? contact.last_message.length > 30
+                            ? `${contact.last_message.substring(0, 30)}...`
+                            : contact.last_message
                           : "-"}
                       </TableCell>
                       <TableCell className="text-sm">
@@ -798,7 +823,7 @@ export default function ContactsPage() {
                           <div className="mt-2">
                             <Badge
                               variant="outline"
-                              className={`text-xs max-w-full break-all`} 
+                              className={`text-xs max-w-full break-all`}
                             >
                               <span className="break-all word-break-all">
                                 {contact.platform_name}
@@ -806,23 +831,25 @@ export default function ContactsPage() {
                             </Badge>
                           </div>
                           <div className="mt-2">
-                           <Badge
+                            <Badge
                               variant="outline"
                               className={`text-xs max-w-full break-all ${
-                                contact.source_type?.toLowerCase() === 'whatsapp'
-                                  ? 'bg-green-100 text-green-800 border-green-300'
-                                  : contact.source_type?.toLowerCase() === 'webchat'
-                                  ? 'bg-blue-100 text-blue-800 border-blue-300'
-                                  : contact.source_type?.toLowerCase() === 'instagram'
-                                  ? 'bg-purple-100 text-purple-800 border-purple-300'
-                                  : 'bg-gray-100 text-gray-800 border-gray-300'
+                                contact.source_type?.toLowerCase() ===
+                                "whatsapp"
+                                  ? "bg-green-100 text-green-800 border-green-300"
+                                  : contact.source_type?.toLowerCase() ===
+                                    "webchat"
+                                  ? "bg-blue-100 text-blue-800 border-blue-300"
+                                  : contact.source_type?.toLowerCase() ===
+                                    "instagram"
+                                  ? "bg-purple-100 text-purple-800 border-purple-300"
+                                  : "bg-gray-100 text-gray-800 border-gray-300"
                               }`}
                             >
                               <span className="break-all word-break-all">
-                                {contact.source_type || 'Unknown'}
+                                {contact.source_type || "Unknown"}
                               </span>
                             </Badge>
-
                           </div>
                         </div>
                       </div>
@@ -1003,18 +1030,27 @@ export default function ContactsPage() {
         onSuccess={handleWhatsAppSuccess}
         onError={handleWhatsAppError}
       />
-      
+
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+      >
         <DialogContent>
           <div className="space-y-4">
             <h2 className="text-lg font-bold">Hapus Kontak?</h2>
-            <p>Apakah Anda yakin ingin menghapus kontak ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <p>
+              Apakah Anda yakin ingin menghapus kontak ini? Tindakan ini tidak
+              dapat dibatalkan.
+            </p>
             <div className="flex gap-2 justify-end">
               <Button variant="destructive" onClick={confirmDeleteContact}>
                 Hapus
               </Button>
-              <Button variant="outline" onClick={() => setDeleteDialog({ open: false })}>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialog({ open: false })}
+              >
                 Batal
               </Button>
             </div>

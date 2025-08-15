@@ -393,7 +393,7 @@ export default function ExistingKnowledgeList({ agentId }: ExistingKnowledgeList
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 m-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-foreground">

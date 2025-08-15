@@ -3,10 +3,10 @@ import axiosInstance from './axios';
 export const DepartmentService = {
   /**
    * Create a new department
-   * @param {Object} data - Department data { name: string, description: string }
+   * @param {Object} data - Department data { name: string, description: string, head_ids: string[] }
    * @returns {Promise<any>} - The created department response
    */
-  async createDepartment(data: { name: string; description: string ; head_id : string }) {
+  async createDepartment(data: { name: string; description: string ; head_ids : string[] }) {
     const response = await axiosInstance.post('/v1/departments', data);
     return response.data;
   },
@@ -42,10 +42,10 @@ export const DepartmentService = {
   /**
    * Update department by ID
    * @param {string} id - Department ID
-   * @param {Object} data - Update data { name, description, is_active }
+   * @param {Object} data - Update data { name, description, is_active, head_ids }
    * @returns {Promise<any>} - Updated department
    */
-  async updateDepartment(id: string, data: { name: string; description: string; is_active: boolean }) {
+  async updateDepartment(id: string, data: { name: string; description: string; is_active: boolean; head_ids?: string[] }) {
     const response = await axiosInstance.put(`/v1/departments/${id}`, data);
     return response.data;
   },

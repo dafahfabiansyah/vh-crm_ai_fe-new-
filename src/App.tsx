@@ -18,6 +18,7 @@ import AIAgentDetailPage from "./pages/AiDetailPage";
 import WhatsAppQRPage from "./pages/WhatsAppQRPage";
 import PipelinePage from "./pages/PipelinePage";
 import ProductPage from "./pages/ProductPage";
+import ProductDetailsPage from "./pages/ProductDetailsPage";
 import TicketPage from "./pages/TicketPage";
 import FlowSettingsPage from "./pages/FlowSettingsPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -189,6 +190,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ProductPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products/:id"
+          element={
+            <ProtectedRoute>
+              <ProductDetailsPage />
             </ProtectedRoute>
           }
         />
