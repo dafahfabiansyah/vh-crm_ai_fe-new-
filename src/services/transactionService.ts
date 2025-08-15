@@ -166,8 +166,8 @@ async function submitToPlinkAPI(data: PlinkSubmissionData): Promise<PlinkRespons
   const merchantKeyId = 'e8339f7d872347f48325e3c5a857a8c2';
   const merchantId = '001750938574287';
   const secretKey = 'bace1d9bf907c01321364d87';
-  const backendCallback = 'https://api.tumbuhin.id/transactions/payment-callback';
-  const frontendCallback = 'https://app.tumbuhin.id/billing';
+  const backendCallback = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/transactions/payment-callback`;
+  const frontendCallback = `${import.meta.env.VITE_BASE_URL || 'http://localhost:5173'}/billing`;
   
   // Create product details for subscription
   const productDetails = [{
