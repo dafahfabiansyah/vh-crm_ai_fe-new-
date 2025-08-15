@@ -12,7 +12,7 @@ import { Textarea } from "./ui/textarea";
 interface IntegrationExecution {
   integration_name: string
   success: boolean
-  response_body: string | null
+  response_body: string | object | null
   error_message?: string
   parsed_response?: any
 }
@@ -299,7 +299,12 @@ export default function AIAgentChatPreview({ agentId, agentName, welcomeMessage,
                                   {integration.parsed_response ? (
                                     <pre className="whitespace-pre-wrap">{JSON.stringify(integration.parsed_response, null, 2)}</pre>
                                   ) : (
-                                    <pre className="whitespace-pre-wrap">{integration.response_body}</pre>
+                                    <pre className="whitespace-pre-wrap">
+                                      {typeof integration.response_body === 'object' 
+                                        ? JSON.stringify(integration.response_body, null, 2)
+                                        : integration.response_body
+                                      }
+                                    </pre>
                                   )}
                                 </div>
                               )}

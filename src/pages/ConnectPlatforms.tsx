@@ -306,6 +306,15 @@ export default function ConnectedPlatformsPage() {
         if (currentPlatform.pipeline) {
           console.log('Pipeline tab - updating id_pipeline via update_platform_inbox');
           await platformsInboxService.updatePlatformMapping(currentPlatform.id, currentPlatform.pipeline);
+          
+          // Note: Human agents remain active when pipeline is mapped
+          // Only AI agents are automatically cleared by the backend
+          
+          // Update local state to clear AI agent selection for immediate UI feedback
+          updateSelectedPlatform({ 
+            aiAgent: undefined // Clear AI agent in local state for consistency
+          });
+          
           success(`Pipeline berhasil di-mapping ke platform ${currentPlatform.name}.`);
         } else {
           showError("Please select a pipeline before saving.");
