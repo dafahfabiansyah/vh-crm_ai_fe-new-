@@ -30,6 +30,8 @@ import EditCustomIntegration from "./pages/EditCustomIntegration";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/ui/toast-container";
 import { ProfilePage } from "./pages/ProfilePage";
+import WebchatPage from "./pages/WebchatPage";
+import CreateWebchatPage from "./pages/CreateWebchatPage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -237,7 +239,8 @@ export default function App() {
           path="/connect/webchat"
           element={
             <ProtectedRoute>
-              <WhatsAppQRPage />
+              {/* <WebchatPage agentId="1" agentName="Test Agent" /> */}
+              <CreateWebchatPage/>
             </ProtectedRoute>
           }
         />
