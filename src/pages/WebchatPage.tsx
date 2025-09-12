@@ -51,47 +51,19 @@ const DUMMY_RESPONSES = [
   "I can definitely help you with that. Let me break this down for you."
 ];
 
-const DUMMY_INTEGRATIONS: IntegrationExecution[] = [
-  {
-    integration_name: "Weather API",
-    success: true,
-    response_body: JSON.stringify({
-      temperature: "22°C",
-      condition: "Sunny",
-      humidity: "65%"
-    }),
-    parsed_response: {
-      temperature: "22°C",
-      condition: "Sunny",
-      humidity: "65%"
-    }
-  },
-  {
-    integration_name: "Database Query",
-    success: true,
-    response_body: JSON.stringify({
-      results: 5,
-      status: "completed"
-    }),
-    parsed_response: {
-      results: 5,
-      status: "completed"
-    }
-  }
-];
 
 export default function WebchatPage({ 
-  agentId = "demo-agent", 
+   
   agentName = "AI Assistant", 
-  welcomeMessage,
+  
   className 
 }: AIAgentChatPreviewProps) {
   const [message, setMessage] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSending, setIsSending] = useState(false)
-  const [sessionId, setSessionId] = useState("demo-session-123")
+  const [, setSessionId] = useState("demo-session-123")
   const [messages, setMessages] = useState<Message[]>(DUMMY_MESSAGES)
-  const [hasUserSentMessage, setHasUserSentMessage] = useState(false)
+  const [, setHasUserSentMessage] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   // Auto scroll to bottom when messages change
@@ -112,7 +84,7 @@ export default function WebchatPage({
       }
       
       setMessages((prev) => [...prev, userMessage])
-      const currentMessage = message
+      // const currentMessage = message
       setMessage("")
       setIsSending(true)
       setHasUserSentMessage(true)
@@ -120,7 +92,7 @@ export default function WebchatPage({
       // Simulate API delay
       setTimeout(() => {
         // Randomly decide if we should show integration results
-        const showIntegrations = Math.random() > 0.7;
+        // const showIntegrations = Math.random() > 0.7;
         
         // if (showIntegrations) {
         //   // Add integration results message
