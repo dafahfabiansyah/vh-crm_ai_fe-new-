@@ -71,10 +71,13 @@ export default function App() {
           <Route path="ai-agents" element={<AIAgentsPage />} />
           <Route path="ai-agents/:id" element={<AIAgentDetailWrapper />} />
           <Route path="integration/shipping" element={<ShippingIntegrationPage />} />
-          <Route path="integration/api" element={<ApiIntegrationPage />} />
-          <Route path="integration/api/create" element={<CreateApiIntegrationPage />} />
-          <Route path="integration/api/:id" element={<CustomIntegrationDetail />} />
-          <Route path="integration/api/:id/edit" element={<EditCustomIntegration />} />
+          {/* integration to API */}
+          <Route path="integration/api">
+            <Route index element={<ApiIntegrationPage />} />
+            <Route path="create" element={<CreateApiIntegrationPage />} />
+            <Route path=":id" element={<CustomIntegrationDetail />} />
+            <Route path=":id/edit" element={<EditCustomIntegration />} />
+          </Route>
           <Route path="human-agents" element={<HumanAgentsPage />} />
           <Route path="connected-platforms" element={<ConnectedPlatformsPage />} />
           <Route path="contacts" element={<ContactsPage />} />
@@ -85,9 +88,12 @@ export default function App() {
           <Route path="products/:id" element={<ProductDetailsPage />} />
           <Route path="tickets" element={<TicketPage />} />
           <Route path="flow" element={<FlowSettingsPage />} />
-          <Route path="connect/whatsapp" element={<WhatsAppQRPage />} />
-          <Route path="connect/instagram" element={<WhatsAppQRPage />} />
-          <Route path="connect/webchat" element={<CreateWebchatPage />} />
+          {/* connecting platforms */}
+          <Route path="connect">
+            <Route path="whatsapp" element={<WhatsAppQRPage />} />
+            <Route path="instagram" element={<WhatsAppQRPage />} />
+            <Route path="webchat" element={<CreateWebchatPage />} />
+          </Route>
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="csat" element={<CSATPage />} />
