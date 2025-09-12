@@ -58,7 +58,7 @@ export default function NotFound() {
           </Button>
         </div>
 
-        {/* Quick Links */}
+        {/* Quick Links
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-foreground">Halaman Populer</h3>
           <div className="grid gap-3 md:grid-cols-3 max-w-2xl mx-auto">
@@ -99,9 +99,9 @@ export default function NotFound() {
               </Button>
             </Link>
           </div>
-        </div>
+        </div> */}
 
-        {/* Help Section */}
+        {/* Help Section
         <Card className="max-w-md mx-auto">
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -125,7 +125,7 @@ export default function NotFound() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Footer */}
         <div className="text-sm text-muted-foreground">

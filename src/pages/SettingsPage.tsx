@@ -8,7 +8,8 @@ import {
   Package,
   ChevronRight,
   Workflow,
-  Combine
+  Combine,
+  Star
 } from 'lucide-react'
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -43,6 +44,15 @@ const SettingsPage = () => {
       path: '/flow',
       iconColor: 'text-green-600',
       bgColor: 'bg-green-100'
+    },
+    {
+      id: 'csat',
+      title: 'CSAT Settings',
+      description: 'Configure CSAT settings',
+      icon: Star,
+      path: '/csat',
+      iconColor: 'text-yellow-600',
+      bgColor: 'bg-yellow-100'
     },
     {
       id: 'Integration',

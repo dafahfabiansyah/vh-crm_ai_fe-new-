@@ -34,6 +34,9 @@ import { ToastContainer } from "@/components/ui/toast-container";
 import { ProfilePage } from "./pages/ProfilePage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
+import "./app.css"
+import CSATPage from "./pages/CSATPage";
+
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
   const { id } = useParams<{ id: string }>();
@@ -87,6 +90,7 @@ export default function App() {
           <Route path="connect/webchat" element={<CreateWebchatPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="csat" element={<CSATPage />} />
         </Route>
         {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />

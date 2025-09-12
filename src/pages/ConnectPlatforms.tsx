@@ -788,7 +788,7 @@ export default function ConnectedPlatformsPage() {
                     <SelectTrigger className="text-sm">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-gray-600" />
-                        <SelectValue placeholder="Add team..." />
+                        <SelectValue placeholder="Add department..." />
                       </div>
                     </SelectTrigger>
                     <SelectContent>
@@ -796,7 +796,7 @@ export default function ConnectedPlatformsPage() {
                       <SelectItem value="Support Team">Support Team</SelectItem>
                       <SelectItem value="Sales Team">Sales Team</SelectItem>
                       <SelectItem value="Operations">Operations</SelectItem> */}
-                      <SelectItem value="Operations">Belum ada team</SelectItem>
+                      <SelectItem value="Operations">Belum ada department</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1372,10 +1372,10 @@ export default function ConnectedPlatformsPage() {
                                 className="w-full justify-between text-left"
                               >
                                 {(() => {
-                                  console.log('Desktop Platform:', selectedPlatform.name);
-                                  console.log('Desktop Platform mappings:', selectedPlatform.platformMappings);
-                                  console.log('Desktop Human agents selected IDs:', selectedPlatform.humanAgentsSelected);
-                                  console.log('Desktop Available human agents:', humanAgents.map(a => ({id: a.id, name: a.name})));
+                                  // console.log('Desktop Platform:', selectedPlatform.name);
+                                  // console.log('Desktop Platform mappings:', selectedPlatform.platformMappings);
+                                  // console.log('Desktop Human agents selected IDs:', selectedPlatform.humanAgentsSelected);
+                                  // console.log('Desktop Available human agents:', humanAgents.map(a => ({id: a.id, name: a.name})));
                                   
                                   if (selectedPlatform.humanAgentsSelected && selectedPlatform.humanAgentsSelected.length > 0) {
                                     const selectedAgents = humanAgents
@@ -1434,10 +1434,10 @@ export default function ConnectedPlatformsPage() {
                             </PopoverContent>
                           </Popover>
                         </div>
-                        {/* Teams */}
+                        {/* Department */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">
-                            Teams
+                            Department
                           </Label>
                           <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
                             {selectedPlatform.teams?.map((team) => (
@@ -1472,7 +1472,7 @@ export default function ConnectedPlatformsPage() {
                             <SelectTrigger className="text-sm">
                               <div className="flex items-center gap-2">
                                 <Users className="h-4 w-4 text-gray-600" />
-                                <SelectValue placeholder="Add team..." />
+                                <SelectValue placeholder="Add department..." />
                               </div>
                             </SelectTrigger>
                             <SelectContent>
