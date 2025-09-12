@@ -1,10 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Navigate, useLocation, Outlet } from 'react-router';
 import { useAppSelector } from '@/hooks/redux';
 import Loading from '@/pages/Loading';
 
 interface PublicRouteProps {
-  children: React.ReactNode;
   redirectTo?: string;
   restrictWhenAuthenticated?: boolean;
 }
@@ -17,7 +16,6 @@ interface PublicRouteProps {
  * akan redirect ke dashboard.
  */
 export const PublicRoute: React.FC<PublicRouteProps> = ({ 
-  children, 
   redirectTo = '/dashboard',
   restrictWhenAuthenticated = true 
 }) => {
@@ -36,8 +34,8 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
     return <Navigate to={intendedPath} replace />;
   }
 
-  // Render children
-  return <>{children}</>;
+  // Render nested routes melalui Outlet
+  return <Outlet />;
 };
 
 export default PublicRoute;

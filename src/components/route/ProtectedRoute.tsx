@@ -1,12 +1,11 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Navigate, useLocation, Outlet } from 'react-router';
 import { useAppSelector } from '@/hooks/redux';
 import { AuthService } from '@/services/authService';
 import Loading from '@/pages/Loading';
 import { isDebugMode, debugLog } from '@/config/debug';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
   redirectTo?: string;
 }
 
@@ -18,7 +17,6 @@ interface ProtectedRouteProps {
  * Jika sedang loading (cek auth), tampilkan loading screen.
  */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
   redirectTo = '/auth/login'
 }) => {
   const { isAuthenticated, isLoading, isInitialized } = useAppSelector((state) => state.auth);
@@ -40,7 +38,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
     
     // In debug mode, allow access even if not authenticated
-    return <>{children}</>;
+    // return <>{children}</>;
+    return <Outlet />;
   }
 
   // PRODUCTION MODE: Normal protection logic
@@ -74,8 +73,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Jika authenticated, render children
-  return <>{children}</>;
+  // Jika authenticated, render nested routes melalui Outlet
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

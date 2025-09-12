@@ -27,11 +27,11 @@ import ApiIntegrationPage from "./pages/ApiIntegrationPage";
 import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
 import EditCustomIntegration from "./pages/EditCustomIntegration";
+import CreateWebchatPage from "./pages/CreateWebchatPage";
+// import WebchatPage from "./pages/WebchatPage";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/ui/toast-container";
 import { ProfilePage } from "./pages/ProfilePage";
-import WebchatPage from "./pages/WebchatPage";
-import CreateWebchatPage from "./pages/CreateWebchatPage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
@@ -45,7 +45,7 @@ export default function App() {
 
   // Initialize auth from cookies when app loads
   useEffect(() => {
-    console.log("🚀 App initializing - syncing with cookies...");
+    // console.log("🚀 App initializing - syncing with cookies...");
     dispatch(syncWithCookies());
   }, [dispatch]);
 
@@ -53,215 +53,41 @@ export default function App() {
     <ErrorBoundary>
       <ToastProvider>
         <Routes>
-          {/* Redirect root to login */}
+          {/* Redirect unauthenticated users to login */}
           <Route path="/" element={<Navigate to="/auth/login" replace />} />
-        {/* <Route path="/" element={<DashboardPage/>} /> */}
-        {/* Public Auth routes - redirect to dashboard if already authenticated */}
-        <Route
-          path="/auth/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/auth/register"
-          element={
-            <PublicRoute>
-              <RegisterPage />
-            </PublicRoute>
-          }
-        />
-        {/* Protected Dashboard routes - require authentication */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ai-agents"
-          element={
-            <ProtectedRoute>
-              <AIAgentsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ai-agents/:id"
-          element={
-            <ProtectedRoute>
-              <AIAgentDetailWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/integration/shipping"
-          element={
-            <ProtectedRoute>
-              <ShippingIntegrationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/integration/api"
-          element={
-            <ProtectedRoute>
-              <ApiIntegrationPage/>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/integration/api/create"
-          element={
-            <ProtectedRoute>
-              <CreateApiIntegrationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/integration/api/:id"
-          element={
-            <ProtectedRoute>
-              <CustomIntegrationDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/integration/api/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditCustomIntegration />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/human-agents"
-          element={
-            <ProtectedRoute>
-              <HumanAgentsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/connected-platforms"
-          element={
-            <ProtectedRoute>
-              <ConnectedPlatformsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/contacts"
-          element={
-            <ProtectedRoute>
-              <ContactsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/billing"
-          element={
-            <ProtectedRoute>
-              <BillingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pipeline/create"
-          element={
-            <ProtectedRoute>
-              <CreatePipelinePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pipeline"
-          element={
-            <ProtectedRoute>
-              <PipelinePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/products"
-          element={
-            <ProtectedRoute>
-              <ProductPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/products/:id"
-          element={
-            <ProtectedRoute>
-              <ProductDetailsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tickets"
-          element={
-            <ProtectedRoute>
-              <TicketPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/flow"
-          element={
-            <ProtectedRoute>
-              <FlowSettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/connect/whatsapp"
-          element={
-            <ProtectedRoute>
-              <WhatsAppQRPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/connect/instagram"
-          element={
-            <ProtectedRoute>
-              <WhatsAppQRPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/connect/webchat"
-          element={
-            <ProtectedRoute>
-              {/* <WebchatPage agentId="1" agentName="Test Agent" /> */}
-              <CreateWebchatPage/>
-            </ProtectedRoute>
-          }
-        />
-        {/* Settings Page */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Profile Page */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+          
+          {/* Public Auth routes - redirect to dashboard if already authenticated */}
+          <Route path="/auth" element={<PublicRoute />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+          </Route>
+          
+        {/* Protected routes - require authentication */}
+        <Route path="/" element={<ProtectedRoute />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="ai-agents" element={<AIAgentsPage />} />
+          <Route path="ai-agents/:id" element={<AIAgentDetailWrapper />} />
+          <Route path="integration/shipping" element={<ShippingIntegrationPage />} />
+          <Route path="integration/api" element={<ApiIntegrationPage />} />
+          <Route path="integration/api/create" element={<CreateApiIntegrationPage />} />
+          <Route path="integration/api/:id" element={<CustomIntegrationDetail />} />
+          <Route path="integration/api/:id/edit" element={<EditCustomIntegration />} />
+          <Route path="human-agents" element={<HumanAgentsPage />} />
+          <Route path="connected-platforms" element={<ConnectedPlatformsPage />} />
+          <Route path="contacts" element={<ContactsPage />} />
+          <Route path="billing" element={<BillingPage />} />
+          <Route path="pipeline/create" element={<CreatePipelinePage />} />
+          <Route path="pipeline" element={<PipelinePage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="products/:id" element={<ProductDetailsPage />} />
+          <Route path="tickets" element={<TicketPage />} />
+          <Route path="flow" element={<FlowSettingsPage />} />
+          <Route path="connect/whatsapp" element={<WhatsAppQRPage />} />
+          <Route path="connect/instagram" element={<WhatsAppQRPage />} />
+          <Route path="connect/webchat" element={<CreateWebchatPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
         {/* 404 Not Found Page */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
