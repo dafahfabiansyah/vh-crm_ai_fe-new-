@@ -559,9 +559,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
                           maxLength={10000}
                           className="min-h-[120px]"
                         />
-                        <div className="flex justify-between items-center text-sm text-muted-foreground">
-                          <span>{behaviorCharacterCount}/10,000</span>
-                        </div>
                       </div>
                     </div>
 

@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, Zap, Code, Bold, Italic } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { HelpCircle, Zap, Code, Bold, Italic } from "lucide-react";
 
 interface BehaviorEditorProps {
   value: string;
@@ -33,8 +33,13 @@ export function BehaviorEditor({
   maxLength = 10000,
 }: BehaviorEditorProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 });
-  const [filteredIntegrations, setFilteredIntegrations] = useState<AutocompleteItem[]>([]);
+  const [autocompletePosition, setAutocompletePosition] = useState({
+    top: 0,
+    left: 0,
+  });
+  const [filteredIntegrations, setFilteredIntegrations] = useState<
+    AutocompleteItem[]
+  >([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -42,23 +47,19 @@ export function BehaviorEditor({
 
   // Convert activated integrations to autocomplete items
   const integrationItems: AutocompleteItem[] = activatedIntegrations
-    .filter(integration => integration.is_enabled)
+    .filter((integration) => integration.is_enabled)
     .map((integration, index) => {
       return {
-        id: integration.integration_name.toLowerCase().replace(/\s+/g, '_'),
+        id: integration.integration_name.toLowerCase().replace(/\s+/g, "_"),
         name: integration.integration_name,
         description: `Integration: ${integration.integration_name}`,
         custom_integration_fields: integration.custom_integration_fields || {},
-        uniqueKey: `activated_${integration.id_integration}_${index}`
+        uniqueKey: `activated_${integration.id_integration}_${index}`,
       };
     });
 
   // Use only activated integrations for this AI agent
   const allIntegrations = integrationItems;
-
-
-
-
 
   // Insert formatting helpers
   const insertFormatting = (format: string) => {
@@ -69,24 +70,24 @@ export function BehaviorEditor({
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end);
 
-    let newText = '';
+    let newText = "";
     let cursorOffset = 0;
 
     switch (format) {
-      case 'bold':
-        newText = selectedText ? `**${selectedText}**` : '**bold text**';
+      case "bold":
+        newText = selectedText ? `**${selectedText}**` : "**bold text**";
         cursorOffset = selectedText ? 0 : -9; // Position cursor before 'bold text'
         break;
-      case 'italic':
-        newText = selectedText ? `*${selectedText}*` : '*italic text*';
+      case "italic":
+        newText = selectedText ? `*${selectedText}*` : "*italic text*";
         cursorOffset = selectedText ? 0 : -11;
         break;
-      case 'code':
-        newText = selectedText ? `\`${selectedText}\`` : '`code`';
+      case "code":
+        newText = selectedText ? `\`${selectedText}\`` : "`code`";
         cursorOffset = selectedText ? 0 : -5;
         break;
-      case 'integration':
-        newText = '@int';
+      case "integration":
+        newText = "@int";
         cursorOffset = 0;
         break;
     }
@@ -111,16 +112,19 @@ export function BehaviorEditor({
     const textBeforeCursor = newValue.substring(0, cursorPosition);
 
     // Check if user is typing @integration, @inte, or @int
-    const integrationMatch = textBeforeCursor.match(/@int(?:e(?:gration)?)?:?([\w_]*)$/);
+    const integrationMatch = textBeforeCursor.match(
+      /@int(?:e(?:gration)?)?:?([\w_]*)$/
+    );
 
     if (integrationMatch) {
-      const query = integrationMatch[1] || '';
+      const query = integrationMatch[1] || "";
 
       // Filter integrations based on query (search in both id and name)
-      const filtered = allIntegrations.filter(item =>
-        item.id.toLowerCase().includes(query.toLowerCase()) ||
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.description.toLowerCase().includes(query.toLowerCase())
+      const filtered = allIntegrations.filter(
+        (item) =>
+          item.id.toLowerCase().includes(query.toLowerCase()) ||
+          item.name.toLowerCase().includes(query.toLowerCase()) ||
+          item.description.toLowerCase().includes(query.toLowerCase())
       );
 
       setFilteredIntegrations(filtered);
@@ -128,10 +132,10 @@ export function BehaviorEditor({
 
       if (filtered.length > 0) {
         // Create a temporary span to measure text width accurately
-        const measureSpan = document.createElement('span');
-        measureSpan.style.visibility = 'hidden';
-        measureSpan.style.position = 'absolute';
-        measureSpan.style.whiteSpace = 'pre';
+        const measureSpan = document.createElement("span");
+        measureSpan.style.visibility = "hidden";
+        measureSpan.style.position = "absolute";
+        measureSpan.style.whiteSpace = "pre";
         measureSpan.style.font = getComputedStyle(textarea).font;
         document.body.appendChild(measureSpan);
 
@@ -142,7 +146,7 @@ export function BehaviorEditor({
         const paddingTop = parseInt(style.paddingTop) || 0;
 
         // Calculate exact cursor position
-        const lines = textBeforeCursor.split('\n');
+        const lines = textBeforeCursor.split("\n");
         const currentLineIndex = lines.length - 1;
         const currentLineText = lines[currentLineIndex];
 
@@ -154,7 +158,8 @@ export function BehaviorEditor({
         document.body.removeChild(measureSpan);
 
         // Position dropdown right next to the cursor
-        const topOffset = paddingTop + (currentLineIndex * lineHeight) + lineHeight + 5;
+        const topOffset =
+          paddingTop + currentLineIndex * lineHeight + lineHeight + 5;
         const leftOffset = paddingLeft + textWidth + 5;
 
         // Ensure dropdown doesn't go off-screen
@@ -163,7 +168,7 @@ export function BehaviorEditor({
 
         setAutocompletePosition({
           top: rect.top + topOffset + window.scrollY,
-          left: finalLeft + window.scrollX
+          left: finalLeft + window.scrollX,
         });
 
         setShowAutocomplete(true);
@@ -179,24 +184,24 @@ export function BehaviorEditor({
     if (!showAutocomplete || filteredIntegrations.length === 0) return;
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex(prev =>
+        setSelectedIndex((prev) =>
           prev < filteredIntegrations.length - 1 ? prev + 1 : 0
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex(prev =>
+        setSelectedIndex((prev) =>
           prev > 0 ? prev - 1 : filteredIntegrations.length - 1
         );
         break;
-      case 'Enter':
-      case 'Tab':
+      case "Enter":
+      case "Tab":
         e.preventDefault();
         insertIntegration(filteredIntegrations[selectedIndex]);
         break;
-      case 'Escape':
+      case "Escape":
         setShowAutocomplete(false);
         break;
     }
@@ -211,14 +216,19 @@ export function BehaviorEditor({
     const textAfterCursor = value.substring(cursorPosition);
 
     // Find the start of @integration:, @inte, or @int to replace
-    const integrationMatch = textBeforeCursor.match(/@int(?:e(?:gration)?)?:?([\w_]*)$/);
+    const integrationMatch = textBeforeCursor.match(
+      /@int(?:e(?:gration)?)?:?([\w_]*)$/
+    );
     if (!integrationMatch) return;
 
     const matchStart = cursorPosition - integrationMatch[0].length;
 
     // Create the integration text with custom fields (only field names)
     let integrationText = `@integration:${integration.id}`;
-    if (integration.custom_integration_fields && Object.keys(integration.custom_integration_fields).length > 0) {
+    if (
+      integration.custom_integration_fields &&
+      Object.keys(integration.custom_integration_fields).length > 0
+    ) {
       const fieldNames = Object.keys(integration.custom_integration_fields);
       const fieldsObject = fieldNames.reduce((acc, fieldName) => {
         acc[fieldName] = "";
@@ -229,9 +239,7 @@ export function BehaviorEditor({
     }
 
     const newText =
-      value.substring(0, matchStart) +
-      integrationText +
-      textAfterCursor;
+      value.substring(0, matchStart) + integrationText + textAfterCursor;
 
     onChange(newText);
     setShowAutocomplete(false);
@@ -247,20 +255,23 @@ export function BehaviorEditor({
   // Close autocomplete when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+      if (
+        autocompleteRef.current &&
+        !autocompleteRef.current.contains(event.target as Node)
+      ) {
         setShowAutocomplete(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <div className="space-y-4">
       {/* Header with help */}
       <div className="flex items-center justify-end">
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           onClick={() => setShowHelp(!showHelp)}
@@ -268,25 +279,32 @@ export function BehaviorEditor({
         >
           <HelpCircle className="w-4 h-4" />
           <span>Help</span>
-        </Button>
+        </Button> */}
       </div>
 
       {/* Help panel */}
       {showHelp && (
-        <Card className="p-4 bg-blue-50 border-blue-200">
-          <h3 className="font-semibold text-blue-900 mb-3">How to write AI behavior instructions</h3>
+        <Card className="p-4 ">
+          <h3 className="font-semibold mb-3">
+            {/* How to write AI behavior instructions */}
+            Instruksi untuk Membuat AI Behavior
+          </h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div>
-              <h4 className="font-medium text-blue-800 mb-2">Text Formatting</h4>
-              <ul className="space-y-1 text-blue-700">
+              <h4 className="font-medium mb-2">
+                Text Formatting
+              </h4>
+              <ul className="space-y-1 ">
                 <li>• **bold text** for emphasis</li>
                 <li>• *italic text* for subtle emphasis</li>
                 <li>• `code text` for technical terms</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-blue-800 mb-2">Add Integrations</h4>
-              <ul className="space-y-1 text-blue-700">
+              <h4 className="font-medium mb-2">
+                Add Integrations
+              </h4>
+              <ul className="space-y-1 ">
                 <li>• Type @int to see available integrations</li>
                 <li>• Use arrow keys to navigate</li>
                 <li>• Press Enter or Tab to select</li>
@@ -302,7 +320,7 @@ export function BehaviorEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => insertFormatting('bold')}
+            onClick={() => insertFormatting("bold")}
             className="flex items-center space-x-1"
           >
             <Bold className="w-3 h-3" />
@@ -311,7 +329,7 @@ export function BehaviorEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => insertFormatting('italic')}
+            onClick={() => insertFormatting("italic")}
             className="flex items-center space-x-1"
           >
             <Italic className="w-3 h-3" />
@@ -320,7 +338,7 @@ export function BehaviorEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => insertFormatting('code')}
+            onClick={() => insertFormatting("code")}
             className="flex items-center space-x-1"
           >
             <Code className="w-3 h-3" />
@@ -329,11 +347,20 @@ export function BehaviorEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => insertFormatting('integration')}
+            onClick={() => insertFormatting("integration")}
             className="flex items-center space-x-1"
           >
             <Zap className="w-3 h-3" />
             <span className="text-xs">Integration</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowHelp(!showHelp)}
+            className="flex items-center space-x-1"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span>Help</span>
           </Button>
         </div>
 
@@ -347,8 +374,6 @@ export function BehaviorEditor({
           placeholder="Describe the AI agent's behavior and use @integration: to add integrations..."
         />
 
-
-
         {/* Enhanced autocomplete dropdown */}
         {showAutocomplete && filteredIntegrations.length > 0 && (
           <Card
@@ -356,13 +381,15 @@ export function BehaviorEditor({
             className="absolute z-50 w-96 max-h-72 overflow-y-auto border shadow-xl bg-white"
             style={{
               top: autocompletePosition.top,
-              left: autocompletePosition.left
+              left: autocompletePosition.left,
             }}
           >
             <div className="p-3">
               <div className="flex items-center space-x-2 mb-3">
                 <Zap className="w-4 h-4 text-blue-500" />
-                <span className="text-sm font-medium text-gray-700">Available Integrations</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Available Integrations
+                </span>
                 <Badge variant="outline" className="text-xs">
                   {filteredIntegrations.length} found
                 </Badge>
@@ -370,10 +397,11 @@ export function BehaviorEditor({
               {filteredIntegrations.map((integration, index) => (
                 <div
                   key={integration.uniqueKey || `${integration.id}_${index}`}
-                  className={`px-4 py-4 cursor-pointer rounded-lg transition-all duration-200 border ${index === selectedIndex
-                      ? 'bg-blue-50 border-blue-200 shadow-sm'
-                      : 'hover:bg-gray-50 border-transparent'
-                    }`}
+                  className={`px-4 py-4 cursor-pointer rounded-lg transition-all duration-200 border ${
+                    index === selectedIndex
+                      ? "bg-blue-50 border-blue-200 shadow-sm"
+                      : "hover:bg-gray-50 border-transparent"
+                  }`}
                   onClick={() => insertIntegration(integration)}
                 >
                   <div className="space-y-3">
@@ -395,21 +423,28 @@ export function BehaviorEditor({
                       {integration.description}
                     </div>
 
-                    {integration.custom_integration_fields && Object.keys(integration.custom_integration_fields).length > 0 && (
-                      <div className="bg-gray-50 rounded-md p-3 border">
-                        <div className="text-xs font-medium text-gray-700 mb-2 flex items-center space-x-1">
-                          <Code className="w-3 h-3" />
-                          <span>Custom Fields</span>
+                    {integration.custom_integration_fields &&
+                      Object.keys(integration.custom_integration_fields)
+                        .length > 0 && (
+                        <div className="bg-gray-50 rounded-md p-3 border">
+                          <div className="text-xs font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                            <Code className="w-3 h-3" />
+                            <span>Custom Fields</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.keys(
+                              integration.custom_integration_fields
+                            ).map((fieldName, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-mono"
+                              >
+                                {fieldName}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {Object.keys(integration.custom_integration_fields).map((fieldName, idx) => (
-                            <span key={idx} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-mono">
-                              {fieldName}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               ))}
@@ -423,24 +458,26 @@ export function BehaviorEditor({
 
       {/* Character count */}
       <div className="flex justify-between items-center text-xs text-gray-500">
-        <span>{value.length} / {maxLength} characters</span>
+        <span>
+          {value.length} / {maxLength} characters
+        </span>
         <span>{allIntegrations.length} integrations available</span>
       </div>
 
       <style>{`
          .behavior-textarea {
-           font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+          //  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
            font-size: 14px;
-           line-height: 1.6;
-           background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          //  line-height: 1.6;
+          //  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
            border: 2px solid #e2e8f0;
            border-radius: 12px;
            padding: 16px;
            transition: all 0.2s ease;
          }
          .behavior-textarea:focus {
-           border-color: #3b82f6;
-           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          //  border-color: #3b82f6;
+          //  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
            background: #ffffff;
          }
          .integration-highlight {
