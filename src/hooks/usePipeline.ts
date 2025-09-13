@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import CreatePipelineService, { type CreatePipelineRequest, type PipelineListResponse } from '@/services/pipelineService';
 
@@ -29,9 +29,9 @@ export const useCreatePipeline = () => {
     }
   };
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
   return {
     createPipeline,
@@ -41,18 +41,20 @@ export const useCreatePipeline = () => {
   };
 };
 
-export const usePipelineList = () => {
+export const usePipelineList = (autoFetch: boolean = true) => {
   const [pipelines, setPipelines] = useState<PipelineListResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const fetchPipelines = async () => {
+  const fetchPipelines = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await CreatePipelineService.getPipelines();
       setPipelines(response);
+      setHasFetched(true);
       return response;
     } catch (error: any) {
       console.error("Error fetching pipelines:", error);
@@ -61,17 +63,27 @@ export const usePipelineList = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const clearError = () => {
+  // Auto fetch on mount if autoFetch is true
+  useEffect(() => {
+    if (autoFetch && !hasFetched) {
+      fetchPipelines().catch(error => {
+        console.error('Failed to auto-fetch pipelines:', error);
+      });
+    }
+  }, [autoFetch, hasFetched]);
+
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
   return {
     pipelines,
     fetchPipelines,
     isLoading,
     error,
-    clearError
+    clearError,
+    hasFetched
   };
 };

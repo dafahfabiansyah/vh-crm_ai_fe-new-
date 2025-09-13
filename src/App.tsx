@@ -28,14 +28,14 @@ import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 import CustomIntegrationDetail from "./pages/CustomIntegrationDetail";
 import EditCustomIntegration from "./pages/EditCustomIntegration";
 import CreateWebchatPage from "./pages/CreateWebchatPage";
+import CSATPage from "./pages/CSATPage";
+import ProfilePage from "./pages/ProfilePage";
 // import WebchatPage from "./pages/WebchatPage";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/ui/toast-container";
-import { ProfilePage } from "./pages/ProfilePage";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 import "./app.css"
-import CSATPage from "./pages/CSATPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {

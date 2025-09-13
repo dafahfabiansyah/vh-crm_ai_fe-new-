@@ -3,10 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-html, body {
-  height: 100%;
-  overflow: hidden; /* Paksa tidak bisa scroll di body/html */
-}
+
 #root {
   height: 100%;
 }

@@ -29,8 +29,9 @@ import { AuthService } from "@/services/authService";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
 import {
   getTransactionHistory,
-  getCurrentSubscription,
+  // getCurrentSubscription, // No longer needed
 } from "@/services/transactionService";
+import { useAppSelector } from "@/hooks/redux";
 import { useEffect, useState } from "react";
 import TransactionHistory from "@/components/transaction-history";
 
@@ -52,7 +53,7 @@ interface SubscriptionPlan {
   description?: string;
 }
 
-export function ProfilePage() {
+function ProfilePage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -80,23 +81,26 @@ export function ProfilePage() {
     setUserRole(AuthService.getRoleFromToken());
   }, []);
 
-  // Load subscription plans and current subscription
+  // Get subscription from Redux store
+  const { subscription } = useAppSelector((state) => state.auth);
+
+  // Load subscription plans
   useEffect(() => {
     const loadSubscriptionData = async () => {
       try {
-        const [plans, current] = await Promise.all([
-          getSubscriptionPlans(),
-          getCurrentSubscription(),
-        ]);
+        const plans = await getSubscriptionPlans();
         setSubscriptionPlans(plans);
-        setCurrentSubscription(current.data);
+        // Set current subscription from Redux store
+        if (subscription) {
+          setCurrentSubscription({ package_name: subscription });
+        }
       } catch (error) {
         console.error("Error loading subscription data:", error);
       }
     };
 
     loadSubscriptionData();
-  }, []);
+  }, [subscription]);
 
   // Load transactions from API
   useEffect(() => {
@@ -668,3 +672,5 @@ export function ProfilePage() {
     </MainLayout>
   );
 }
+
+export default ProfilePage;

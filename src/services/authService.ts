@@ -18,6 +18,7 @@ const COOKIE_OPTIONS = {
 
 const USER_DATA_COOKIE = 'client_ctx';
 const AUTH_TOKEN_COOKIE = 'auth_bearer';
+const SUBSCRIPTION_COOKIE = 'user_subscription';
 
 // Encryption key - In production, this should be from environment variables
 const ENCRYPTION_KEY = import.meta.env.VITE_PUBLIC_ENCRYPTION_KEY || 'vh-crm-secret-key';
@@ -166,8 +167,51 @@ export class AuthService {
    * Logout user
    */
   static logout(): void {
+    this.clearAuthData();
+  }
+
+  /**
+   * Clear all authentication data
+   */
+  static clearAuthData(): void {
     Cookies.remove(USER_DATA_COOKIE, { path: '/' });
     Cookies.remove(AUTH_TOKEN_COOKIE, { path: '/' });
+    Cookies.remove(SUBSCRIPTION_COOKIE, { path: '/' });
+  }
+
+  /**
+   * Store subscription data
+   */
+  static setSubscription(subscription: string): void {
+    try {
+      console.log('🔄 AuthService.setSubscription - input:', subscription);
+      const encryptedSubscription = this.encryptData(subscription);
+      Cookies.set(SUBSCRIPTION_COOKIE, encryptedSubscription, COOKIE_OPTIONS);
+      console.log('✅ Subscription stored in cookie successfully');
+    } catch (error) {
+      console.error('❌ Error storing subscription:', error);
+    }
+  }
+
+  /**
+   * Get stored subscription
+   */
+  static getStoredSubscription(): string | null {
+    try {
+      const encryptedSubscription = Cookies.get(SUBSCRIPTION_COOKIE);
+      console.log('🔄 AuthService.getStoredSubscription - encrypted:', encryptedSubscription);
+      if (!encryptedSubscription) {
+        console.log('❌ No subscription cookie found');
+        return null;
+      }
+      
+      const decryptedSubscription = this.decryptData(encryptedSubscription);
+      console.log('✅ Subscription retrieved from cookie:', decryptedSubscription);
+      return decryptedSubscription || null;
+    } catch (error) {
+      console.error('❌ Error retrieving subscription:', error);
+      return null;
+    }
   }
 
   /**
@@ -292,13 +336,7 @@ export class AuthService {
     }
   }
 
-  /**
-   * Clear all authentication data (for debugging)
-   */
-  static clearAuthData(): void {
-    this.logout();
-    console.log('Authentication data cleared');
-  }
+
 
   /**
    * Get session info (for debugging - without sensitive data)

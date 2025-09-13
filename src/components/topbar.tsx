@@ -46,7 +46,7 @@ import {
   Info,
   Menu,
 } from "lucide-react";
-import { getCurrentSubscription } from "@/services/transactionService";
+// import { getCurrentSubscription } from "@/services/transactionService"; // No longer needed
 import { TicketService } from "@/services/ticketService";
 // import { AuthService } from "@/services/authService";
 import { useToast } from "@/hooks";
@@ -122,20 +122,8 @@ export default function Topbar({
   });
   const { success, error: showError } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
- 
-  useEffect(() => {
-    setLoadingSubscription(true);
-    getCurrentSubscription()
-      .then((res) => {
-        setCurrentSubscription(res.data);
-        setLoadingSubscription(false);
-      })
-      .catch(() => {
-        setLoadingSubscription(false);
-      });
-  }, []);
+  // Get subscription from Redux store
+  const { subscription } = useAppSelector((state) => state.auth);
 
 
   // Get user data from Redux state (which is loaded from cookies)
@@ -256,12 +244,10 @@ export default function Topbar({
           <div className="flex items-center">
             <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 mr-1 sm:mr-2 flex-shrink-0" />
             <AlertDescription className="text-xs sm:text-sm font-medium whitespace-nowrap">
-              {loadingSubscription ? (
-                <span>Memuat paket...</span>
-              ) : currentSubscription?.package_name ? (
+              {subscription ? (
                 <span className="capitalize">
                   Anda berlangganan paket{" "}
-                  {currentSubscription.package_name}
+                  {subscription}
                 </span>
               ) : (
                 <>

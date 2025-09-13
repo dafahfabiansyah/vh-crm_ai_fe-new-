@@ -65,6 +65,7 @@ export interface AuthState {
   error: string | null;
   isAuthenticated: boolean;
   isInitialized: boolean; // Add this to track if auth state has been initialized
+  subscription: string | null; // Package name from subscription
 }
 
 // decode JWT token response

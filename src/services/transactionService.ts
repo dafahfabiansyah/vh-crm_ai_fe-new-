@@ -67,7 +67,8 @@ export async function getUsageTracking() {
 }
 
 export async function getCurrentSubscription() {
-  return axios.get("/v1/current-subscription");
+  const response = await axios.get("/v1/current-subscription");
+  return response.data;
 }
 
 export async function getTransactionHistory() {

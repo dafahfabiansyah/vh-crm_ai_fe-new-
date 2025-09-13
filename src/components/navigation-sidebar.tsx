@@ -14,7 +14,8 @@ import type { NavigationItem } from "@/types";
 import { navigationItems, bottomNavigationItems } from "@/mock/data";
 import { usePipelineList } from "@/hooks/usePipeline";
 import { AuthService } from "../services/authService";
-import { getCurrentSubscription } from "../services/transactionService";
+import { useAppSelector } from "@/hooks/redux";
+// import { getCurrentSubscription } from "../services/transactionService"; // No longer needed
 
 interface NavigationSidebarProps {
   isMobileOpen?: boolean;
@@ -27,17 +28,19 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps = {}) {
   const location = useLocation();
   const pathname = location.pathname;
-  const [expandedItems, setExpandedItems] = useState<string[]>(["pipeline"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isHovered, setIsHovered] = useState(false);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   // Ambil role user sekali saja saat komponen mount
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean>(false);
-  const subscriptionCheckedRef = useRef(false);
+  
+  // Get subscription from Redux store
+  const { subscription } = useAppSelector((state) => state.auth);
+  const hasActiveSubscription = !!subscription;
 
-  // Pipeline list hook
-  const { pipelines, fetchPipelines } = usePipelineList();
+  // Pipeline list hook with lazy loading
+  const { pipelines, fetchPipelines, hasFetched } = usePipelineList(false);
 
   // Use external mobile state if provided, otherwise use internal state
   const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen;
@@ -55,34 +58,25 @@ export default function NavigationSidebar({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch pipelines when component mounts
+  // Computed values untuk mengurangi repetitive calculations
+  const shouldShowExpanded = isMobile ? isMobileOpen : isHovered;
+  const isManagerWithoutSubscription = userRole?.toLowerCase() === "manager" && !hasActiveSubscription;
+
+  // Fetch pipelines only when pipeline list is expanded (lazy loading)
   useEffect(() => {
-    fetchPipelines().catch(error => {
-      console.error('Failed to fetch pipelines:', error);
-    });
-  }, []);
+    if (expandedItems.includes('pipeline') && !hasFetched) {
+      fetchPipelines().catch(error => {
+        console.error('Failed to fetch pipelines:', error);
+      });
+    }
+  }, [expandedItems, hasFetched, fetchPipelines]);
 
   // Ambil role user sekali saja saat komponen mount
   useEffect(() => {
     setUserRole(AuthService.getRoleFromToken());
   }, []);
 
-  // Fetch subscription status on mount (only once per session)
-  useEffect(() => {
-    if (subscriptionCheckedRef.current) return;
-    subscriptionCheckedRef.current = true;
-    getCurrentSubscription()
-      .then((res) => {
-        if (res?.data && res.data.package_name) {
-          setHasActiveSubscription(true);
-        } else {
-          setHasActiveSubscription(false);
-        }
-      })
-      .catch(() => {
-        setHasActiveSubscription(false);
-      });
-  }, []);
+  // Subscription is now handled by Redux store, no need for separate fetch
 
   // Create enhanced navigation items with dynamic pipeline list
   let filteredNavigationItems = navigationItems;
@@ -136,124 +130,178 @@ export default function NavigationSidebar({
     }
     return false;
   };
-  const renderNavigationItem = (item: NavigationItem, level = 0) => {
-    const hasChildren = item.children && item.children.length > 0;
+  // Helper function untuk styling button yang konsisten
+  const getButtonClassName = (itemIsActive: boolean, shouldShowExpanded: boolean) => {
+    return cn(
+      "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
+      "px-3",
+      itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
+    );
+  };
+
+  // Helper function untuk content yang expandable
+  const renderExpandableContent = (item: NavigationItem, shouldShowExpanded: boolean, isExpanded: boolean) => (
+    <div
+      className={cn(
+        "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
+        shouldShowExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+      )}
+    >
+      <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+      {item.badge && (
+        <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
+          {item.badge}
+        </Badge>
+      )}
+      {item.children && (
+        isExpanded ? (
+          <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0" />
+        ) : (
+          <ChevronRight className="h-4 w-4 ml-2 flex-shrink-0" />
+        )
+      )}
+    </div>
+  );
+
+  // Render collapsible item dengan children
+  const renderCollapsibleItem = (item: NavigationItem, level: number, shouldShowExpanded: boolean) => {
     const isExpanded = expandedItems.includes(item.id);
     const itemIsActive = isItemActive(item);
-    const shouldShowExpanded = isMobile ? isMobileOpen : isHovered;
-    
-    // Calculate padding based on level
     const paddingLeft = level > 0 && shouldShowExpanded ? { paddingLeft: `${24 + level * 16}px` } : {};
 
-    if (hasChildren) {
-      return (
-        <Collapsible
-          key={item.id}
-          open={shouldShowExpanded && isExpanded}
-          onOpenChange={() => shouldShowExpanded && toggleExpanded(item.id)}
-        >
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                !shouldShowExpanded ? "px-3" : "px-3",
-                itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
-              )}
-              style={paddingLeft}
-            >
-              <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
-              <div
-                className={cn(
-                  "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
-                  shouldShowExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-                )}
-              >
-                <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 ml-2 flex-shrink-0" />
-                )}
-              </div>
-            </Button>
-          </CollapsibleTrigger>
-          {shouldShowExpanded && (
-            <CollapsibleContent className="space-y-1">
-              {item.children?.map((child) => renderNavigationItem(child, level + 1))}
-            </CollapsibleContent>
-          )}
-        </Collapsible>
-      );
-    }
-
-    if (item.href) {
-      return (
-        <Link key={item.id} to={item.href} onClick={() => setIsMobileOpen(false)}>
+    return (
+      <Collapsible
+        key={item.id}
+        open={shouldShowExpanded && isExpanded}
+        onOpenChange={() => shouldShowExpanded && toggleExpanded(item.id)}
+      >
+        <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className={cn(
-              "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-              !shouldShowExpanded ? "px-3" : "px-3",
-              itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
-            )}
+            className={getButtonClassName(itemIsActive, shouldShowExpanded)}
             style={paddingLeft}
           >
             <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
-            <div
-              className={cn(
-                "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
-                shouldShowExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-              )}
-            >
-              <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
-              {item.badge && (
-                <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
-                  {item.badge}
-                </Badge>
-              )}
-            </div>
+            {renderExpandableContent(item, shouldShowExpanded, isExpanded)}
           </Button>
-        </Link>
-      );
-    }
+        </CollapsibleTrigger>
+        {shouldShowExpanded && (
+          <CollapsibleContent className="space-y-1">
+            {item.children?.map((child) => renderNavigationItem(child, level + 1))}
+          </CollapsibleContent>
+        )}
+      </Collapsible>
+    );
+  };
+
+  // Render link item
+  const renderLinkItem = (item: NavigationItem, level: number, shouldShowExpanded: boolean) => {
+    const itemIsActive = isItemActive(item);
+    const paddingLeft = level > 0 && shouldShowExpanded ? { paddingLeft: `${24 + level * 16}px` } : {};
+
+    return (
+      <Link key={item.id} to={item.href!} onClick={() => setIsMobileOpen(false)}>
+        <Button
+          variant="ghost"
+          className={getButtonClassName(itemIsActive, shouldShowExpanded)}
+          style={paddingLeft}
+        >
+          <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
+          {renderExpandableContent(item, shouldShowExpanded, false)}
+        </Button>
+      </Link>
+    );
+  };
+
+  // Render button item (tanpa link)
+  const renderButtonItem = (item: NavigationItem, level: number, shouldShowExpanded: boolean) => {
+    const itemIsActive = isItemActive(item);
+    const paddingLeft = level > 0 && shouldShowExpanded ? { paddingLeft: `${24 + level * 16}px` } : {};
 
     return (
       <div key={item.id}>
         <Button
           variant="ghost"
-          className={cn(
-            "w-full justify-start h-11 font-normal text-muted-foreground hover:text-foreground hover:bg-accent/50",
-            !shouldShowExpanded ? "px-3" : "px-3",
-            itemIsActive && "bg-primary/10 text-primary border-r-2 border-r-primary"
-          )}
+          className={getButtonClassName(itemIsActive, shouldShowExpanded)}
           style={paddingLeft}
-          disabled={userRole?.toLowerCase() === "manager" && !hasActiveSubscription}
-          title={userRole?.toLowerCase() === "manager" && !hasActiveSubscription ? "Manager tidak dapat mengakses menu" : undefined}
+          disabled={isManagerWithoutSubscription}
+          title={isManagerWithoutSubscription ? "Manager tidak dapat mengakses menu" : undefined}
         >
           <item.icon className={cn("h-4 w-4 flex-shrink-0", shouldShowExpanded && "mr-3")} />
-          <div
-            className={cn(
-              "flex items-center flex-1 transition-all duration-300 ease-in-out overflow-hidden",
-              shouldShowExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            )}
-          >
-            <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
-            {item.badge && (
-              <Badge variant="secondary" className="ml-2 h-5 px-2 text-xs">
-                {item.badge}
-              </Badge>
-            )}
-          </div>
+          {renderExpandableContent(item, shouldShowExpanded, false)}
         </Button>
       </div>
     );
   };
 
+  // Main render function yang sudah disederhanakan
+  const renderNavigationItem = (item: NavigationItem, level = 0) => {
+    const hasChildren = item.children && item.children.length > 0;
+
+    if (hasChildren) {
+      return renderCollapsibleItem(item, level, shouldShowExpanded);
+    }
+
+    if (item.href) {
+      return renderLinkItem(item, level, shouldShowExpanded);
+    }
+
+    return renderButtonItem(item, level, shouldShowExpanded);
+  };
+
+  // Helper function untuk render konten sidebar yang dapat digunakan di desktop dan mobile
+  const renderSidebarContent = (showExpanded: boolean, isVisible: boolean, showCloseButton = false) => (
+    <>
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full flex-shrink-0">
+              <TreePine className="h-5 w-5 text-green-600" />
+            </div>
+            {showExpanded && (
+              <div
+                className={cn(
+                  "transition-all duration-300 ease-in-out overflow-hidden",
+                  isVisible ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+                )}
+              >
+                <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">
+                  Tumbuhin
+                </h1>
+              </div>
+            )}
+          </div>
+          {showCloseButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+      </div>
+      {/* Main Navigation */}
+      <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        <nav className="space-y-1 px-2">
+          {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
+        </nav>
+      </div>
+      {/* Bottom Navigation */}
+      <div className="border-t border-border p-2">
+        <nav className="space-y-1">
+          {bottomNavigationItems.map((item) => renderNavigationItem(item))}
+        </nav>
+      </div>
+    </>
+  );
+
   return (
     <>
       {/* Overlay to disable sidebar if Manager and NOT subscribed */}
-      {userRole?.toLowerCase() === "manager" && !hasActiveSubscription && (
+      {isManagerWithoutSubscription && (
         <div
           style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "16rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
           className="hidden lg:block"
@@ -283,36 +331,7 @@ export default function NavigationSidebar({
               isHovered ? "w-64 opacity-100" : "w-16 opacity-0 pointer-events-none"
             )}
           >
-            {/* Header */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full flex-shrink-0">
-                  <TreePine className="h-5 w-5 text-green-600" />
-                </div>
-                <div
-                  className={cn(
-                    "transition-all duration-300 ease-in-out overflow-hidden",
-                    isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-                  )}
-                >
-                  <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">
-                    Tumbuhin
-                  </h1>
-                </div>
-              </div>
-            </div>
-            {/* Main Navigation */}
-            <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
-              <nav className="space-y-1 px-2">
-                {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
-              </nav>
-            </div>
-            {/* Bottom Navigation */}
-            <div className="border-t border-border p-2">
-              <nav className="space-y-1">
-                {bottomNavigationItems.map((item) => renderNavigationItem(item))}
-              </nav>
-            </div>
+            {renderSidebarContent(true, isHovered)}
           </div>
           {/* Collapsed sidebar - always visible */}
           <div className="flex flex-col h-full">
@@ -392,7 +411,7 @@ export default function NavigationSidebar({
         </div>
       )}
       {/* Mobile Sidebar Overlay for Manager */}
-      {isMobile && userRole?.toLowerCase() === "manager" && isMobileOpen && !hasActiveSubscription && (
+      {isMobile && isManagerWithoutSubscription && isMobileOpen && (
         <div
           style={{ position: "fixed", zIndex: 1000, top: 0, left: 0, width: "20rem", height: "100vh", background: "rgba(255,255,255,0)", cursor: "not-allowed" }}
         />
@@ -405,40 +424,7 @@ export default function NavigationSidebar({
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          {/* Header with close button */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full flex-shrink-0">
-                  <TreePine className="h-5 w-5 text-green-600" />
-                </div>
-                <h1 className="text-lg font-semibold text-foreground">
-                  Tumbuhin
-                </h1>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMobileOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Main Navigation */}
-          <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
-            <nav className="space-y-1 px-2">
-              {enhancedNavigationItems.map((item) => renderNavigationItem(item))}
-            </nav>
-          </div>
-
-          {/* Bottom Navigation */}
-          <div className="border-t border-border p-2">
-            <nav className="space-y-1">
-              {bottomNavigationItems.map((item) => renderNavigationItem(item))}
-            </nav>
-          </div>
+          {renderSidebarContent(true, true, true)}
         </div>
       )}
     </>

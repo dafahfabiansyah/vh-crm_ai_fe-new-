@@ -1,38 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { AuthService } from "../services/authService";
-import { getCurrentSubscription } from "../services/transactionService";
+import { useAppSelector } from "@/hooks/redux";
+// import { getCurrentSubscription } from "../services/transactionService"; // No longer needed
 
 const ManagerBillingEnforcer: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean>(false);
-  const [subscriptionChecked, setSubscriptionChecked] = useState<boolean>(false);
-
-  useEffect(() => {
-    getCurrentSubscription()
-      .then((res) => {
-        // console.log('Subscription response:', res.data);
-        if (res?.data && res.data.package_name) {
-          setHasActiveSubscription(true);
-        } else {
-          setHasActiveSubscription(false);
-        }
-        setSubscriptionChecked(true);
-      })
-      .catch(() => {
-        setHasActiveSubscription(false);
-        setSubscriptionChecked(true);
-      });
-  }, []);
+  // Get subscription from Redux store
+  const { subscription } = useAppSelector((state) => state.auth);
+  const hasActiveSubscription = !!subscription;
 
   useEffect(() => {
     const role = AuthService.getRoleFromToken();
-    // Only redirect if manager, subscription check is done, and NOT subscribed
-    if (role === "Manager" && subscriptionChecked && !hasActiveSubscription && location.pathname !== "/billing") {
+    // Only redirect if manager and NOT subscribed
+    if (role === "Manager" && !hasActiveSubscription && location.pathname !== "/billing") {
       navigate("/billing", { replace: true });
     }
-  }, [location.pathname, navigate, hasActiveSubscription, subscriptionChecked]);
+  }, [location.pathname, navigate, hasActiveSubscription]);
 
   const role = AuthService.getRoleFromToken();
   if (role !== "Manager") return null;
@@ -44,4 +29,4 @@ const ManagerBillingEnforcer: React.FC = () => {
   return null;
 };
 
-export default ManagerBillingEnforcer; 
+export default ManagerBillingEnforcer;

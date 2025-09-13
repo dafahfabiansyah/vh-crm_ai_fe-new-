@@ -33,7 +33,9 @@ import {
 } from "lucide-react";
 import MainLayout from "@/main-layout";
 import { getSubscriptionPlans } from "@/services/subscriptionService";
-import { createTransaction, getUsageTracking, getCurrentSubscription, getTransactionHistory, validateVoucher } from "@/services/transactionService";
+import { createTransaction, getUsageTracking, getTransactionHistory, validateVoucher } from "@/services/transactionService";
+// import { getCurrentSubscription } from "@/services/transactionService"; // No longer needed
+import { useAppSelector } from "@/hooks/redux";
 import type { VoucherValidationResponse } from "@/services/transactionService";
 import ManagerBillingEnforcer from "@/components/manager-billing-enforcer";
 import { useToast } from "@/hooks";
@@ -230,19 +232,18 @@ export default function BillingPage() {
       });
   }, []);
 
+  // Get subscription from Redux store
+  const { subscription } = useAppSelector((state) => state.auth);
+
   useEffect(() => {
-    setLoadingSubscription(true);
-    getCurrentSubscription()
-      .then((res) => {
-        setCurrentSubscription(res.data);
-        setLoadingSubscription(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        setSubscriptionError("Gagal mengambil data subscription");
-        setLoadingSubscription(false);
-      });
-  }, []);
+    if (subscription) {
+      setCurrentSubscription({ package_name: subscription });
+      setLoadingSubscription(false);
+    } else {
+      setCurrentSubscription(null);
+      setLoadingSubscription(false);
+    }
+  }, [subscription]);
 
   useEffect(() => {
     setLoadingTransactions(true);

@@ -378,7 +378,6 @@ export default function AIAgentDetailPage({ agentId }: AIAgentDetailPageProps) {
     );
   }
 
-  const behaviorCharacterCount = agentData.behaviour.length;
   const welcomeCharacterCount = agentData.welcomeMessage.length;
   const transferCharacterCount = agentData.transferConditions.length;
 

@@ -4,7 +4,7 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { loginUser, clearError } from "@/store/authSlice";
+import { loginUser, clearError, fetchSubscription } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -205,6 +205,11 @@ export default function LoginForm() {
 
       // Login successful
       console.log("Login successful:", result);
+
+      // Fetch subscription data
+      console.log('🔄 Dispatching fetchSubscription...');
+      const subscriptionResult = await dispatch(fetchSubscription());
+      console.log('🔄 fetchSubscription result:', subscriptionResult);
 
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
