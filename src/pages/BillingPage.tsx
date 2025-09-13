@@ -63,7 +63,6 @@ export default function BillingPage() {
   const [, setUsageError] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [, setLoadingSubscription] = useState(true);
-  const [, setSubscriptionError] = useState<string | null>(null);
   const [, setTransactions] = useState<any[]>([]);
   const [, setLoadingTransactions] = useState(true);
   const [, setTransactionsError] = useState<string | null>(null);

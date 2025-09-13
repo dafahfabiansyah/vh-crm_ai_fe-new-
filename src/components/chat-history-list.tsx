@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useContacts } from "@/hooks";
 import type { Contact } from "@/services";
+import type { UseContactsReturn } from "@/hooks/useContacts";
 import { AgentsService } from "@/services/agentsService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import type { AIAgent } from "@/types";
@@ -44,6 +45,7 @@ interface ChatHistoryListProps {
   onTabChange?: (tab: "assigned" | "unassigned" | "resolved") => void;
   onStartChatSuccess?: (message: string) => void;
   onStartChatError?: (error: string) => void;
+  contactsData?: UseContactsReturn; // Optional shared contacts data
 }
 
 export default function ChatHistoryList({
@@ -55,7 +57,14 @@ export default function ChatHistoryList({
   onTabChange,
   onStartChatSuccess,
   onStartChatError,
+  contactsData: externalContactsData,
 }: ChatHistoryListProps) {
+  // Always call useContacts hook (hooks rules), but always disable fetch since parent provides data
+  const internalContactsData = useContacts(1, 100, false);
+  
+  // Use external data if provided, otherwise use internal data (which won't have fetched)
+  const contactsData = externalContactsData || internalContactsData;
+  
   const {
     contacts,
     loading,
@@ -63,13 +72,14 @@ export default function ChatHistoryList({
     assignedCount,
     unassignedCount,
     resolvedCount,
-  } = useContacts();
+  } = contactsData;
   const [internalActiveTab, setInternalActiveTab] = useState<
     "assigned" | "unassigned" | "resolved"
   >("assigned");
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([]);
   const [humanAgents, setHumanAgents] = useState<HumanAgent[]>([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
+  const [agentsLoaded, setAgentsLoaded] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [isStartChatModalOpen, setIsStartChatModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -86,26 +96,30 @@ export default function ChatHistoryList({
 
   // Date picker states - removed as they're now handled in FilterChatModal
 
-  // Fetch agents data
-  useEffect(() => {
-    const fetchAgents = async () => {
-      setAgentsLoading(true);
-      try {
-        const [aiAgentsData, humanAgentsData] = await Promise.all([
-          AgentsService.getAgents(),
-          HumanAgentsService.getHumanAgents(),
-        ]);
-        setAiAgents(aiAgentsData);
-        setHumanAgents(humanAgentsData);
-      } catch (error) {
-        console.error("Error fetching agents:", error);
-      } finally {
-        setAgentsLoading(false);
-      }
-    };
-
-    fetchAgents();
-  }, []);
+  // Fetch agents data lazily when dropdown is opened
+  const fetchAgents = async () => {
+    if (agentsLoaded || agentsLoading) {
+      // console.log("Agents already loaded or loading, skipping fetch");
+      return;
+    }
+    
+    // console.log("Fetching agents data (lazy loading)...");
+    setAgentsLoading(true);
+    try {
+      const [aiAgentsData, humanAgentsData] = await Promise.all([
+        AgentsService.getAgents(),
+        HumanAgentsService.getHumanAgents(),
+      ]);
+      setAiAgents(aiAgentsData);
+      setHumanAgents(humanAgentsData);
+      setAgentsLoaded(true);
+      // console.log("Agents data loaded successfully:", { aiAgents: aiAgentsData.length, humanAgents: humanAgentsData.length });
+    } catch (error) {
+      console.error("Error fetching agents:", error);
+    } finally {
+      setAgentsLoading(false);
+    }
+  };
 
   // Use controlled tab if provided, otherwise use internal state
   const activeTab = controlledActiveTab ?? internalActiveTab;
@@ -348,7 +362,9 @@ export default function ChatHistoryList({
       {/* Header */}
       <div className="p-3 sm:p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={(open) => {
+            if (open) fetchAgents();
+          }}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"

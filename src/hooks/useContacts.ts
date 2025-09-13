@@ -14,7 +14,7 @@ export interface UseContactsReturn {
   refetch: () => Promise<void>;
 }
 
-export function useContacts(page: number = 1, perPage: number = 100): UseContactsReturn {
+export function useContacts(page: number = 1, perPage: number = 100, enabled: boolean = true): UseContactsReturn {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export function useContacts(page: number = 1, perPage: number = 100): UseContact
     try {
       setLoading(true);
       setError(null);
-
+      
       const response: ContactsResponse = await ContactsService.getContacts(page, perPage);
 
       setContacts(response.items);
@@ -106,8 +106,12 @@ export function useContacts(page: number = 1, perPage: number = 100): UseContact
   });
 
   useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+    if (enabled) {
+      fetchContacts();
+    } else {
+      setLoading(false);
+    }
+  }, [fetchContacts, enabled]);
 
   return {
     contacts,

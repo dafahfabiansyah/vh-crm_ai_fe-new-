@@ -5,6 +5,7 @@ import ChatConversation from "./chat-conversation"
 import ChatInformation from "./chat-information"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/contexts/ToastContext"
+import { useContacts } from "@/hooks"
 import type { Contact } from "@/services/contactsService"
 
 // Default welcome content
@@ -60,6 +61,9 @@ export default function ChatDashboard() {
   const [showInfo, setShowInfo] = useState(false)
   const [activeTab, setActiveTab] = useState<'assigned' | 'unassigned' | 'resolved'>('assigned')
   const { success, error: showError } = useToast()
+  
+  // Shared contacts data to avoid duplicate API calls
+  const contactsData = useContacts()
 
   const handleSelectContact = (contact: Contact) => {
     setSelectedContactId(contact.id)
@@ -93,6 +97,7 @@ export default function ChatDashboard() {
             onTabChange={setActiveTab}
             onStartChatSuccess={handleStartChatSuccess}
             onStartChatError={handleStartChatError}
+            contactsData={contactsData}
           />
         </div>
 
@@ -135,6 +140,7 @@ export default function ChatDashboard() {
               onTabChange={setActiveTab}
               onStartChatSuccess={handleStartChatSuccess}
               onStartChatError={handleStartChatError}
+              contactsData={contactsData}
             />
           </div>
         ) : (
