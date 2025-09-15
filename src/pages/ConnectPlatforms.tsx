@@ -60,6 +60,7 @@ import PipelineService from "@/services/pipelineService";
 import type { PipelineListResponse } from "@/services/pipelineService";
 import { HumanAgentsService } from "@/services/humanAgentsService";
 import type { HumanAgent } from "@/services/humanAgentsService";
+import { DepartmentService } from "@/services/departmentService";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -82,6 +83,10 @@ export default function ConnectedPlatformsPage() {
   const [pipelines, setPipelines] = useState<PipelineListResponse[]>([]);
   const [pipelinesLoading , setPipelinesLoading] = useState(false);
   const [, setPipelinesError] = useState<string | null>(null);
+
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+  const [, setDepartmentsError] = useState<string | null>(null);
 
   // Mobile detail view state
   const [showMobileDetail, setShowMobileDetail] = useState(false);
@@ -148,7 +153,7 @@ export default function ConnectedPlatformsPage() {
             isLoggedIn: item.is_connected,
             // Map agent information from platform_mappings
             aiAgent: aiAgentMapping?.agent_name || undefined,
-            teams: activeMapping ? [activeMapping.agent_type] : undefined,
+            teams: undefined, // Initialize as empty, will be populated by department selection
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
@@ -210,6 +215,19 @@ export default function ConnectedPlatformsPage() {
       .finally(() => setHumanAgentsLoading(false));
   }, []);
 
+  // Fetch departments from API
+  useEffect(() => {
+    setDepartmentsLoading(true);
+    setDepartmentsError(null);
+    DepartmentService.getDepartments()
+      .then((data) => setDepartments(data))
+      .catch((err) => {
+        setDepartmentsError(err.message || "Failed to fetch departments");
+        setDepartments([]);
+      })
+      .finally(() => setDepartmentsLoading(false));
+   }, []);
+
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
@@ -255,7 +273,7 @@ export default function ConnectedPlatformsPage() {
             isLoggedIn: item.is_connected,
             // Map agent information from platform_mappings
             aiAgent: aiAgentMapping?.agent_name || undefined,
-            teams: activeMapping ? [activeMapping.agent_type] : undefined,
+            teams: undefined, // Initialize as empty, will be populated by department selection
             // Map pipeline information
             pipeline: item.id_pipeline || undefined,
             // Store raw mapping data for reference
@@ -448,7 +466,7 @@ export default function ConnectedPlatformsPage() {
           isConnected: item.is_connected,
           isLoggedIn: item.is_connected,
           aiAgent: activeAiMapping?.agent_name || undefined,
-          teams: activeMapping ? [activeMapping.agent_type] : undefined,
+          teams: undefined, // Initialize as empty, will be populated by department selection
           pipeline: item.id_pipeline || undefined,
           platformMappings: item.platform_mappings || [],
           // Extract human agent IDs from platform_mappings (only active ones for selection)
@@ -1476,17 +1494,19 @@ export default function ConnectedPlatformsPage() {
                               </div>
                             </SelectTrigger>
                             <SelectContent>
-                              {/* <SelectItem value="DISTCCTV">DISTCCTV</SelectItem>
-                              <SelectItem value="Support Team">
-                                Support Team
-                              </SelectItem>
-                              <SelectItem value="Sales Team">
-                                Sales Team
-                              </SelectItem>
-                              <SelectItem value="Operations">
-                                Operations
-                              </SelectItem> */}
-                              <SelectItem value="Belum ada team">Belum ada team</SelectItem>
+                              {departmentsLoading ? (
+                                <SelectItem value="" disabled>
+                                  Loading departments...
+                                </SelectItem>
+                              ) : departments.length > 0 ? (
+                                departments.map((department) => (
+                                  <SelectItem key={department.id} value={department.name}>
+                                    {department.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="Belum ada team">Belum ada team</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>

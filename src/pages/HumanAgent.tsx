@@ -293,7 +293,7 @@ export default function HumanAgentsPage() {
                                     {String(agent.user_email || "")}
                                   </td>
                                   <td className="p-4">
-                                    <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded-full whitespace-nowrap">
+                                    <span className="bg-primary text-primary-foreground px-2 py-1 text-xs rounded-full whitespace-nowrap">
                                       {agent.role || "Manager"}
                                     </span>
                                   </td>
