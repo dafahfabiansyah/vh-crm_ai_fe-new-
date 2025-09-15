@@ -36,6 +36,8 @@ import { ToastContainer } from "@/components/ui/toast-container";
 // import CreateApiIntegrationPage from "./pages/CreateApiIntegrationPage";
 
 import "./app.css"
+import FlowDummyPage from "./pages/FlowDummyPage";
+import CreateFlowPage from "./pages/CreateFlowPage";
 
 // Wrapper component for AIAgentDetailPage to handle params
 function AIAgentDetailWrapper() {
@@ -87,7 +89,12 @@ export default function App() {
           <Route path="products" element={<ProductPage />} />
           <Route path="products/:id" element={<ProductDetailsPage />} />
           <Route path="tickets" element={<TicketPage />} />
-          <Route path="flow" element={<FlowSettingsPage />} />
+          {/* buat flow */}
+          <Route path="flow" element={<CreateFlowPage />} />
+          {/* flow detail atau setting */}
+          <Route path="flow/setting" element={<FlowSettingsPage />} />
+          {/* dummy flow */}
+          <Route path="flow/dummy" element={<FlowDummyPage />} />
           {/* connecting platforms */}
           <Route path="connect">
             <Route path="whatsapp" element={<WhatsAppQRPage />} />

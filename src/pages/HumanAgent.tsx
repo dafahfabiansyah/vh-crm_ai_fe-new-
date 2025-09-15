@@ -1,9 +1,9 @@
-import { useState } from "react";
+import  React,  { useState } from "react";
 import MainLayout from "@/main-layout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
+import CreateHumanAgentModal from "@/components/create-human-agent-modal";
+import EditHumanAgentModal from "@/components/edit-human-agent-modal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -11,16 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Search, Edit, Trash2, RefreshCw } from "lucide-react";
-import CreateHumanAgentModal from "@/components/create-human-agent-modal";
-import EditHumanAgentModal from "@/components/edit-human-agent-modal";
 import { HumanAgentsService } from "@/services/humanAgentsService";
-import React from "react";
 import { DepartmentService } from "@/services/departmentService";
 import CreateDepartmentModal from "@/components/create-department-modal";
 import EditDepartmentModal from "@/components/edit-department-modal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Hapus mock data untuk human agents
 export default function HumanAgentsPage() {
@@ -47,6 +46,9 @@ export default function HumanAgentsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteType, setDeleteType] = useState<"agent"|"department"|null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // Add state to track active tab
+  const [activeTab, setActiveTab] = useState("human-agent");
 
   // Fetch agents from API
   const fetchHumanAgents = async () => {
@@ -78,27 +80,18 @@ export default function HumanAgentsPage() {
 
   // Fetch agents for department head display
   const [agents, setAgents] = useState<any[]>([]);
-  const [, setLoadingAgents] = useState(false);
 
-  const fetchAgents = async () => {
-    setLoadingAgents(true);
-    try {
-      const data = await HumanAgentsService.getHumanAgents();
-      setAgents(data);
-    } catch (err) {
-      // Optionally handle error
-    } finally {
-      setLoadingAgents(false);
-    }
-  };
-
-  // Fetch on mount
+  // Fetch on mount - panggil human agents dan departments untuk kolom department
   React.useEffect(() => {
     fetchHumanAgents();
     fetchDepartments();
-    fetchAgents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Add useEffect to handle tab changes - departments sudah di-load di mount
+  React.useEffect(() => {
+    // Departments sudah di-fetch saat mount, tidak perlu lazy loading lagi
+  }, [activeTab, departments.length]);
 
   const handleDeleteAgent = (id: string) => {
     setDeleteType("agent");
@@ -178,7 +171,7 @@ export default function HumanAgentsPage() {
             Human Agent Settings
           </h1>
 
-          <Tabs defaultValue="human-agent" className="w-full">
+          <Tabs defaultValue="human-agent" className="w-full" onValueChange={(value) => setActiveTab(value)}>
             <TabsList className="grid w-full max-w-full sm:max-w-md grid-cols-2">
               <TabsTrigger value="human-agent" className="text-sm">
                 Human Agent
